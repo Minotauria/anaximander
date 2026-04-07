@@ -614,6 +614,7 @@ function spawnChild(n,dir,style){
     outlined:n.outlined||false,scale:n.scale||1,palKey:n.palKey||'pastel',notes:[],image:'',
     textAlign:n.textAlign||'center',labelHtml:''};
   map.nodes.push(child);
+  console.log('nodes after push:', map.nodes.length, 'child id:', child.id);
   const parentEdges=map.edges.filter(ed=>ed.from===n.id);
   const parentThickness=parentEdges.length?parentEdges[0].thickness:3.5;
   const e=makeEdge('e'+Date.now(),n.id,child.id,style);e.thickness=parentThickness;initKf(e,map);map.edges.push(e);
@@ -1022,9 +1023,8 @@ function drawGhost(g,i){
 function hitGhostScreen(sx,sy){
   for(let i=0;i<ghosts.length;i++){
     const g=ghosts[i],sp=w2s(g.x,g.y);
-    ctx.font=`400 ${Math.round(11*T.s)}px 'Nunito',sans-serif`;
-    const tw=ctx.measureText(g.label).width;
-    const grx=Math.max(36*T.s,tw/2+14*T.s),gry=16*T.s;
+    // use fixed radius — avoids ctx state dependency
+    const grx=Math.max(50*T.s,(g.label.length*5+20)*T.s),gry=18*T.s;
     if(Math.abs(sx-sp.x)<grx&&Math.abs(sy-sp.y)<gry)return i;
   }
   return -1;
@@ -1032,6 +1032,7 @@ function hitGhostScreen(sx,sy){
 function materialiseGhost(idx){
   const g=ghosts[idx];if(!g)return;
   const map=cmap();if(!map)return;
+  console.log('materialiseGhost called, ghost:', g.label, 'parentId:', g.parentId, 'nodes before:', map.nodes.length);
   const parent=map.nodes.find(n=>n.id===g.parentId);
   pushCanvasHistLocal('materialise ghost');
   const child={id:map.nextId++,x:g.x,y:g.y,label:g.label,
@@ -1046,9 +1047,8 @@ function materialiseGhost(idx){
   e.thickness=2;initKf(e,map);map.edges.push(e);
   selN=child.id;softSave();
   ghosts=[];
-  if(ghostsEnabled)buildGhosts(child.id);
   render();
-  setTimeout(()=>startEdit(child),50);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>startEdit(child)));
 }
 function render(){
   const map=cmap();if(!map)return;
@@ -1179,9 +1179,9 @@ inlineInput.addEventListener('blur',()=>{
   if(resizeN)return;
   setTimeout(()=>{
     const ae=document.activeElement;
-    // don't commit if focus moved to toolbar, inline input itself, or a net-pop
-    if(ae&&(ae===inlineInput||nodeEditToolbar.contains(ae)||ae.closest('.net-pop')))return;
-    // don't commit if a ghost was just clicked (wait for startEdit to take over)
+    // don't commit if focus is on input, toolbar, any pop, or body (ghost click)
+    if(!ae||ae===document.body)return; // focus went to canvas/body = ghost or canvas click handled separately
+    if(ae===inlineInput||nodeEditToolbar.contains(ae)||ae.closest('.net-pop')||ae.closest('.net-url-inp'))return;
     if(_ghostJustFired)return;
     commitEdit();
   },200);
