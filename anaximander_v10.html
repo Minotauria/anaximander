@@ -138,6 +138,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .net-btn.red{color:#9a7878;}
 .net-btn.red:hover{background:#2a1e1e;color:#c89898;border-color:#4a3030;}
 .net-sep{width:0.5px;height:14px;background:#2a3028;margin:0 2px;flex-shrink:0;}
+#bulk-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:5px;background:#1a201a;border:0.5px solid #2a3028;border-radius:12px;padding:6px 12px;z-index:190;box-shadow:0 8px 30px rgba(0,0,0,0.6);white-space:nowrap;}
+#bulk-bar.vis{display:flex;}
+.bb-count{font-size:10px;color:#7a7858;font-family:'Lora',serif;padding-right:2px;flex-shrink:0;}
+.bb-sw{width:13px;height:13px;border-radius:3px;cursor:pointer;border:1.5px solid transparent;flex-shrink:0;display:inline-block;transition:transform 0.1s;}
+.bb-sw:hover{transform:scale(1.25);}
+.bb-sw.on{border-color:rgba(255,255,255,0.55);}
+.bb-shape{cursor:pointer;border-radius:4px;border:0.5px solid transparent;flex-shrink:0;display:block;background:#0d1a0d;}
+.bb-shape:hover{border-color:#3a4030;}
 .net-select{background:#1a201a;border:0.5px solid #303624;border-radius:6px;font-size:11px;color:#c8c898;cursor:pointer;padding:3px 5px;font-family:'Lora',serif;flex-shrink:0;}
 .net-select optgroup{font-style:normal;font-weight:500;color:#c8c898;background:#0d1a0d;text-transform:uppercase;letter-spacing:0.05em;font-size:9px;}
 .net-select option{font-style:normal;font-weight:400;color:#a09e8a;background:#1a201a;font-size:11px;padding:2px 6px;}
@@ -306,6 +314,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <div id="link-tooltip" style="position:absolute;display:none;background:#1a201a;color:#dac888;font-size:11px;padding:5px 10px;border-radius:7px;border:0.5px solid #2a3028;pointer-events:none;z-index:45;max-width:320px;word-break:break-word;font-family:'Lora',serif;box-shadow:0 4px 16px rgba(0,0,0,0.5);"></div>
         <div id="inline-input" contenteditable="false" spellcheck="false"></div>
         <div id="node-edit-toolbar"></div>
+        <div id="bulk-bar">
+          <span class="bb-count" id="bulk-count">0 nodes</span>
+          <div class="net-sep" style="height:16px;"></div>
+          <div id="bulk-colours" style="display:flex;align-items:center;gap:3px;"></div>
+          <div class="net-sep" style="height:16px;"></div>
+          <div id="bulk-shapes" style="display:flex;align-items:center;gap:3px;"></div>
+          <div class="net-sep" style="height:16px;"></div>
+          <div id="bulk-edges" style="display:flex;align-items:center;gap:3px;"></div>
+        </div>
         <div id="node-search" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:6px;background:#1a1a1a;border:0.5px solid #444;border-radius:8px;padding:5px 10px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.5);">
   <span style="color:#555;font-size:13px;">&#128269;</span>
   <input id="search-input" type="text" placeholder="search nodes…" style="background:none;border:none;outline:none;color:#eee;font-size:13px;font-family:'Nunito',sans-serif;width:200px;"/>
@@ -2049,6 +2066,7 @@ function render(){
   }
   renderMM();
   document.getElementById('zoom-lbl').textContent=Math.round(T.s*100)+'%';
+  syncBulkBar();
 }
 
 function renderMM(){
@@ -3208,6 +3226,11 @@ const SHORTCUTS=[
     ['⌘ / ctrl + click suggestion','toggle individual suggestion'],
     ['double-click suggestion','edit label before accepting'],
   ]},
+  {section:'bulk edit (2+ nodes selected)',items:[
+    ['click colour swatch','set fill colour on all selected nodes'],
+    ['click shape','set shape on all selected nodes'],
+    ['click edge style','set edge style on all edges touching selected nodes'],
+  ]},
   {section:'sidebar',items:[
     ['⌘ + click row','add to selection'],
     ['shift + click row','range select'],
@@ -4142,6 +4165,68 @@ async function testOllamaConnection(){
     if(status){status.textContent='✕ Ollama not reachable — is it running?';status.style.color='#c87878';}
   }finally{if(btn)btn.disabled=false;}
 }
+
+// ── BULK EDIT BAR ────────────────────────────────────────────────────────────
+;(function(){
+  const colEl=document.getElementById('bulk-colours');
+  const shapeEl=document.getElementById('bulk-shapes');
+  const edgeEl=document.getElementById('bulk-edges');
+
+  // colour swatches — muted palette
+  PALETTES.muted.forEach(c=>{
+    const sw=document.createElement('div');sw.className='bb-sw';sw.style.background=c;sw.title=c;
+    sw.addEventListener('click',()=>{
+      const m=cmap();if(!m)return;
+      pushCanvasHistLocal('bulk colour');
+      m.nodes.filter(n=>selSet.has(n.id)).forEach(n=>{n.color=c;if(n.shape==='text')n.textColor=null;});
+      softSave();render();
+    });
+    colEl.appendChild(sw);
+  });
+
+  // shape mini-canvases — reuse drawLegendShape
+  ['longpill','pill','circle','ellipse','diamond','hex','rect','text'].forEach(sh=>{
+    const cv=document.createElement('canvas');cv.width=44;cv.height=26;
+    cv.style.cssText='width:26px;height:15px;';cv.className='bb-shape';cv.title=sh;
+    drawLegendShape(cv.getContext('2d'),sh);
+    cv.addEventListener('click',()=>{
+      const m=cmap();if(!m)return;
+      pushCanvasHistLocal('bulk shape');
+      m.nodes.filter(n=>selSet.has(n.id)).forEach(n=>{n.shape=sh;});
+      softSave();render();
+    });
+    shapeEl.appendChild(cv);
+  });
+
+  // edge style buttons
+  [['straight','<line x1="2" y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.5"/>'],
+   ['dashed','<line x1="2" y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4,2.5"/>'],
+   ['dotted','<line x1="2" y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1.5,2.5"/>'],
+  ].forEach(([style,lineSvg])=>{
+    const btn=document.createElement('button');btn.className='net-btn tight';btn.title=style+' edge';
+    btn.innerHTML=`<svg width="20" height="18" viewBox="0 0 20 18" fill="none">${lineSvg}</svg>`;
+    btn.addEventListener('click',()=>{
+      const m=cmap();if(!m)return;
+      pushCanvasHistLocal('bulk edge style');
+      m.edges.filter(e=>selSet.has(e.from)||selSet.has(e.to)).forEach(e=>{e.style=style;});
+      softSave();render();
+    });
+    edgeEl.appendChild(btn);
+  });
+})();
+
+function syncBulkBar(){
+  const bar=document.getElementById('bulk-bar');if(!bar)return;
+  if(selSet.size<2){bar.classList.remove('vis');return;}
+  bar.classList.add('vis');
+  document.getElementById('bulk-count').textContent=selSet.size+' nodes';
+  // highlight swatches matching current selection
+  const m=cmap();if(!m)return;
+  const selectedNodes=m.nodes.filter(n=>selSet.has(n.id));
+  const sharedColor=selectedNodes.length&&selectedNodes.every(n=>n.color===selectedNodes[0].color)?selectedNodes[0].color:null;
+  document.querySelectorAll('.bb-sw').forEach(sw=>{sw.classList.toggle('on',sw.style.background===sharedColor||hexToRgbStr(sharedColor)===sw.style.background);});
+}
+function hexToRgbStr(hex){if(!hex)return'';const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgb(${r}, ${g}, ${b})`;}
 
 // ── AI UI wiring ────────────────────────────────────────────────────────────
 (function wireAiUI(){
