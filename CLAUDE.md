@@ -57,6 +57,7 @@ This project has been built iteratively over many sessions. The workflow that wo
    - `git add -A && git commit -m "short message" && git push`
    - Live URL updates within ~30 seconds.
 6. Don't bump the version filename until we cut a real new release.
+7. **Keep the shortcuts menu current.** Any new keyboard shortcut or mouse gesture goes into the `SHORTCUTS` constant (near the bottom of the `<script>` block). Do this as part of the same change, not as a follow-up.
 
 ## The bank — features discussed but not built
 

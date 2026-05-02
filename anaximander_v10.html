@@ -348,40 +348,65 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       <button class="ai-close" id="ai-close-btn">✕</button>
       <div class="ai-h4">AI suggestions</div>
       <div class="ai-tr"><input type="checkbox" id="ai-enabled"><label for="ai-enabled">Enable AI suggestions</label></div>
-      <div class="ai-field"><label for="ai-model">Model</label>
-        <select id="ai-model">
-          <option value="sonnet">Claude Sonnet 4.6 — best quality, ~$0.006 per Tab</option>
-          <option value="haiku">Claude Haiku 4.5 — ~10× cheaper, slightly weaker</option>
-        </select>
+      <!-- provider tabs -->
+      <div class="ai-field">
+        <label>Provider</label>
+        <div class="ai-ptabs" id="ai-prov-tabs">
+          <button class="ai-prov-tab ai-pt on" data-prov="claude">Claude</button>
+          <button class="ai-prov-tab ai-pt" data-prov="ollama">Ollama</button>
+        </div>
       </div>
-      <div class="ai-field"><label for="ai-key-s">Anthropic API key</label>
-        <input type="password" id="ai-key-s" placeholder="sk-ant-…">
-      </div>
-      <p class="ai-dim">Stored only in your browser. Sent only to api.anthropic.com.</p>
-      <div class="wiz" id="ai-wiz">
-        <div class="wiz-lbl">set up your key</div>
-        <div class="wiz-step on" id="ws1">
-          <p>Do you have an Anthropic account?</p>
-          <div class="wbr">
-            <button class="wb pri" id="wbHave">I do →</button>
-            <a href="https://console.anthropic.com/login/register" target="_blank"><button class="wb">Create one ↗</button></a>
+      <!-- Claude section -->
+      <div id="ai-claude-sec">
+        <div class="ai-field"><label for="ai-model">Model</label>
+          <select id="ai-model">
+            <option value="sonnet">Claude Sonnet 4.6 — best quality, ~$0.006 per Tab</option>
+            <option value="haiku">Claude Haiku 4.5 — ~10× cheaper, slightly weaker</option>
+          </select>
+        </div>
+        <div class="ai-field"><label for="ai-key-s">Anthropic API key</label>
+          <input type="password" id="ai-key-s" placeholder="sk-ant-…">
+        </div>
+        <p class="ai-dim">Stored only in your browser. Sent only to api.anthropic.com.</p>
+        <div class="wiz" id="ai-wiz">
+          <div class="wiz-lbl">set up your key</div>
+          <div class="wiz-step on" id="ws1">
+            <p>Do you have an Anthropic account?</p>
+            <div class="wbr">
+              <button class="wb pri" id="wbHave">I do →</button>
+              <a href="https://console.anthropic.com/login/register" target="_blank"><button class="wb">Create one ↗</button></a>
+            </div>
+          </div>
+          <div class="wiz-step" id="ws2">
+            <p>Create a key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys ↗</a> and paste it below.</p>
+            <div class="wkr"><input type="password" id="wKeyIn" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false"><button class="wb pri" id="wTestBtn">Test key</button></div>
+            <div class="wst tst" id="wsTesting">Testing…</div>
+            <div class="wst ok" id="wsOk">✓ Key works</div>
+            <div class="wst err" id="wsErr"></div>
+            <div style="margin-top:8px;"><button class="wb" id="wBack" style="font-size:11px;padding:4px 10px;">← back</button></div>
+          </div>
+          <div class="wdone" id="wDone">
+            <div class="wdl"><span style="color:#7ec87e;font-size:18px;">✓</span><span>AI is enabled.</span></div>
+            <div class="wdh">Close this panel and press <strong>Tab</strong> on any selected node to try it.</div>
+            <button class="wb" id="wChange" style="font-size:11px;padding:4px 10px;">Change key</button>
           </div>
         </div>
-        <div class="wiz-step" id="ws2">
-          <p>Create a key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys ↗</a> and paste it below.</p>
-          <div class="wkr"><input type="password" id="wKeyIn" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false"><button class="wb pri" id="wTestBtn">Test key</button></div>
-          <div class="wst tst" id="wsTesting">Testing…</div>
-          <div class="wst ok" id="wsOk">✓ Key works</div>
-          <div class="wst err" id="wsErr"></div>
-          <div style="margin-top:8px;"><button class="wb" id="wBack" style="font-size:11px;padding:4px 10px;">← back</button></div>
-        </div>
-        <div class="wdone" id="wDone">
-          <div class="wdl"><span style="color:#7ec87e;font-size:18px;">✓</span><span>AI is enabled.</span></div>
-          <div class="wdh">Close this panel and press <strong>Tab</strong> on any selected node to try it.</div>
-          <button class="wb" id="wChange" style="font-size:11px;padding:4px 10px;">Change key</button>
-        </div>
+        <p class="ai-dim" style="margin-top:14px;"><strong style="color:#a09e8a;">Note:</strong> Claude.ai subscriptions don't apply here — you need a separate paid API key from <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Typical cost: a fraction of a cent per Tab.</p>
       </div>
-      <p class="ai-dim" style="margin-top:14px;"><strong style="color:#a09e8a;">Note:</strong> Claude.ai Pro / Max subscriptions don't apply here — subscription auth is restricted to Anthropic's own apps. You need a separate paid API key from <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Typical cost: a fraction of a cent per Tab.</p>
+      <!-- Ollama section -->
+      <div id="ai-ollama-sec" style="display:none">
+        <div class="ai-field"><label for="ai-ollama-url">Ollama URL</label>
+          <input type="text" id="ai-ollama-url" placeholder="http://localhost:11434">
+        </div>
+        <div class="ai-field"><label for="ai-ollama-model">Model</label>
+          <input type="text" id="ai-ollama-model" placeholder="llama3.2">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+          <button class="wb pri" id="ai-ollama-test">Test connection</button>
+          <span id="ai-ollama-status" style="font-size:12px;font-family:'Lora',serif;"></span>
+        </div>
+        <p class="ai-dim" style="margin-top:12px;">Ollama must be running locally. Install from <a href="https://ollama.ai" target="_blank">ollama.ai ↗</a> then run <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:#0d1a0d;padding:1px 5px;border-radius:3px;">ollama serve</code> and pull a model, e.g. <code style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:#0d1a0d;padding:1px 5px;border-radius:3px;">ollama pull llama3.2</code>. Free, private, runs offline.</p>
+      </div>
     </div>
   </div>
   <!-- Legend modal -->
@@ -524,9 +549,10 @@ const DROP_SIZE=9,DROP_GAP=3,MAX_DROPS=6;
 let state={folders:[],maps:[],currentMapId:null};
 let T={x:0,y:0,s:1};
 let panning=false,panS={x:0,y:0};
-let selN=null,focusNodeId=null,focusMode=false,ghosts=[],hoveredGhostIdx=-1,_ghostJustFired=false,ghostsEnabled=true;
+let selN=null,selSet=new Set(),focusNodeId=null,focusMode=false,ghosts=[],hoveredGhostIdx=-1,_ghostJustFired=false,ghostsEnabled=true;
+let marquee=null; // {sx,sy,ex,ey} screen coords while shift-drag selecting
 let aiGhosts=[],aiRequest=null,aiDirty=false,aiEditingGhost=null;
-const AI_SHAPES=['longpill','pill','circle','ellipse','diamond','hex','parallelogram'];
+const AI_SHAPES=['longpill','pill','circle','ellipse','diamond','hex','parallelogram','text'];
 const AI_EDGES=['straight','dashed','dotted'];
 let nodeAlpha={};
 const spawnAnim=new Map(); // nodeId -> {start, fromX, fromY, dur}
@@ -718,6 +744,11 @@ function buildNodeEditToolbar(n){
   outB.innerHTML='<svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="1.5 1.2"/></svg>';
   outB.addEventListener('click',()=>{n.outlined=!n.outlined;outB.classList.toggle('on',n.outlined);softSave();render();});
   r3.appendChild(outB);
+  // transparent (outline-only node)
+  const transB=document.createElement('button');transB.className='net-btn'+(n.transparent?' on':'');transB.title='transparent (outline only)';
+  transB.innerHTML='<svg width="14" height="14" viewBox="0 0 16 16"><rect x="2" y="4.5" width="12" height="7" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+  transB.addEventListener('click',()=>{n.transparent=!n.transparent;transB.classList.toggle('on',n.transparent);softSave();render();});
+  r3.appendChild(transB);
   const sp5=document.createElement('div');sp5.className='net-sep';r3.appendChild(sp5);
   // image
   const imgB=document.createElement('button');imgB.className='net-btn'+(n.image?' on':'');imgB.title=n.image?'dblclick=remove image':'upload image';
@@ -843,9 +874,13 @@ function loadState(){
   if(!state.maps||!state.maps.length){state.maps=[defMap('m1','First map')];state.currentMapId='m1';}
   if(!state.bin)state.bin=[];
   if(!state.currentMapId)state.currentMapId=state.maps[0].id;
-  if(!state.ai)state.ai={enabled:false,apiKey:'',model:'sonnet'};
+  if(!state.ai)state.ai={enabled:false,apiKey:'',model:'sonnet',provider:'claude',ollamaUrl:'http://localhost:11434',ollamaModel:'llama3.2'};
+  if(!state.ai.provider)state.ai.provider='claude';
+  if(!state.ai.ollamaUrl)state.ai.ollamaUrl='http://localhost:11434';
+  if(!state.ai.ollamaModel)state.ai.ollamaModel='llama3.2';
   state.maps.forEach(map=>{
     if(!map.legend)map.legend={shapes:{},edges:{},colours:{}};
+    if(map.legend.textWords==null)map.legend.textWords=40;
     map.edges.forEach(e=>{if(!e.keyframes||!e.keyframes.length)initKf(e,map);if(e.thickness===undefined||e.thickness===null)e.thickness=3.5;});
     map.nodes.forEach(n=>{if(!n.notes)n.notes=[];});
     // migrate prior default bg ('#111' / '#111111') to new default
@@ -1208,7 +1243,7 @@ function parseHtmlRuns(htmlStr,baseFontSize,baseFont,baseColor){
   while(runs.length&&runs[runs.length-1].text==='\n')runs.pop();
   return runs.length?runs:[{text:'',bold:false,italic:false,underline:false,strike:false,color:baseColor,size:baseFontSize}];
 }
-function drawRichLabel(runs,baseFont,align,x,y,maxW,lineH){
+function drawRichLabel(runs,baseFont,align,x,y,maxW,lineH,strokeW){
   const lines=[];let cur=[];
   runs.forEach(r=>{const parts=r.text.split('\n');parts.forEach((p,i)=>{if(p)cur.push({...r,text:p});if(i<parts.length-1){lines.push(cur);cur=[];}});});
   if(cur.length)lines.push(cur);if(!lines.length)lines.push([]);
@@ -1221,6 +1256,7 @@ function drawRichLabel(runs,baseFont,align,x,y,maxW,lineH){
     ctx.textBaseline='middle';
     line.forEach(r=>{
       ctx.font=`${r.italic?'italic':'normal'} ${r.bold?'700':'400'} ${r.size}px ${baseFont}`;
+      if(strokeW>0){ctx.lineWidth=strokeW*2;ctx.strokeStyle='rgba(0,0,0,0.45)';ctx.lineJoin='round';ctx.textAlign='left';ctx.strokeText(r.text,cx,lineY);}
       ctx.fillStyle=r.color;ctx.textAlign='left';ctx.fillText(r.text,cx,lineY);
       const rw=ctx.measureText(r.text).width;
       if(r.underline){ctx.beginPath();ctx.strokeStyle=r.color;ctx.lineWidth=Math.max(0.5,r.size*0.06);ctx.moveTo(cx,lineY+r.size*0.6);ctx.lineTo(cx+rw,lineY+r.size*0.6);ctx.stroke();}
@@ -1285,7 +1321,14 @@ function drawNode(n,sel){
     const baseTextCol=n.textColor||n.color||ACCENT;
     const runs=parseHtmlRuns(n.labelHtml||n.label,fs,n.font||"'Nunito',sans-serif",baseTextCol);
     drawRichLabel(runs,n.font||"'Nunito',sans-serif",n.textAlign||'center',0,0,nrx(n)*T.s*2,Math.round(FONT_SIZE(n)*1.4*T.s));
-  }drawNodeLinkIcon(n);ctx.restore();drawNoteDrops(n);return;}
+  }
+  if(sel||editingNode?.id===n.id){
+    const pad=6*T.s,rw=nrx(n)*T.s*2,rh=nry(n)*T.s*2;
+    ctx.save();ctx.strokeStyle=ACCENT;ctx.lineWidth=1;ctx.setLineDash([4*T.s,3*T.s]);
+    ctx.strokeRect(-rw/2-pad,-rh/2-pad,rw+pad*2,rh+pad*2);
+    ctx.restore();
+  }
+  drawNodeLinkIcon(n);ctx.restore();drawNoteDrops(n);return;}
   // build shape path (used multiple times: glow pass, fill, bevel clip, sel ring)
   const buildShapePath=()=>{
     ctx.beginPath();
@@ -1295,36 +1338,37 @@ function drawNode(n,sel){
     else if(n.shape==='square'){const s=Math.max(nrx(n),nry(n))*T.s;ctx.rect(-s,-s,s*2,s*2);}
     else if(n.shape==='circle'){const r=Math.max(srx,sry);ctx.arc(0,0,r,0,Math.PI*2);}else ctx.ellipse(0,0,srx,sry,0,0,Math.PI*2);
   };
-  // glow pass (soft white halo behind the fill)
-  ctx.save();
-  ctx.shadowColor='rgba(255,255,255,0.1)';ctx.shadowBlur=12*T.s;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
-  buildShapePath();
-  ctx.fillStyle=n.color||'#b5d89b';ctx.fill();
-  ctx.restore();
-  // re-fill to cover any shadow bleed inside the shape
-  buildShapePath();
-  ctx.fillStyle=n.color||'#b5d89b';ctx.fill();
-  // inner bevel: clip to shape and paint a top-down light gradient
-  // gradient extent capped so tall shapes don't show a hard horizontal band
-  ctx.save();
-  buildShapePath();
-  ctx.clip();
-  const bevelEnd=Math.min(sry,18*T.s); // cap fade distance at ~18px (zoom-scaled)
-  const bevelGrad=ctx.createLinearGradient(0,-sry,0,-sry+bevelEnd*2);
-  bevelGrad.addColorStop(0,'rgba(255,255,255,0.18)');
-  bevelGrad.addColorStop(0.5,'rgba(255,255,255,0.05)');
-  bevelGrad.addColorStop(1,'rgba(255,255,255,0)');
-  ctx.fillStyle=bevelGrad;
-  ctx.fillRect(-srx-20,-sry-20,srx*2+40,sry*2+40);
-  ctx.restore();
-  // outline / selection ring (drawn after bevel so they stay crisp)
-  if(n.outlined){buildShapePath();ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=1.5;ctx.stroke();}
+  // glow pass + fill + bevel (skipped for transparent nodes)
+  if(!n.transparent){
+    ctx.save();
+    ctx.shadowColor='rgba(255,255,255,0.1)';ctx.shadowBlur=12*T.s;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+    buildShapePath();
+    ctx.fillStyle=n.color||'#b5d89b';ctx.fill();
+    ctx.restore();
+    buildShapePath();
+    ctx.fillStyle=n.color||'#b5d89b';ctx.fill();
+    ctx.save();
+    buildShapePath();
+    ctx.clip();
+    const bevelEnd=Math.min(sry,18*T.s);
+    const bevelGrad=ctx.createLinearGradient(0,-sry,0,-sry+bevelEnd*2);
+    bevelGrad.addColorStop(0,'rgba(255,255,255,0.18)');
+    bevelGrad.addColorStop(0.5,'rgba(255,255,255,0.05)');
+    bevelGrad.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=bevelGrad;
+    ctx.fillRect(-srx-20,-sry-20,srx*2+40,sry*2+40);
+    ctx.restore();
+  }
+  // border: transparent → outline in node colour; outlined → white ring; then selection ring
+  if(n.transparent){buildShapePath();ctx.strokeStyle=n.color||'#6a9a6a';ctx.lineWidth=1.5;ctx.stroke();}
+  else if(n.outlined){buildShapePath();ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=1.5;ctx.stroke();}
   if(sel||editingNode?.id===n.id){buildShapePath();ctx.strokeStyle=ACCENT;ctx.lineWidth=2;ctx.stroke();}
   if(editingNode?.id!==n.id){
     const fs=Math.round(FONT_SIZE(n)*T.s);
-    const baseTextCol=n.textColor||(n.shape==='text'?n.color:tcol(n.color));
+    const baseTextCol=n.textColor||(n.transparent?n.color:(n.shape==='text'?n.color:tcol(n.color)));
+    const strokeW=(!n.transparent&&!n.textColor&&baseTextCol!=='#111')?0.5*T.s:0;
     const runs=parseHtmlRuns(n.labelHtml||n.label,fs,n.font||"'Nunito',sans-serif",baseTextCol);
-    drawRichLabel(runs,n.font||"'Nunito',sans-serif",n.textAlign||'center',0,0,nrx(n)*T.s*2,Math.round(FONT_SIZE(n)*1.25*T.s));
+    drawRichLabel(runs,n.font||"'Nunito',sans-serif",n.textAlign||'center',0,0,nrx(n)*T.s*2,Math.round(FONT_SIZE(n)*1.25*T.s),strokeW);
   }
   const _isActiveS=findActiveNode(lastM.x,lastM.y);
   if(editingNode?.id===n.id||(_isActiveS&&_isActiveS.id===n.id)){ctx.beginPath();ctx.arc(srx,sry,8*T.s,0,Math.PI*2);ctx.fillStyle='#111';ctx.fill();ctx.strokeStyle=ACCENT;ctx.lineWidth=2;ctx.stroke();ctx.strokeStyle=ACCENT;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(srx-5*T.s,sry+2*T.s);ctx.lineTo(srx+2*T.s,sry+2*T.s);ctx.lineTo(srx+2*T.s,sry-5*T.s);ctx.stroke();ctx.beginPath();ctx.moveTo(srx-4*T.s,sry-4*T.s);ctx.lineTo(srx+2*T.s,sry+2*T.s);ctx.stroke();}
@@ -1804,7 +1848,7 @@ function materialiseGhost(idx){
   const e=makeEdge('e'+Date.now(),g.parentId,child.id,'straight');
   e.thickness=2;initKf(e,map);map.edges.push(e);
   if(parent)startSpawnAnim(child.id,parent.x,parent.y);
-  selN=child.id;softSave();
+  selN=child.id;selSet=new Set([child.id]);softSave();
   ghosts=[];
   render();
   setTimeout(()=>startEdit(child),150);
@@ -1988,13 +2032,21 @@ function render(){
   map.nodes.forEach(n=>{
     if(_hidden.has(n.id))return;
     if(_focusDim&&!_focusDim.nodes.has(n.id)){ctx.save();ctx.globalAlpha=0.12;drawNode(n,false);ctx.restore();}
-    else{drawNode(n,n.id===selN);drawCollapseIndicator(n);}
+    else{drawNode(n,selSet.has(n.id));drawCollapseIndicator(n);}
   });
   map.nodes.forEach(n=>{if(!_hidden.has(n.id))drawPlusButtons(n);});
   if(pickerFor)drawPicker(pickerFor.node,pickerFor.dir);
   drawPlusDragPreview();
   drawConnectDrag();
   drawAiGhosts();
+  if(marquee){
+    const mx=Math.min(marquee.sx,marquee.ex),my=Math.min(marquee.sy,marquee.ey);
+    const mw=Math.abs(marquee.ex-marquee.sx),mh=Math.abs(marquee.ey-marquee.sy);
+    ctx.save();
+    ctx.fillStyle='rgba(126,200,126,0.06)';ctx.fillRect(mx,my,mw,mh);
+    ctx.strokeStyle=ACCENT;ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.strokeRect(mx,my,mw,mh);
+    ctx.restore();
+  }
   renderMM();
   document.getElementById('zoom-lbl').textContent=Math.round(T.s*100)+'%';
 }
@@ -2147,8 +2199,7 @@ cvs.addEventListener('mousedown',ev=>{
         return;
       }
     }
-    // clicked outside AI ghosts — dismiss
-    dismissAiGhosts();
+    // clicked outside AI ghosts — do NOT dismiss; user must press Esc or Enter
   }
   // ghost check FIRST — before commitEdit, before anything
   if(ghostsEnabled&&ghosts.length){const _gi=hitGhostScreen(sx,sy);if(_gi>=0){_ghostJustFired=true;materialiseGhost(_gi);return;}}
@@ -2170,7 +2221,17 @@ for(const _n of map.nodes){
   {const _active=findActiveNode(sx,sy);if(_active&&hitResizeScreen(sx,sy,_active)){resizeN=_active;resizeS={ox:sx,sc:_active.scale||1,fs:_active.fontSize||12};return;}}
   if(hoveredEdge){const kfIdx=hitKf(sx,sy,hoveredEdge);if(kfIdx!==null){dragKf={edge:hoveredEdge,index:kfIdx};return;}}
   const n=hitNodeScreen(sx,sy);
-  if(n){mouseDownTime=Date.now();dragN=n;dragBranch=ev.altKey;branchIds=dragBranch?new Set([n.id]):getDescendants(n.id);dragO={x:s2w(sx,sy).x-n.x,y:s2w(sx,sy).y-n.y};didDrag=false;return;}
+  if(n){
+    if(ev.metaKey||ev.ctrlKey){
+      // ⌘/Ctrl+click: toggle this node in the multi-selection
+      if(selSet.has(n.id)){selSet.delete(n.id);if(selN===n.id)selN=selSet.size?[...selSet][0]:null;}
+      else{selSet.add(n.id);selN=n.id;}
+      render();return;
+    }
+    mouseDownTime=Date.now();dragN=n;dragBranch=ev.altKey;branchIds=dragBranch?new Set([n.id]):getDescendants(n.id);dragO={x:s2w(sx,sy).x-n.x,y:s2w(sx,sy).y-n.y};didDrag=false;return;
+  }
+  if(selN||selSet.size){selN=null;selSet=new Set();render();}
+  if(ev.shiftKey){marquee={sx,sy,ex:sx,ey:sy};return;}
   ghosts=[];panning=true;panS={x:ev.clientX-T.x,y:ev.clientY-T.y};cvs.style.cursor="grabbing";
 });
 
@@ -2222,10 +2283,20 @@ cvs.addEventListener('mouseup',ev=>{
     connectDrag=null;render();return;
   }
   // connect-drag started but no movement — treat as a regular click on the node
-  if(connectDrag&&!connectDragMoved){const n=connectDrag;connectDrag=null;if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}if(!_ghostJustFired)clickTimer=setTimeout(()=>{clickTimer=null;startEdit(n);},0);return;}
+  if(connectDrag&&!connectDragMoved){const n=connectDrag;connectDrag=null;if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}selN=n.id;selSet=new Set([n.id]);render();return;}
   if(dragKf){dragKf=null;schedCanvasHistLocal('move keyframe');softSave();return;}
+  if(marquee){
+    const map=cmap();
+    if(map){
+      const mx0=Math.min(marquee.sx,marquee.ex),mx1=Math.max(marquee.sx,marquee.ex);
+      const my0=Math.min(marquee.sy,marquee.ey),my1=Math.max(marquee.sy,marquee.ey);
+      const hit=map.nodes.filter(nd=>{const sp=w2s(nd.x,nd.y);return sp.x>=mx0&&sp.x<=mx1&&sp.y>=my0&&sp.y<=my1;});
+      if(hit.length){selSet=new Set(hit.map(nd=>nd.id));selN=hit.length===1?hit[0].id:null;}
+    }
+    marquee=null;render();return;
+  }
   if(dragN){dragN.vx=0;dragN.vy=0;}
-  if(dragN&&!didDrag){const n=dragN;dragN=null;if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}if(!_ghostJustFired)clickTimer=setTimeout(()=>{clickTimer=null;startEdit(n);},0);}
+  if(dragN&&!didDrag){const n=dragN;dragN=null;if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}selN=n.id;selSet=new Set([n.id]);render();}
   if(dragN&&didDrag){pushCanvasHistLocal('move node');softSave();}
   dragN=null;didDrag=false;dragBranch=false;branchIds=new Set();panning=false;cvs.style.cursor="default";
 });
@@ -2233,10 +2304,13 @@ cvs.addEventListener('mouseup',ev=>{
 cvs.addEventListener('dblclick',ev=>{
   if(ev.button!==0)return;
   if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}
-  if(editingNode){commitEdit();return;}
+  if(editingNode)commitEdit();
   const{x:sx,y:sy}=gpos(ev);
   // dblclick on AI ghost → edit its label
   if(aiGhosts.length){const _ag=hitAiGhostScreen(sx,sy);if(_ag){startAiGhostEdit(_ag);return;}}
+  // dblclick on node → open editor
+  const hitN=hitNodeScreen(sx,sy);
+  if(hitN){startEdit(hitN);return;}
   // dblclick on a note-drop cluster opens the notes panel for that node
   const dropN=hitNoteDrops(sx,sy);
   if(dropN){showNotesPanel(dropN);return;}
@@ -2263,10 +2337,18 @@ cvs.addEventListener('mousemove',ev=>{
     if(editingNode&&editingNode.id===resizeN.id)positionInput(resizeN);
     render();return;
   }
+  if(marquee){marquee.ex=sx;marquee.ey=sy;render();return;}
   if(panning){T.x=ev.clientX-panS.x;T.y=ev.clientY-panS.y;render();return;}
   if(dragKf){const w=s2w(sx,sy);dragKf.edge.keyframes[dragKf.index]={x:w.x,y:w.y};render();return;}
   if(connectDrag){connectEnd={x:sx,y:sy};connectDragMoved=true;render();return;}
-  if(dragN){const n=map?.nodes.find(nd=>nd.id===dragN.id);if(n&&(dragBranch||Date.now()-mouseDownTime>200||didDrag)){didDrag=true;const w=s2w(sx,sy);if(dragBranch){
+  if(dragN){const n=map?.nodes.find(nd=>nd.id===dragN.id);if(n&&(dragBranch||Date.now()-mouseDownTime>200||didDrag)){didDrag=true;const w=s2w(sx,sy);
+      // multi-select drag: move all selected nodes together
+      if(!dragBranch&&selSet.size>1&&selSet.has(n.id)){
+        const _dx=w.x-dragO.x-n.x,_dy=w.y-dragO.y-n.y;
+        selSet.forEach(id=>{const nd=map.nodes.find(x=>x.id===id);if(nd){nd.x+=_dx;nd.y+=_dy;}});
+        map.edges.forEach(e=>{if(selSet.has(e.from)&&selSet.has(e.to)&&e.keyframes)e.keyframes.forEach(kf=>{kf.x+=_dx;kf.y+=_dy;});});
+        dragO={x:w.x-n.x,y:w.y-n.y};
+      }else if(dragBranch){
           // option+drag: move node only, kf follow
           n._prevX=n.x;n._prevY=n.y;
           n.x=w.x-dragO.x;n.y=w.y-dragO.y;
@@ -2321,7 +2403,7 @@ function showCtx(cx,cy,n,wp){
   if(n){
     [['notes'+(n.notes&&n.notes.length?' ('+n.notes.length+')':''),()=>showNotesPanel(n)],
      [n.collapsed?'expand branch':'collapse branch',()=>toggleCollapse(n)],
-     [(focusMode&&focusNodeId===n.id)?'exit focus':'focus mode',()=>toggleFocus(n)],['edit node',()=>startEdit(n)],['delete node',()=>{pushCanvasHistLocal('delete node');const m=cmap();m.nodes=m.nodes.filter(nd=>nd.id!==n.id);m.edges=m.edges.filter(e=>e.from!==n.id&&e.to!==n.id);if(activeNotesNode&&activeNotesNode.id===n.id){activeNotesNode=null;document.getElementById('notes-panel').classList.remove('vis');}if(selN===n.id)selN=null;softSave();render();},true]].forEach(([lbl,fn,red])=>{const i=document.createElement('div');i.className='ci'+(red?' red':'');i.textContent=lbl;i.addEventListener('click',()=>{menu.style.display='none';fn();});menu.appendChild(i);});
+     [(focusMode&&focusNodeId===n.id)?'exit focus':'focus mode',()=>toggleFocus(n)],['edit node',()=>startEdit(n)],['delete node',()=>{pushCanvasHistLocal('delete node');const m=cmap();m.nodes=m.nodes.filter(nd=>nd.id!==n.id);m.edges=m.edges.filter(e=>e.from!==n.id&&e.to!==n.id);if(activeNotesNode&&activeNotesNode.id===n.id){activeNotesNode=null;document.getElementById('notes-panel').classList.remove('vis');}if(selN===n.id)selN=null;selSet.delete(n.id);softSave();render();},true]].forEach(([lbl,fn,red])=>{const i=document.createElement('div');i.className='ci'+(red?' red':'');i.textContent=lbl;i.addEventListener('click',()=>{menu.style.display='none';fn();});menu.appendChild(i);});
   } else {
     [
       ['+ new node here',()=>{const m=cmap();if(!m||!wp)return;const child={id:m.nextId++,x:wp.x,y:wp.y,label:'new node',urls:[],primaryUrl:0,color:'#6a9a6a',shape:defShape||'longpill',font:"'Lora',serif",notes:[],image:'',outlined:false,scale:1,palKey:'muted',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0};m.nodes.push(child);pushCanvasHistLocal('new node');softSave();render();setTimeout(()=>{if(typeof startEdit==='function')startEdit(child);},80);}],
@@ -3084,14 +3166,15 @@ const SHORTCUTS=[
   {section:'editing',items:[
     ['enter','commit edit'],
     ['shift + enter','newline inside text'],
-    ['esc','cancel edit / close panel / dismiss menu'],
+    ['esc','cancel edit · deselect · close panel · dismiss menu (layered)'],
     ['⌘B / ⌘I / ⌘U','bold / italic / underline'],
     ['⌘⇧S','strikethrough'],
-    ['delete / backspace','delete selected node (when not editing)'],
+    ['delete / backspace','delete selected node(s) (when not editing)'],
   ]},
   {section:'navigation',items:[
     ['scroll wheel','zoom'],
     ['drag empty canvas','pan'],
+    ['shift + drag empty canvas','marquee — select nodes in rectangle'],
     ['⌘K','search nodes'],
     ['F11 / ⌘⇧F','fullscreen'],
   ]},
@@ -3100,7 +3183,11 @@ const SHORTCUTS=[
     ['⌘⇧Z','redo'],
   ]},
   {section:'mouse gestures',items:[
+    ['click node','select node'],
+    ['⌘ / ctrl + click node','add or remove from multi-selection'],
+    ['double-click node','enter edit mode'],
     ['drag node','move node + descendants'],
+    ['drag any node in a multi-selection','move whole selection together'],
     ['option + drag node','move node only (without children)'],
     ['hover node','reveal + buttons on each side'],
     ['click +','open shape picker for new child'],
@@ -3108,11 +3195,18 @@ const SHORTCUTS=[
     ['hover edge','reveal keyframe handles'],
     ['drag keyframe','curve the edge'],
     ['hover edge midpoint','show + to branch from here'],
-    ['double-click node','enter edit mode'],
     ['double-click note drop','open notes panel'],
     ['double-click link badge','open link'],
     ['drag node corner','resize node + scale text'],
     ['right-click','context menu'],
+  ]},
+  {section:'AI suggestions',items:[
+    ['tab','suggest child nodes for selected node (AI must be enabled)'],
+    ['enter','accept selected suggestions (or all if none selected)'],
+    ['esc','cancel request → dismiss suggestions (press twice if needed)'],
+    ['click suggestion','select it'],
+    ['⌘ / ctrl + click suggestion','toggle individual suggestion'],
+    ['double-click suggestion','edit label before accepting'],
   ]},
   {section:'sidebar',items:[
     ['⌘ + click row','add to selection'],
@@ -3235,7 +3329,7 @@ document.addEventListener('keydown',e=>{
   // Tab → AI suggestions
   if(e.key==='Tab'&&!e.target.matches('input,textarea,select,[contenteditable]')){
     e.preventDefault();
-    if(selN&&state.ai&&state.ai.enabled&&state.ai.apiKey){requestAiSuggestions();}
+    if(selN&&state.ai&&state.ai.enabled){requestAiSuggestions();}
     return;
   }
   if(e.key==='Escape'){
@@ -3261,6 +3355,7 @@ document.addEventListener('keydown',e=>{
     if(topMenu.classList.contains('vis')){topMenu.classList.remove('vis');return;}
     if(document.getElementById('hist-pop').classList.contains('vis')){document.getElementById('hist-pop').classList.remove('vis');return;}
     if(document.getElementById('bg-pop').classList.contains('vis')){document.getElementById('bg-pop').classList.remove('vis');return;}
+    if(selN||selSet.size){selN=null;selSet=new Set();render();return;}
     if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}
   }
   if(e.key==='Enter'&&!e.shiftKey){
@@ -3274,7 +3369,7 @@ document.addEventListener('keydown',e=>{
     if(editingNode){e.preventDefault();commitEdit();return;}
     document.getElementById('bg-pop').classList.remove('vis');
   }
-  if((e.key==='Delete'||e.key==='Backspace')&&!e.target.matches('input,textarea,select,[contenteditable]')){const m=cmap();if(selN){pushCanvasHistLocal('delete node');m.nodes=m.nodes.filter(n=>n.id!==selN);m.edges=m.edges.filter(ed=>ed.from!==selN&&ed.to!==selN);if(activeNotesNode&&activeNotesNode.id===selN){activeNotesNode=null;document.getElementById('notes-panel').classList.remove('vis');}selN=null;softSave();render();}}
+  if((e.key==='Delete'||e.key==='Backspace')&&!e.target.matches('input,textarea,select,[contenteditable]')){const m=cmap();if(selSet.size){pushCanvasHistLocal('delete node');const ids=selSet;m.nodes=m.nodes.filter(n=>!ids.has(n.id));m.edges=m.edges.filter(ed=>!ids.has(ed.from)&&!ids.has(ed.to));if(activeNotesNode&&ids.has(activeNotesNode.id)){activeNotesNode=null;document.getElementById('notes-panel').classList.remove('vis');}selN=null;selSet=new Set();softSave();render();}}
   // fullscreen
   if(e.key==='F11'||(meta&&e.shiftKey&&e.key==='f')){e.preventDefault();toggleFullscreen();}
   // focus mode toggle (Escape also exits)
@@ -3576,7 +3671,7 @@ function materialiseAiGhost(ghost){
   const e=makeEdge('e'+Date.now(),ghost.parentId,child.id,ghost.edgeStyle||'straight');
   e.thickness=3.5;initKf(e,map);map.edges.push(e);
   if(parent)startSpawnAnim(child.id,parent.x,parent.y);
-  selN=child.id;aiGhosts=[];aiDirty=true;softSave();render();
+  selN=child.id;selSet=new Set([child.id]);aiGhosts=[];aiDirty=true;softSave();render();
 }
 
 function materialiseAiGhosts(list){
@@ -3593,7 +3688,7 @@ function materialiseAiGhosts(list){
     const e=makeEdge('e'+Date.now(),ghost.parentId,child.id,ghost.edgeStyle||'straight');
     e.thickness=3.5;initKf(e,map);map.edges.push(e);
     if(parent)startSpawnAnim(child.id,parent.x,parent.y);
-    selN=child.id;
+    selN=child.id;selSet.add(child.id);
   }
   aiGhosts=[];aiDirty=true;softSave();render();
 }
@@ -3665,8 +3760,95 @@ function cancelAiGhostEdit(){
 }
 
 async function* streamAiSuggestions(parent,signal,count){
-  if(state.ai.apiKey?.trim())yield* realClaudeStream(parent,signal,count);
+  if(state.ai.provider==='ollama')yield* ollamaStream(parent,signal,count);
+  else if(state.ai.apiKey?.trim())yield* realClaudeStream(parent,signal,count);
   else yield* fakeAiStream(parent,signal,count);
+}
+
+function wrapAiText(str,cols=60){
+  str=str.replace(/\s+/g,' ').trim();
+  // split on sentence endings to find natural paragraph breaks
+  const sentences=str.match(/[^.!?]+[.!?]+\s*/g)||[str];
+  // group ~2 sentences per paragraph
+  const paras=[];
+  for(let i=0;i<sentences.length;i+=2)paras.push(sentences.slice(i,i+2).join('').trim());
+  // word-wrap each paragraph at cols chars
+  return paras.map(p=>{
+    const words=p.split(' ');const lines=[];let cur='';
+    for(const w of words){
+      if(cur&&cur.length+1+w.length>cols){lines.push(cur);cur=w;}
+      else{cur=cur?cur+' '+w:w;}
+    }
+    if(cur)lines.push(cur);
+    return lines.join('\n');
+  }).join('\n\n');
+}
+
+async function* ollamaStream(parent,signal,count){
+  const base=(state.ai.ollamaUrl||'http://localhost:11434').replace(/\/$/,'');
+  const model=state.ai.ollamaModel||'llama3.2';
+  const siblings=directAiChildren(parent).map(c=>c.label);
+  const ancestors=ancestorAiChain(parent);
+  const legendCtx=buildAiLegendContext();
+  const textWords=(cmap()?.legend?.textWords)??40;
+  const systemPrompt=[
+    'You suggest child node labels for a mind-map.',
+    'Return ONLY a JSON array of objects. Each object has these fields:',
+    '  label   — short phrase (max ~8 words); if shape is "text", flowing prose of ~'+textWords+' words instead',
+    '  shape   — one of: '+AI_SHAPES.join(', '),
+    '  color   — a hex colour from the map\'s palette',
+    '  edge    — one of: straight, dashed, dotted',
+    '',
+    legendCtx?'Map legend (use these conventions when choosing shape/color/edge):\n'+legendCtx:'',
+    'No commentary. No markdown. Only valid JSON.'
+  ].filter(Boolean).join('\n');
+  const userMsg=[
+    `Parent node: "${parent.label}"`,
+    ancestors.length?`Ancestors (nearest first): ${ancestors.join(' → ')}`:'',
+    siblings.length?`Existing children (do not duplicate): ${siblings.join(', ')}`:'',
+    `Suggest exactly ${count} children.`
+  ].filter(Boolean).join('\n');
+  const resp=await fetch(`${base}/api/chat`,{
+    method:'POST',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify({model,stream:true,messages:[{role:'system',content:systemPrompt},{role:'user',content:userMsg}]})
+  });
+  if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err?.error||`Ollama HTTP ${resp.status}`);}
+  const reader=resp.body.getReader();
+  const decoder=new TextDecoder();
+  let buf='',textAccum='';
+  const yielded=new Set();
+  while(true){
+    if(signal.cancelled)return;
+    const{done,value}=await reader.read();
+    if(done)break;
+    buf+=decoder.decode(value,{stream:true});
+    const lines=buf.split('\n');
+    buf=lines.pop();
+    for(const line of lines){
+      if(!line.trim())continue;
+      let obj;try{obj=JSON.parse(line);}catch(_){continue;}
+      const chunk=obj?.message?.content||'';
+      if(chunk){
+        textAccum+=chunk;
+        const objRe=/\{[^{}]*\}/g;let m;
+        while((m=objRe.exec(textAccum))!==null){
+          const key=`${m.index}:${m[0].length}`;
+          if(yielded.has(key))continue;
+          try{
+            const parsed=JSON.parse(m[0]);
+            if(parsed.label){
+              yielded.add(key);
+              const _sh=AI_SHAPES.includes(parsed.shape)?parsed.shape:'longpill';
+              yield{label:_sh==='text'?wrapAiText(parsed.label):parsed.label,shape:_sh,color:parsed.color||PALETTES.muted[yielded.size%10],edgeStyle:AI_EDGES.includes(parsed.edge)?parsed.edge:'straight'};
+              if(signal.cancelled)return;
+            }
+          }catch(_){}
+        }
+      }
+      if(obj?.done)return;
+    }
+  }
 }
 
 async function* realClaudeStream(parent,signal,count){
@@ -3674,10 +3856,11 @@ async function* realClaudeStream(parent,signal,count){
   const siblings=directAiChildren(parent).map(c=>c.label);
   const ancestors=ancestorAiChain(parent);
   const legendCtx=buildAiLegendContext();
+  const textWords=(cmap()?.legend?.textWords)??40;
   const systemPrompt=[
     'You suggest child node labels for a mind-map.',
     'Return ONLY a JSON array of objects. Each object has these fields:',
-    '  label   — short phrase (max ~8 words)',
+    '  label   — short phrase (max ~8 words); if shape is "text", flowing prose of ~'+textWords+' words instead',
     '  shape   — one of: '+AI_SHAPES.join(', '),
     '  color   — a hex colour from the map\'s palette',
     '  edge    — one of: straight, dashed, dotted',
@@ -3723,7 +3906,8 @@ async function* realClaudeStream(parent,signal,count){
             const obj=JSON.parse(m[0]);
             if(obj.label){
               yielded.add(key);
-              yield{label:obj.label,shape:AI_SHAPES.includes(obj.shape)?obj.shape:'longpill',color:obj.color||PALETTES.muted[yielded.size%10],edgeStyle:AI_EDGES.includes(obj.edge)?obj.edge:'straight'};
+              const _sh=AI_SHAPES.includes(obj.shape)?obj.shape:'longpill';
+              yield{label:_sh==='text'?wrapAiText(obj.label):obj.label,shape:_sh,color:obj.color||PALETTES.muted[yielded.size%10],edgeStyle:AI_EDGES.includes(obj.edge)?obj.edge:'straight'};
               if(signal.cancelled)return;
             }
           }catch(_){}
@@ -3845,10 +4029,19 @@ function buildLegendUI(){
     const row=document.createElement('div');row.className='lgr';
     const cv=document.createElement('canvas');cv.className='lgic';cv.width=44;cv.height=26;
     const inp=document.createElement('input');inp.type='text';inp.placeholder='meaning of '+sh;inp.dataset.shape=sh;inp.value=ea(lg.shapes[sh]);
-    row.appendChild(cv);row.appendChild(inp);sEl.appendChild(row);
+    row.appendChild(cv);row.appendChild(inp);
+    if(sh==='text'){
+      const wc=lg.textWords??40;
+      const wcTilde=document.createElement('span');wcTilde.style.cssText='font-size:11px;color:#7a7858;flex-shrink:0;';wcTilde.textContent='~';
+      const wcSlider=document.createElement('input');wcSlider.type='range';wcSlider.min='10';wcSlider.max='200';wcSlider.step='10';wcSlider.value=wc;wcSlider.style.cssText='width:72px;flex-shrink:0;accent-color:#7ec87e;';
+      const wcVal=document.createElement('span');wcVal.style.cssText='font-size:11px;color:#7a7858;white-space:nowrap;flex-shrink:0;min-width:52px;';wcVal.textContent=wc+' words';
+      wcSlider.addEventListener('input',()=>{const m=cmap();if(m){if(!m.legend)m.legend={shapes:{},edges:{},colours:{}};m.legend.textWords=parseInt(wcSlider.value);wcVal.textContent=wcSlider.value+' words';softSave();}});
+      row.appendChild(wcTilde);row.appendChild(wcSlider);row.appendChild(wcVal);
+    }
+    sEl.appendChild(row);
     drawLegendShape(cv.getContext('2d'),sh);
   }
-  sEl.querySelectorAll('input').forEach(i=>i.addEventListener('input',e=>{const m=cmap();if(m){if(!m.legend)m.legend={shapes:{},edges:{},colours:{}};m.legend.shapes[e.target.dataset.shape]=e.target.value;softSave();}}));
+  sEl.querySelectorAll('input[data-shape]').forEach(i=>i.addEventListener('input',e=>{const m=cmap();if(m){if(!m.legend)m.legend={shapes:{},edges:{},colours:{}};m.legend.shapes[e.target.dataset.shape]=e.target.value;softSave();}}));
   eEl.innerHTML='';
   for(const ed of AI_EDGES){
     const row=document.createElement('div');row.className='lgr';
@@ -3883,7 +4076,7 @@ function drawLegendShape(c,shape){
   else if(shape==='diamond'){c.moveTo(cx,cy-h/2);c.lineTo(cx+w/2,cy);c.lineTo(cx,cy+h/2);c.lineTo(cx-w/2,cy);c.closePath();}
   else if(shape==='hex'){const a=w/2,b=h/2;c.moveTo(cx-a,cy);c.lineTo(cx-a/2,cy-b);c.lineTo(cx+a/2,cy-b);c.lineTo(cx+a,cy);c.lineTo(cx+a/2,cy+b);c.lineTo(cx-a/2,cy+b);c.closePath();}
   else if(shape==='parallelogram'){const sk=h*0.4;c.moveTo(cx-w/2+sk,cy-h/2);c.lineTo(cx+w/2,cy-h/2);c.lineTo(cx+w/2-sk,cy+h/2);c.lineTo(cx-w/2,cy+h/2);c.closePath();}
-  else c.roundRect(cx-w/2,cy-h/2,w,h,4);
+  if(shape==='text'){c.save();c.font="italic 400 13px 'Lora',serif";c.fillStyle='#a09e8a';c.textAlign='center';c.textBaseline='middle';c.fillText('Aa',cx,cy);c.restore();return;}
   c.fill();c.stroke();
 }
 function drawLegendEdge(c,style){
@@ -3898,9 +4091,20 @@ function syncAiUI(){
   const enEl=document.getElementById('ai-enabled');
   const mdEl=document.getElementById('ai-model');
   const kyEl=document.getElementById('ai-key-s');
+  const urlEl=document.getElementById('ai-ollama-url');
+  const modEl=document.getElementById('ai-ollama-model');
   if(enEl)enEl.checked=!!state.ai.enabled;
   if(mdEl)mdEl.value=state.ai.model||'sonnet';
   if(kyEl)kyEl.value=state.ai.apiKey||'';
+  if(urlEl)urlEl.value=state.ai.ollamaUrl||'http://localhost:11434';
+  if(modEl)modEl.value=state.ai.ollamaModel||'llama3.2';
+  // sync provider tabs + sections
+  const prov=state.ai.provider||'claude';
+  document.querySelectorAll('.ai-prov-tab').forEach(t=>t.classList.toggle('on',t.dataset.prov===prov));
+  const cSec=document.getElementById('ai-claude-sec');
+  const oSec=document.getElementById('ai-ollama-sec');
+  if(cSec)cSec.style.display=prov==='claude'?'':'none';
+  if(oSec)oSec.style.display=prov==='ollama'?'':'none';
   updateWizard();
 }
 function updateWizard(){
@@ -3913,6 +4117,30 @@ function updateWizard(){
   }else{
     wd.classList.remove('on');
   }
+}
+async function testOllamaConnection(){
+  const base=(document.getElementById('ai-ollama-url')?.value||'http://localhost:11434').replace(/\/$/,'');
+  const model=document.getElementById('ai-ollama-model')?.value||'llama3.2';
+  const btn=document.getElementById('ai-ollama-test');
+  const status=document.getElementById('ai-ollama-status');
+  if(btn)btn.disabled=true;
+  if(status){status.textContent='Testing…';status.style.color='#7a7858';}
+  try{
+    const resp=await fetch(`${base}/api/chat`,{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({model,stream:false,messages:[{role:'user',content:'hi'}]})
+    });
+    if(resp.ok){
+      state.ai.ollamaUrl=base;state.ai.ollamaModel=model;state.ai.enabled=true;softSave();
+      if(status){status.textContent='✓ Connected';status.style.color='#7ec87e';}
+    }else{
+      const err=await resp.json().catch(()=>({}));
+      if(status){status.textContent='✕ '+(err?.error||`HTTP ${resp.status}`);status.style.color='#c87878';}
+    }
+  }catch(e){
+    if(status){status.textContent='✕ Ollama not reachable — is it running?';status.style.color='#c87878';}
+  }finally{if(btn)btn.disabled=false;}
 }
 
 // ── AI UI wiring ────────────────────────────────────────────────────────────
@@ -3959,6 +4187,15 @@ function updateWizard(){
     document.querySelectorAll('#lgnd-pal-tabs .ai-pt').forEach(t=>t.classList.toggle('on',t.dataset.pal===tab));
     renderLegendColours(tab);
   });
+  // provider tabs
+  document.getElementById('ai-prov-tabs')?.addEventListener('click',e=>{
+    const prov=e.target.dataset.prov;if(!prov)return;
+    state.ai.provider=prov;softSave();syncAiUI();
+  });
+  // Ollama fields
+  document.getElementById('ai-ollama-url')?.addEventListener('input',e=>{state.ai.ollamaUrl=e.target.value;softSave();});
+  document.getElementById('ai-ollama-model')?.addEventListener('input',e=>{state.ai.ollamaModel=e.target.value;softSave();});
+  document.getElementById('ai-ollama-test')?.addEventListener('click',testOllamaConnection);
 })();
 
 loadState();renderSB();renderBin();animate();
