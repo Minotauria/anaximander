@@ -42,7 +42,7 @@ This project has been built iteratively over many sessions. The workflow that wo
 - **Spawn animation doesn't visibly fire on text-shape nodes.** Side-effect of where the text-shape early-return sits in `drawNode`. Accepted as-is; not a bug to fix.
 - **Imported `.mm` files don't lay out beautifully.** The Coggle position model doesn't fully translate. Run *untangle* afterwards. Acceptable, not a bug.
 - **Default colours and styling are botanical** — chrome `#1a201a`, borders `#2a3028` / `#303624`, text `#a09e8a` / `#909078` / `#c8c898` / `#dac888`, default node fill `#6a9a6a`, all UI in Lora serif. Don't drift from this palette without checking.
-- **Bevel gradient on nodes is capped at 18px from top.** Intentional — looks weird if it scales with node size.
+- **Bevel gradient on nodes is capped at 14px from top.** Intentional — looks wrong if it scales with node size. The gradient spans exactly `bevelEnd` (not `bevelEnd*2`) so it's fully gone by 14px.
 - **Rhombus and diamond are aliases.** Old saves use `rhombus`, new saves use `diamond`. Both render identically. Don't remove the alias.
 - **Single-click selects a node; double-click opens the editor.** This is intentional — single-click needs to leave canvas focus intact so Tab can trigger AI suggestions.
 - **AI features require `state.ai` (global) and `map.legend` (per-map).** Both are defaulted in `loadState`. `state.ai = {enabled, apiKey, model}`. The localStorage key stays `anax_v7`.

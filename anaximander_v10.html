@@ -1385,10 +1385,9 @@ function drawNode(n,sel){
     ctx.save();
     buildShapePath();
     ctx.clip();
-    const bevelEnd=Math.min(sry,18*T.s);
-    const bevelGrad=ctx.createLinearGradient(0,-sry,0,-sry+bevelEnd*2);
-    bevelGrad.addColorStop(0,'rgba(255,255,255,0.18)');
-    bevelGrad.addColorStop(0.5,'rgba(255,255,255,0.05)');
+    const bevelEnd=Math.min(sry,14*T.s);
+    const bevelGrad=ctx.createLinearGradient(0,-sry,0,-sry+bevelEnd);
+    bevelGrad.addColorStop(0,'rgba(255,255,255,0.15)');
     bevelGrad.addColorStop(1,'rgba(255,255,255,0)');
     ctx.fillStyle=bevelGrad;
     ctx.fillRect(-srx-20,-sry-20,srx*2+40,sry*2+40);
