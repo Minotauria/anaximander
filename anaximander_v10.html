@@ -1385,12 +1385,19 @@ function drawNode(n,sel){
     ctx.save();
     buildShapePath();
     ctx.clip();
-    const bevelEnd=Math.min(sry,14*T.s);
-    const bevelGrad=ctx.createLinearGradient(0,-sry,0,-sry+bevelEnd);
+    // Each shape has a different actual top Y — must start gradient there, not at -sry,
+    // or canvas clamps the first colour stop backward and floods the top cap with full-opacity white.
+    let shapeTopY=-sry;
+    if(n.shape==='diamond'||n.shape==='rhombus') shapeTopY=-(nry(n)+10)*T.s;
+    else if(n.shape==='square'||n.shape==='circle') shapeTopY=-Math.max(srx,sry);
+    const shapeHH=-shapeTopY;
+    const bevelEnd=Math.min(shapeHH,14*T.s);
+    const bevelGrad=ctx.createLinearGradient(0,shapeTopY,0,shapeTopY+bevelEnd);
     bevelGrad.addColorStop(0,'rgba(255,255,255,0.15)');
     bevelGrad.addColorStop(1,'rgba(255,255,255,0)');
     ctx.fillStyle=bevelGrad;
-    ctx.fillRect(-srx-20,-sry-20,srx*2+40,sry*2+40);
+    const fr=Math.max(srx,shapeHH)+20;
+    ctx.fillRect(-fr,shapeTopY,fr*2,shapeHH*2);
     ctx.restore();
   }
   // border: transparent → outline in node colour; outlined → white ring; then selection ring
