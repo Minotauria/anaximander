@@ -188,9 +188,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sm-shape.on,.sm-edge.on{background:#26301e;border-color:#3a4030;color:#dac888;}
 .sm-shape svg,.sm-edge svg{display:block;}
 /* ── AI / Legend modals ──────────────────────────────────── */
-#ai-ov,#legend-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:80;display:none;align-items:center;justify-content:center;}
-#ai-ov.vis,#legend-ov.vis{display:flex;}
-#ai-box,#legend-box{background:#1a201a;border-radius:14px;border:0.5px solid #2a3028;padding:22px 26px;width:540px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);font-family:'Lora',serif;color:#a09e8a;position:relative;}
+#ai-ov,#legend-ov,#gen-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:80;display:none;align-items:center;justify-content:center;}
+#ai-ov.vis,#legend-ov.vis,#gen-ov.vis{display:flex;}
+#ai-box,#legend-box,#gen-box{background:#1a201a;border-radius:14px;border:0.5px solid #2a3028;padding:22px 26px;width:540px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);font-family:'Lora',serif;color:#a09e8a;position:relative;}
+#gen-prompt{width:100%;background:#0d1a0d;border:0.5px solid #303624;color:#dac888;padding:10px 12px;font-size:13px;font-family:'Lora',serif;border-radius:8px;resize:vertical;outline:none;line-height:1.6;margin:10px 0 6px;}
+#gen-prompt:focus{border-color:#3a4030;}
+#gen-status{font-size:12px;color:#7a7858;min-height:18px;margin-bottom:10px;}
 .ai-h4{font-size:11px;color:#c8c898;text-transform:uppercase;letter-spacing:0.1em;font-weight:500;margin-bottom:14px;}
 .ai-sl{font-size:11px;color:#7a7858;text-transform:uppercase;letter-spacing:0.08em;margin:14px 0 6px;}
 .ai-field{margin-bottom:12px;}
@@ -303,6 +306,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <div class="tmi tmi-sub" id="tmi-exportmenu">&#8615; export &amp; share &#9658;</div>
         <div class="tmi tmi-sub" id="tmi-ghostmenu">&#9685; ghost nodes &#9658;</div>
         <div class="tmi" id="tmi-ai">&#10022; AI suggestions</div>
+        <div class="tmi" id="tmi-gen">&#10022; generate from prompt</div>
         <div class="tmi" id="tmi-legend">&#9671; legend</div>
         <div class="tmi" id="tmi-shortcuts">&#9783; shortcuts</div>
         <div class="tmi" id="tmi-home">&#8592; home</div>
@@ -443,6 +447,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <button class="ai-pt" data-pal="muted">muted</button>
       </div>
       <div id="lgnd-colours"></div>
+    </div>
+  </div>
+  <!-- Generate from prompt modal -->
+  <div id="gen-ov">
+    <div id="gen-box">
+      <button class="ai-close" id="gen-close-btn">✕</button>
+      <div class="ai-h4">✦ generate map from prompt</div>
+      <p style="font-size:13px;color:#7a7858;line-height:1.6;margin-bottom:4px;">Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.</p>
+      <textarea id="gen-prompt" rows="3" placeholder="e.g. the causes of World War I, or Stoic philosophy, or photosynthesis…"></textarea>
+      <div id="gen-status"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="ai-btn" id="gen-cancel-btn" style="display:none;">cancel</button>
+        <button class="ai-btn pri" id="gen-btn">generate</button>
+      </div>
     </div>
   </div>
   <div id="ai-toast"></div>
@@ -3218,6 +3236,11 @@ const SHORTCUTS=[
     ['drag node corner','resize node + scale text'],
     ['right-click','context menu'],
   ]},
+  {section:'generate map from prompt',items:[
+    ['menu → generate from prompt','open the generator'],
+    ['enter','submit prompt (or click generate)'],
+    ['shift + enter','newline in prompt'],
+  ]},
   {section:'AI suggestions',items:[
     ['tab','suggest child nodes for selected node (AI must be enabled)'],
     ['enter','accept selected suggestions (or all if none selected)'],
@@ -4227,6 +4250,155 @@ function syncBulkBar(){
   document.querySelectorAll('.bb-sw').forEach(sw=>{sw.classList.toggle('on',sw.style.background===sharedColor||hexToRgbStr(sharedColor)===sw.style.background);});
 }
 function hexToRgbStr(hex){if(!hex)return'';const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgb(${r}, ${g}, ${b})`;}
+
+// ── GENERATE MAP FROM PROMPT ─────────────────────────────────────────────────
+let _genAbort=null;
+
+async function generateMapFromPrompt(promptText){
+  const genStatus=document.getElementById('gen-status');
+  const genBtn=document.getElementById('gen-btn');
+  const cancelBtn=document.getElementById('gen-cancel-btn');
+  const setStatus=(msg,col)=>{genStatus.textContent=msg;genStatus.style.color=col||'#7a7858';};
+
+  if(!state.ai||!state.ai.apiKey||!state.ai.apiKey.trim()){setStatus('API key required — add one in ✦ AI suggestions settings.','#c89898');return;}
+
+  setStatus('Thinking…');genBtn.disabled=true;cancelBtn.style.display='';
+  _genAbort={cancelled:false};
+  const signal=_genAbort;
+
+  const model=state.ai.model==='haiku'?'claude-haiku-4-5-20251001':'claude-sonnet-4-6';
+  const pal=PALETTES.muted.join(', ');
+  const systemPrompt=[
+    'You are a mind-map generator.',
+    'Return ONLY a valid JSON array of node objects. Each object has these fields:',
+    '  id     — unique string ("n1","n2",…)',
+    '  label  — concise phrase, max 6 words',
+    '  shape  — one of: longpill, pill, circle, ellipse, diamond, hex, rect, text',
+    '  color  — a hex colour chosen from: '+pal,
+    '  parent — id of parent node, or null for the single root node',
+    '  edge   — edge style to parent: straight, dashed, or dotted',
+    'Generate 12–20 nodes forming a clear, well-structured overview.',
+    'The root node (parent: null) should be the central topic.',
+    'No commentary. No markdown fences. Only the JSON array.',
+  ].join('\n');
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':state.ai.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','content-type':'application/json'},
+      body:JSON.stringify({model,max_tokens:2048,stream:true,system:systemPrompt,messages:[{role:'user',content:'Generate a mind map about: '+promptText}]})
+    });
+    if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err?.error?.message||'HTTP '+resp.status);}
+
+    const reader=resp.body.getReader();const decoder=new TextDecoder();
+    let buf='',text='',dots=0;
+    const dotTimer=setInterval(()=>{dots=(dots+1)%4;setStatus('Thinking'+'.'.repeat(dots));},400);
+    while(true){
+      if(signal.cancelled){reader.cancel();break;}
+      const{done,value}=await reader.read();if(done)break;
+      buf+=decoder.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data: '))continue;
+        const data=line.slice(6).trim();if(data==='[DONE]')continue;
+        let ev;try{ev=JSON.parse(data);}catch{continue;}
+        if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta')text+=ev.delta.text;
+      }
+    }
+    clearInterval(dotTimer);
+    if(signal.cancelled){setStatus('Cancelled.');genBtn.disabled=false;cancelBtn.style.display='none';return;}
+
+    // extract JSON array from response
+    const match=text.match(/\[[\s\S]*\]/);
+    if(!match)throw new Error('No JSON array found in response.');
+    const nodes=JSON.parse(match[0]);
+    if(!Array.isArray(nodes)||!nodes.length)throw new Error('Empty or invalid node array.');
+
+    buildMapFromGenerated(promptText,nodes);
+    setStatus('✓ Map created — '+nodes.length+' nodes.','#7ec87e');
+    setTimeout(()=>{document.getElementById('gen-ov').classList.remove('vis');},800);
+
+  }catch(err){
+    setStatus('Error: '+err.message,'#c89898');
+  }finally{
+    genBtn.disabled=false;cancelBtn.style.display='none';_genAbort=null;
+  }
+}
+
+function buildMapFromGenerated(topic,rawNodes){
+  // build id → rawNode lookup
+  const byId=Object.fromEntries(rawNodes.map(n=>[n.id,n]));
+  // find root
+  const root=rawNodes.find(n=>!n.parent)||rawNodes[0];
+
+  // create a new map
+  const mapId='m'+Date.now();
+  const map=defMap(mapId,topic.slice(0,40));
+  map.nodes=[];map.nextId=1;
+
+  // assign sequential numeric ids and build nodes
+  const idMap={};// rawId → numeric id
+  rawNodes.forEach(rn=>{
+    const nid=map.nextId++;
+    idMap[rn.id]=nid;
+    map.nodes.push({id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
+      color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
+      outlined:false,scale:1,palKey:'muted',notes:[],urls:[],primaryUrl:0,
+      image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false});
+  });
+
+  // build edges from parent references
+  rawNodes.forEach(rn=>{
+    if(!rn.parent||!idMap[rn.parent])return;
+    const e=makeEdge('e'+Date.now()+'_'+rn.id,idMap[rn.parent],idMap[rn.id],AI_EDGES.includes(rn.edge)?rn.edge:'straight');
+    e.thickness=3.5;initKf(e,map);map.edges.push(e);
+  });
+
+  // add to state and switch to it
+  state.maps.push(map);
+  state.currentMapId=map.id;
+  selN=null;selSet=new Set();
+  T={x:window.innerWidth/2,y:window.innerHeight/2,s:1};
+  softSave();renderSB();renderMap();
+
+  // apply radial positions immediately (no animation — nodes start at 0,0 so animating from there looks broken)
+  setTimeout(()=>{
+    const targets=computeRadialTargets(map);
+    targets.forEach((pos,id)=>{const n=map.nodes.find(x=>x.id===id);if(n){n.x=pos.x;n.y=pos.y;}});
+    resetAllKf();softSave();render();
+  },30);
+}
+
+;(function wireGenUI(){
+  document.getElementById('tmi-gen')?.addEventListener('click',()=>{
+    topMenu.classList.remove('vis');
+    document.getElementById('gen-status').textContent='';
+    document.getElementById('gen-prompt').value='';
+    document.getElementById('gen-btn').disabled=false;
+    document.getElementById('gen-cancel-btn').style.display='none';
+    document.getElementById('gen-ov').classList.add('vis');
+    setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
+  });
+  document.getElementById('gen-close-btn')?.addEventListener('click',()=>{
+    if(_genAbort)_genAbort.cancelled=true;
+    document.getElementById('gen-ov').classList.remove('vis');
+  });
+  document.getElementById('gen-ov')?.addEventListener('click',ev=>{
+    if(ev.target.id==='gen-ov'){if(_genAbort)_genAbort.cancelled=true;document.getElementById('gen-ov').classList.remove('vis');}
+  });
+  document.getElementById('gen-btn')?.addEventListener('click',()=>{
+    const p=document.getElementById('gen-prompt').value.trim();
+    if(!p)return;
+    generateMapFromPrompt(p);
+  });
+  document.getElementById('gen-cancel-btn')?.addEventListener('click',()=>{
+    if(_genAbort)_genAbort.cancelled=true;
+  });
+  document.getElementById('gen-prompt')?.addEventListener('keydown',ev=>{
+    if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();document.getElementById('gen-btn').click();}
+    if(ev.key==='Escape'){document.getElementById('gen-ov').classList.remove('vis');}
+  });
+})();
 
 // ── AI UI wiring ────────────────────────────────────────────────────────────
 (function wireAiUI(){
