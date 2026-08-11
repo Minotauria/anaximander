@@ -8,6 +8,7 @@ Open the HTML file in a browser. That's it.
 
 ## What it does
 
+- **Home screen** — launch state with map cards (live mini-preview, node count, edited time, colour chips). Begin a blank map, generate one from a prompt, or press `↵` to reopen the most recent. The settings gear here owns all AI config.
 - **Spawn nodes** by dragging from the `+` button on a hovered node, or click for a shape picker.
 - **Edit text** inline with bold / italic / underline / strikethrough / colour / size / alignment.
 - **Connect & branch** edges between any two nodes; bend edges with mid-point keyframes; branch a new subtree off any keyframe.

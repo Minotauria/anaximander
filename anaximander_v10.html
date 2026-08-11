@@ -8,10 +8,56 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #root{width:100%;height:100vh;position:relative;overflow:hidden;background:#0d1a0d;}
-#splash{position:absolute;inset:0;background:#0d1a0d;display:flex;align-items:center;justify-content:center;z-index:100;transition:opacity 0.5s;}
+/* ── splash (launch state) ── */
+#splash{position:absolute;inset:0;background:#1a201a;z-index:100;transition:opacity 0.5s;font-family:'Lora',serif;color:#a09e8a;overflow:hidden;}
 #splash.gone{opacity:0;pointer-events:none;}
-#splash-name{font-family:'Playfair Display',serif;font-size:52px;font-weight:400;color:#2a2a2a;cursor:pointer;letter-spacing:0.04em;transition:color 0.4s;user-select:none;font-style:italic;}
-#splash-name:hover{color:#888;}
+#sp-motif{position:absolute;right:-120px;top:80px;width:760px;height:520px;opacity:0.045;pointer-events:none;}
+.sp-page{position:relative;max-width:880px;margin:0 auto;height:100%;padding:44px 40px 0;display:flex;flex-direction:column;}
+.sp-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:46px;}
+.sp-wordmark{font-size:21px;font-weight:500;color:#c8c898;letter-spacing:0.06em;}
+.sp-gear{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:#4a4a3c;font-size:14px;border:none;background:transparent;font-family:'Lora',serif;transition:background 0.15s,color 0.15s;}
+.sp-gear:hover{background:#232b23;color:#a09e8a;}
+.sp-sec{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4a4a3c;font-weight:500;margin-bottom:12px;flex-shrink:0;}
+.sp-begin{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:42px;flex-shrink:0;}
+.sp-tile{display:flex;align-items:center;gap:13px;padding:15px 17px;background:#1d261d;border:0.5px solid #272f27;border-radius:10px;cursor:pointer;transition:border-color 0.18s,background 0.18s;}
+.sp-tile:hover{border-color:#3a4a38;background:#202a20;}
+.sp-tile-icon{font-size:17px;color:#6a6a58;width:20px;text-align:center;flex-shrink:0;}
+.sp-tile:hover .sp-tile-icon{color:#a09e8a;}
+.sp-tile-icon.ai{color:#7ec87e;}
+.sp-tile:hover .sp-tile-icon.ai{color:#9ada9a;}
+.sp-tile-name{font-size:13px;color:#c8c898;margin-bottom:2px;}
+.sp-tile-desc{font-size:10.5px;color:#55554a;line-height:1.35;}
+.sp-tile.dim{opacity:0.45;pointer-events:none;}
+.sp-soon{font-size:9px;color:#4a4a3a;background:#232b23;border-radius:3px;padding:1px 5px;margin-left:5px;letter-spacing:0.05em;vertical-align:1px;}
+.sp-scroll{flex:1;overflow-y:auto;min-height:0;}
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:10px;}
+.sp-card{position:relative;background:#1d261d;border:0.5px solid #272f27;border-radius:10px;padding:15px 15px 12px;cursor:pointer;min-height:148px;display:flex;flex-direction:column;transition:border-color 0.18s,background 0.18s;}
+.sp-card:hover{border-color:#3a4a38;background:#202a20;}
+.sp-card.recent::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:9.5px 9.5px 0 0;background:linear-gradient(90deg,#5a8a5a 0%,transparent 70%);}
+@keyframes spCardFlash{0%,100%{border-color:#272f27;}40%{border-color:#7ec87e;}}
+.sp-card.flash{animation:spCardFlash 0.7s ease;}
+.sp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.sp-card-name{font-size:13px;color:#c8c898;font-weight:500;line-height:1.3;}
+.sp-dots{width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:none;background:transparent;color:#4a4a3c;font-size:13px;cursor:pointer;font-family:'Lora',serif;opacity:0;transition:opacity 0.15s,background 0.15s,color 0.15s;flex-shrink:0;}
+.sp-card:hover .sp-dots{opacity:1;}
+.sp-dots:hover{background:#252e25;color:#a09e8a;}
+.sp-card-preview{flex:1;display:flex;align-items:center;justify-content:center;opacity:0.38;padding:4px 0;}
+.sp-card-preview svg{width:118px;height:54px;overflow:visible;}
+.sp-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.sp-card-meta{font-size:10px;color:#45453a;}
+.sp-chips{display:flex;gap:3px;}
+.sp-chip{width:6px;height:6px;border-radius:50%;opacity:0.55;}
+.sp-card-menu{position:absolute;top:34px;right:10px;background:#1a201a;border:0.5px solid #2f382e;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:50;display:none;min-width:108px;padding:4px 0;}
+.sp-card-menu.vis{display:block;}
+.sp-cm-item{padding:6px 13px;font-size:11.5px;color:#8a8a76;cursor:pointer;transition:background 0.1s,color 0.1s;}
+.sp-cm-item:hover{background:#1d261d;color:#c8c898;}
+.sp-cm-rule{height:0.5px;background:#252e25;margin:4px 0;}
+.sp-cm-item.del{color:#6a5a48;}
+.sp-cm-item.del:hover{color:#a08a6a;}
+.sp-foot{margin-top:auto;padding:18px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.sp-hint{font-size:10.5px;color:#3a3a30;letter-spacing:0.03em;}
+.sp-key{display:inline-block;border:0.5px solid #2f382e;border-radius:4px;padding:0 5px;margin-right:4px;font-size:10px;color:#55554a;}
+.sp-ver{font-size:10px;color:#30302a;letter-spacing:0.06em;}
 #app{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.4s;}
 #app.vis{opacity:1;pointer-events:all;}
 #sidebar{position:absolute;left:14px;top:14px;bottom:14px;width:200px;background:#1a201a;border:0.5px solid #2a3028;border-radius:14px;display:flex;flex-direction:column;transform:translateX(-220px);transition:transform 0.22s;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,0.5);overflow:hidden;}
@@ -93,7 +139,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #notes-list{flex:1;overflow-y:auto;padding:8px;}
 #notes-add{margin:6px;padding:6px;border-radius:7px;border:0.5px dashed #303624;background:none;color:#909078;font-size:11px;cursor:pointer;font-family:'Lora',serif;flex-shrink:0;}
 #notes-add:hover{border-color:#3a4030;color:#dac888;}
-#modal-ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:70;display:none;align-items:center;justify-content:center;}
+#modal-ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;}
 #modal-ov.vis{display:flex;}
 #modal-box{background:#1a201a;border-radius:14px;border:0.5px solid #2a3028;padding:18px;min-width:240px;font-family:'Lora',serif;box-shadow:0 8px 30px rgba(0,0,0,0.6);}
 #modal-box h4{font-size:11px;font-weight:500;margin-bottom:10px;color:#c8c898;text-transform:uppercase;letter-spacing:0.08em;}
@@ -188,7 +234,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sm-shape.on,.sm-edge.on{background:#26301e;border-color:#3a4030;color:#dac888;}
 .sm-shape svg,.sm-edge svg{display:block;}
 /* ── AI / Legend modals ──────────────────────────────────── */
-#ai-ov,#legend-ov,#gen-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:80;display:none;align-items:center;justify-content:center;}
+#ai-ov,#legend-ov,#gen-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;}
 #ai-ov.vis,#legend-ov.vis,#gen-ov.vis{display:flex;}
 #ai-box,#legend-box,#gen-box{background:#1a201a;border-radius:14px;border:0.5px solid #2a3028;padding:22px 26px;width:540px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);font-family:'Lora',serif;color:#a09e8a;position:relative;}
 #gen-prompt{width:100%;background:#0d1a0d;border:0.5px solid #303624;color:#dac888;padding:10px 12px;font-size:13px;font-family:'Lora',serif;border-radius:8px;resize:vertical;outline:none;line-height:1.6;margin:10px 0 6px;}
@@ -246,7 +292,38 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 </head>
 <body>
 <div id="root">
-  <div id="splash"><div id="splash-name">Anaximander</div><div style="position:absolute;bottom:20px;font-size:10px;color:#2a3028;font-family:'IBM Plex Mono',monospace;letter-spacing:0.05em;">v9 · botanical</div></div>
+  <div id="splash">
+    <div id="sp-motif"></div>
+    <div class="sp-page">
+      <div class="sp-head">
+        <span class="sp-wordmark">Anaximander</span>
+        <button class="sp-gear" id="sp-gear" title="Settings — AI provider, key, model">&#9881;</button>
+      </div>
+      <div class="sp-sec">Begin</div>
+      <div class="sp-begin">
+        <div class="sp-tile" id="sp-tile-blank">
+          <span class="sp-tile-icon">+</span>
+          <span><span class="sp-tile-name">Blank map</span><div class="sp-tile-desc">an empty canvas</div></span>
+        </div>
+        <div class="sp-tile" id="sp-tile-prompt">
+          <span class="sp-tile-icon ai">&#10022;</span>
+          <span><span class="sp-tile-name">From prompt</span><div class="sp-tile-desc">Claude drafts a starter map</div></span>
+        </div>
+        <div class="sp-tile dim" id="sp-tile-doc">
+          <span class="sp-tile-icon">&#8613;</span>
+          <span><span class="sp-tile-name">From document<span class="sp-soon">soon</span></span><div class="sp-tile-desc">summarise a .pdf or .doc</div></span>
+        </div>
+      </div>
+      <div class="sp-scroll">
+        <div class="sp-sec">Return</div>
+        <div class="sp-grid" id="sp-grid"></div>
+      </div>
+      <div class="sp-foot">
+        <span class="sp-hint" id="sp-hint" style="visibility:hidden;"><span class="sp-key">&#8629;</span>reopen <span id="sp-hint-name"></span></span>
+        <span class="sp-ver">v10</span>
+      </div>
+    </div>
+  </div>
   <div id="app">
     <div id="sidebar">
       <div id="sb-inner">
@@ -466,7 +543,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
   <div id="ai-toast"></div>
   <div id="ctx"></div>
   <div id="modal-ov"><div id="modal-box"><h4 id="modal-ttl">name</h4><input id="modal-in"/><div class="mbtns"><button id="modal-cancel">cancel</button><button class="pri" id="modal-ok">ok</button></div></div></div>
-  <div id="shortcuts-ov" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:80;display:none;align-items:center;justify-content:center;">
+  <div id="shortcuts-ov" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;">
     <div id="shortcuts-box" style="background:#1a201a;border:0.5px solid #2a3028;border-radius:14px;padding:22px 26px;width:540px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);font-family:'Lora',serif;color:#a09e8a;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <h4 style="font-size:11px;color:#c8c898;text-transform:uppercase;letter-spacing:0.1em;font-weight:500;">keyboard shortcuts &amp; gestures</h4>
@@ -883,7 +960,7 @@ function positionToolbar(n){
   nodeEditToolbar.style.top=ty+'px';nodeEditToolbar.style.left=tx+'px';
 }
 
-function defMap(id,name){return{id,name,nodes:[{id:1,x:0,y:0,label:'new node',urls:[],primaryUrl:0,color:'#6a9a6a',shape:'longpill',font:"'Lora',serif",notes:[],image:'',outlined:false,scale:1,palKey:'muted',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0}],edges:[],bg:'#0d1a0d',nextId:2,history:[],legend:{shapes:{},edges:{},colours:{}}};}
+function defMap(id,name){return{id,name,updatedAt:Date.now(),nodes:[{id:1,x:0,y:0,label:'new node',urls:[],primaryUrl:0,color:'#6a9a6a',shape:'longpill',font:"'Lora',serif",notes:[],image:'',outlined:false,scale:1,palKey:'muted',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0}],edges:[],bg:'#0d1a0d',nextId:2,history:[],legend:{shapes:{},edges:{},colours:{}}};}
 function makeEdge(id,from,to,style,color){return{id,from,to,style:style||'straight',color:color||'#444',thickness:3.5,keyframes:[],label:''};}
 function initKf(e,map){
   const a=map.nodes.find(n=>n.id===e.from),b=map.nodes.find(n=>n.id===e.to);
@@ -945,6 +1022,7 @@ let _undoStreak=0;
 let _undoWarnDismissed=false;
 function pushCanvasHistLocal(label){
   const map=cmap();if(!map)return;
+  map.updatedAt=Date.now(); // feeds the splash cards' "edited …" time
   if(!map.history)map.history=[];
   if(map.histIdx===undefined)map.histIdx=-1;
   map.history=map.history.slice(0,map.histIdx+1);
@@ -3201,10 +3279,14 @@ const EDGE_SVG={
   arrow2:'<line x1="6" y1="9.5" x2="22" y2="9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polygon points="2,9.5 8,6.5 8,12.5" fill="currentColor"/><polygon points="26,9.5 20,6.5 20,12.5" fill="currentColor"/>',
 };
 
-document.getElementById('tmi-home').addEventListener('click',()=>{topMenu.classList.remove('vis');document.getElementById('splash').classList.remove('gone');document.getElementById('app').classList.remove('vis');});
+document.getElementById('tmi-home').addEventListener('click',()=>{topMenu.classList.remove('vis');showSplash();});
 
 // ── shortcuts modal ──
 const SHORTCUTS=[
+  {section:'home screen',items:[
+    ['enter','reopen the most recent map'],
+    ['esc','close dialog / card menu'],
+  ]},
   {section:'editing',items:[
     ['enter','commit edit'],
     ['shift + enter','newline inside text'],
@@ -3378,6 +3460,20 @@ document.addEventListener('click',e=>{
 
 document.addEventListener('keydown',e=>{
   const meta=e.metaKey||e.ctrlKey;
+  // splash: ↵ reopens the most recent map; Esc closes overlays; everything else is canvas-only
+  if(splashVisible()){
+    if(e.key==='Enter'&&!e.target.matches('input,textarea,select,[contenteditable]')){
+      const recent=mostRecentMap();
+      if(recent)openMapFromSplash(recent.id);
+    }else if(e.key==='Escape'){
+      const _aiOv=document.getElementById('ai-ov');
+      if(_aiOv.style.display==='flex'){_aiOv.style.display='none';}
+      else if(document.getElementById('gen-ov').classList.contains('vis')){if(_genAbort)_genAbort.cancelled=true;document.getElementById('gen-ov').classList.remove('vis');}
+      else if(document.getElementById('modal-ov').classList.contains('vis')){document.getElementById('modal-ov').classList.remove('vis');}
+      else document.querySelectorAll('.sp-card-menu.vis').forEach(el=>el.classList.remove('vis'));
+    }
+    return;
+  }
   // Tab → AI suggestions
   if(e.key==='Tab'&&!e.target.matches('input,textarea,select,[contenteditable]')){
     e.preventDefault();
@@ -3437,7 +3533,9 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-document.getElementById('splash-name').addEventListener('click',()=>{
+// ── SPLASH (launch state) ────────────────────────────────────────────────────
+function splashVisible(){return !document.getElementById('splash').classList.contains('gone');}
+function enterCanvas(){
   document.getElementById('splash').classList.add('gone');
   document.getElementById('app').classList.add('vis');
   // wait for layout to settle (rAF + a few short timeouts cover layout/font/transition timing variability)
@@ -3447,7 +3545,133 @@ document.getElementById('splash-name').addEventListener('click',()=>{
     setTimeout(resize,250);
     setTimeout(resize,600);
   });
+}
+function showSplash(){renderSplash();document.getElementById('splash').classList.remove('gone');document.getElementById('app').classList.remove('vis');}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function genMotif(seed,w,h,s){
+  const r=mulberry32(seed),cx=w/2,cy=h/2,pal=PALETTES.muted;
+  let out='';
+  const n=4+Math.floor(r()*3),off=r()*Math.PI*2,crx=14*s,cry=8*s;
+  for(let i=0;i<n;i++){
+    const a=off+i*Math.PI*2/n+(r()-0.5)*0.6;
+    const dist=Math.min(w,h)*0.42+(r()-0.5)*Math.min(w,h)*0.12;
+    const ex=cx+Math.cos(a)*dist*1.25,ey=cy+Math.sin(a)*dist*0.8;
+    const erx=(7+r()*2)*s,ery=(4+r()*1.3)*s;
+    out+=`<line x1="${cx+Math.cos(a)*crx*0.9}" y1="${cy+Math.sin(a)*cry*0.9}" x2="${ex-Math.cos(a)*erx*0.9}" y2="${ey-Math.sin(a)*ery*0.9}" stroke="#4a5a48" stroke-width="${0.9*s}" stroke-dasharray="${2*s} ${1.6*s}"/>`;
+    out+=`<ellipse cx="${ex}" cy="${ey}" rx="${erx}" ry="${ery}" fill="${pal[Math.floor(r()*pal.length)]}"/>`;
+  }
+  out+=`<ellipse cx="${cx}" cy="${cy}" rx="${crx}" ry="${cry}" fill="${pal[Math.floor(r()*pal.length)]}"/>`;
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${out}</svg>`;
+}
+// mini-preview: the map's real nodes and edges scaled into a card-sized svg
+function mapThumb(map,w,h){
+  const nodes=map.nodes||[];
+  if(!nodes.length)return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"></svg>`;
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  nodes.forEach(n=>{x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x);y1=Math.max(y1,n.y);});
+  const spanX=Math.max(x1-x0,1),spanY=Math.max(y1-y0,1),pad=12;
+  const sc=Math.min((w-pad*2)/spanX,(h-pad*2)/spanY,0.35);
+  const px=n=>pad+(n.x-x0)*sc+(w-pad*2-spanX*sc)/2;
+  const py=n=>pad+(n.y-y0)*sc+(h-pad*2-spanY*sc)/2;
+  const byId={};nodes.forEach(n=>byId[n.id]=n);
+  let out='';
+  (map.edges||[]).slice(0,80).forEach(e=>{
+    const a=byId[e.from],b=byId[e.to];if(!a||!b)return;
+    out+=`<line x1="${px(a).toFixed(1)}" y1="${py(a).toFixed(1)}" x2="${px(b).toFixed(1)}" y2="${py(b).toFixed(1)}" stroke="#4a5a48" stroke-width="0.9" stroke-dasharray="2 1.6"/>`;
+  });
+  nodes.slice(0,60).forEach((n,i)=>{
+    out+=`<ellipse cx="${px(n).toFixed(1)}" cy="${py(n).toFixed(1)}" rx="${i===0?10:7}" ry="${i===0?6:4}" fill="${n.color||'#6a9a6a'}"/>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${out}</svg>`;
+}
+function mapChipColors(map){
+  const count={};
+  (map.nodes||[]).forEach(n=>{if(n.color)count[n.color]=(count[n.color]||0)+1;});
+  return Object.keys(count).sort((a,b)=>count[b]-count[a]).slice(0,4);
+}
+function relTime(ts){
+  if(!ts)return'';
+  const d=Date.now()-ts,day=86400000;
+  if(d<day&&new Date(ts).getDate()===new Date().getDate())return'today';
+  if(d<day*2)return'yesterday';
+  if(d<day*7)return Math.floor(d/day)+' days ago';
+  if(d<day*14)return'last week';
+  if(d<day*30)return Math.floor(d/(day*7))+' weeks ago';
+  if(d<day*60)return'last month';
+  return Math.floor(d/(day*30))+' months ago';
+}
+function mostRecentMap(){
+  if(!state.maps.length)return null;
+  let best=null;
+  state.maps.forEach(m=>{if(!best||(m.updatedAt||0)>(best.updatedAt||0))best=m;});
+  if(!best.updatedAt){const cur=cmap();if(cur)best=cur;}
+  return best;
+}
+function renderSplash(){
+  const motif=document.getElementById('sp-motif');
+  if(!motif.innerHTML)motif.innerHTML=genMotif(7,760,520,3.1);
+  const grid=document.getElementById('sp-grid');
+  grid.innerHTML='';
+  const recent=mostRecentMap();
+  const hint=document.getElementById('sp-hint');
+  hint.style.visibility=recent?'visible':'hidden';
+  if(recent)document.getElementById('sp-hint-name').textContent=recent.name;
+  state.maps.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).forEach(m=>{
+    const card=document.createElement('div');
+    card.className='sp-card'+(recent&&m.id===recent.id?' recent':'');
+    card.dataset.mapId=m.id;
+    const chips=mapChipColors(m);
+    const meta=[m.nodes.length+(m.nodes.length===1?' node':' nodes'),relTime(m.updatedAt)].filter(Boolean).join(' &middot; ');
+    card.innerHTML=`
+      <div class="sp-card-top"><span class="sp-card-name"></span><button class="sp-dots">&#8943;</button></div>
+      <div class="sp-card-preview">${mapThumb(m,120,56)}</div>
+      <div class="sp-card-foot"><span class="sp-card-meta">${meta}</span>
+        <span class="sp-chips">${chips.map(c=>`<span class="sp-chip" style="background:${c}"></span>`).join('')}</span></div>
+      <div class="sp-card-menu">
+        <div class="sp-cm-item" data-act="rename">Rename</div>
+        <div class="sp-cm-item" data-act="duplicate">Duplicate</div>
+        <div class="sp-cm-item" data-act="export">Export</div>
+        <div class="sp-cm-rule"></div>
+        <div class="sp-cm-item del" data-act="delete">Delete</div>
+      </div>`;
+    card.querySelector('.sp-card-name').textContent=m.name;
+    const menu=card.querySelector('.sp-card-menu');
+    card.querySelector('.sp-dots').addEventListener('click',ev=>{
+      ev.stopPropagation();
+      document.querySelectorAll('.sp-card-menu.vis').forEach(el=>{if(el!==menu)el.classList.remove('vis');});
+      menu.classList.toggle('vis');
+    });
+    menu.addEventListener('click',ev=>{
+      ev.stopPropagation();menu.classList.remove('vis');
+      const act=ev.target.dataset.act;if(!act)return;
+      if(act==='rename')promptM('Map name',m.name,v=>{m.name=v;if(m.id===state.currentMapId)document.getElementById('map-title-in').value=v;softSave();renderSB();renderSplash();});
+      else if(act==='duplicate'){sbSnap('before dup');const copy=JSON.parse(JSON.stringify(m));copy.id='m'+Date.now();copy.name=m.name+'_copy';copy.updatedAt=Date.now();state.maps.push(copy);sbSnap('duplicated');softSave();renderSB();renderSplash();}
+      else if(act==='export'){const blob=new Blob([JSON.stringify(m,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(m.name||'map')+'.json';a.click();}
+      else if(act==='delete'){sbDeleteTobin('map',m.id);renderSplash();}
+    });
+    card.addEventListener('click',()=>openMapFromSplash(m.id));
+    grid.appendChild(card);
+  });
+}
+function openMapFromSplash(id){
+  const card=document.querySelector(`.sp-card[data-map-id="${id}"]`);
+  if(card){card.classList.remove('flash');void card.offsetWidth;card.classList.add('flash');}
+  state.currentMapId=id;T={x:0,y:0,s:1};renderMap();
+  setTimeout(()=>enterCanvas(),160);
+}
+document.getElementById('sp-gear').addEventListener('click',()=>{syncAiUI();document.getElementById('ai-ov').style.display='flex';});
+document.getElementById('sp-tile-blank').addEventListener('click',()=>promptM('Map name','New map',v=>{
+  sbSnap('before create');const nm=defMap('m'+Date.now(),v);state.maps.push(nm);state.currentMapId=nm.id;T={x:0,y:0,s:1};sbSnap('created: '+v);softSave();renderSB();renderMap();enterCanvas();
+}));
+document.getElementById('sp-tile-prompt').addEventListener('click',()=>{
+  document.getElementById('gen-status').textContent='';
+  document.getElementById('gen-prompt').value='';
+  document.getElementById('gen-btn').disabled=false;
+  document.getElementById('gen-cancel-btn').style.display='none';
+  document.getElementById('gen-ov').classList.add('vis');
+  setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
 });
+document.getElementById('splash').addEventListener('click',()=>document.querySelectorAll('.sp-card-menu.vis').forEach(el=>el.classList.remove('vis')));
 let mcb=null;
 function promptM(title,def,cb){mcb=cb;document.getElementById('modal-ttl').textContent=title;document.getElementById('modal-in').value=def;document.getElementById('modal-ov').classList.add('vis');setTimeout(()=>document.getElementById('modal-in').select(),40);}
 document.getElementById('modal-ok').addEventListener('click',()=>{const v=document.getElementById('modal-in').value.trim();document.getElementById('modal-ov').classList.remove('vis');if(v&&mcb)mcb(v);});
@@ -3578,13 +3802,13 @@ function shareViaUrl(){
 }
 function loadFromHash(){
   const hash=location.hash;
-  if(!hash.startsWith('#share='))return;
+  if(!hash.startsWith('#share='))return false;
   try{
     const payload=JSON.parse(decodeURIComponent(escape(atob(hash.slice(7)))));
-    if(!payload.nodes)return;
+    if(!payload.nodes)return false;
     // create a new map from the shared data
     const id='shared-'+Date.now();
-    const map={id,name:payload.name||'shared map',folderId:null,
+    const map={id,name:payload.name||'shared map',folderId:null,updatedAt:Date.now(),
       nodes:payload.nodes,edges:payload.edges,bg:payload.bg||'#0d1a0d',
       nextId:Math.max(...payload.nodes.map(n=>typeof n.id==='number'?n.id:0))+1,
       history:[],histIdx:-1};
@@ -3594,7 +3818,8 @@ function loadFromHash(){
     softSave();
     history.replaceState(null,'',location.href.split('#')[0]);
     showToast('Shared map loaded');
-  }catch(e){console.warn('Failed to load shared map',e);}
+    return true;
+  }catch(e){console.warn('Failed to load shared map',e);return false;}
 }
 
 function showToast(msg){
@@ -4266,7 +4491,7 @@ async function generateMapFromPrompt(promptText){
   const cancelBtn=document.getElementById('gen-cancel-btn');
   const setStatus=(msg,col)=>{genStatus.textContent=msg;genStatus.style.color=col||'#7a7858';};
 
-  if(!state.ai||!state.ai.apiKey||!state.ai.apiKey.trim()){setStatus('API key required — add one in ✦ AI suggestions settings.','#c89898');return;}
+  if(!state.ai||!state.ai.apiKey||!state.ai.apiKey.trim()){setStatus('API key required — add one in settings (⚙ on the home screen).','#c89898');return;}
 
   setStatus('Thinking…');genBtn.disabled=true;cancelBtn.style.display='';
   _genAbort={cancelled:false};
@@ -4366,6 +4591,7 @@ function buildMapFromGenerated(topic,rawNodes){
   selN=null;selSet=new Set();
   T={x:window.innerWidth/2,y:window.innerHeight/2,s:1};
   softSave();renderSB();renderMap();
+  if(splashVisible())enterCanvas();
 
   // apply radial positions immediately (no animation — nodes start at 0,0 so animating from there looks broken)
   setTimeout(()=>{
@@ -4462,7 +4688,9 @@ function buildMapFromGenerated(topic,rawNodes){
 })();
 
 loadState();renderSB();renderBin();animate();
-loadFromHash();
+const _sharedLoaded=loadFromHash();
+renderSplash();
+if(_sharedLoaded){renderMap();enterCanvas();}
 // net pop click isolation
 ['net-tc-pop','net-fill-pop','net-url-pop'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',ev=>ev.stopPropagation());});
 // canvas undo/redo button wiring
