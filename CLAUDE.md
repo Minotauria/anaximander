@@ -59,26 +59,21 @@ This project has been built iteratively over many sessions. The workflow that wo
 6. Don't bump the version filename until we cut a real new release.
 7. **Keep the shortcuts menu current.** Any new keyboard shortcut or mouse gesture goes into the `SHORTCUTS` constant (near the bottom of the `<script>` block). Do this as part of the same change, not as a follow-up.
 
-## In progress — menu / UI rework
+## Menu / UI rework — landed in v11 (2026-08-11)
 
-Design approved by Peter (2026-08-11); not yet folded. Mockups in repo root: `mockup_splash_v2.html` and `mockup_canvas_nav_v2.html` (v1 files kept for comparison). Governing principle: **each thing lives in exactly one place.**
+Folded in three commits (splash page → hamburger drawer → right-panel regroup), then cut `anaximander_v11.html`. Mockups (`mockup_*_v2.html`) kept in the repo root for reference. Governing principle: **each thing lives in exactly one place.**
 
-Two app states:
+The two app states, as built:
 
-- **Splash (launch state).** Exists first; you enter a map to reach the canvas. Wordmark + settings gear. **Begin** section — three tiles: Blank map, From prompt (✦), From document (dimmed, "soon"). **Return** section — map cards with generated mini-preview, node count, edited time, legend colour chips, and a hover ⋯ menu (rename / duplicate / export / delete). Most-recent card gets a green top bar; `↵` reopens it. Footer: reopen hint + version.
-- **Canvas (working state).** Hamburger button labelled with the current map name (`≡ First map`) replaces the sidebar arrow. It opens a **popover drawer**: editable map name, maps list with ✓ on current, + new map, ⌂ all maps (→ splash), import file, export & share ▶, recycle bin. Toolbar: saved indicator · ↶ ↷ · `?` (shortcuts). Right panel in three groups — **Canvas** (background, legend), **Map** (history, ghost nodes), **AI** (suggestions, new from prompt) — collapsible via `»` to a thin `«` tab.
+- **Splash (launch state).** You enter a map to reach the canvas. Wordmark + settings gear (the gear owns all AI config — key / model / provider). **Begin** — Blank map, From prompt (✦), From document (dimmed, "soon"). **Return** — map cards with a real mini-preview of the map's nodes, node count, edited time (`updatedAt`, stamped in `pushCanvasHistLocal`), colour chips, hover ⋯ menu (rename / duplicate / export / delete). Most-recent card gets the green top bar; `↵` reopens it.
+- **Canvas (working state).** `≡ <map name>` burger opens a popover drawer: editable map name, flat maps list with ✓, + new map, ⌂ all maps (→ splash), import file (one dialog for .json and .mm), export & share ▶, recycle bin. Toolbar: saved · ↶ ↷ · ⛶ · `?`. Right panel — **Canvas** (background, legend), **Map** (history, ghost nodes ▶, untangle, tidy up), **AI** (suggestions, new from prompt) — collapses via `»` to a `«` tab (persisted).
 
-Decisions and why:
+Post-design calls made during the fold (flag to Peter if they bother him):
 
-- Popover drawer over slide-in sidebar — lighter for desktop.
-- Export lives in the drawer only (was duplicated in the right panel).
-- "Save" button dropped — autosave plus the saved indicator make it redundant.
-- ⋮ overflow menu dropped — shortcuts move to the `?` button.
-- All preview/node colours come from the botanical palette.
-- "New from prompt" stays in the right panel's AI group — confirmed it reads as *creates a new map*.
-- The splash settings gear owns all AI config (key / model / provider). AI settings come out of the canvas entirely; the canvas AI group keeps only in-map actions (suggestions, new from prompt).
-
-Fold order (one commit each): 1) splash page — including AI config moving into its settings gear, 2) hamburger drawer replacing the sidebar, 3) right-panel regroup — including removing AI settings from the canvas. Update `SHORTCUTS` and README's menu references as part of each fold. Stay on v10 while folding; cut `anaximander_v11.html` when all three stages have landed.
+- Untangle / tidy up had no home in the approved design — they went into the right panel's **Map** group; the layout button died with the ⋯ menu.
+- Fullscreen kept a small toolbar button (⛶) — the mockup omitted it, but F11-only felt too hidden.
+- **Folders/projects have no UI in the new design.** `state.folders` and `map.folderId` are preserved in saves (old bin entries still restore) but maps list flat everywhere.
+- Single-map JSON (from a card's Export) imports as a new map; full-state JSON still replaces everything.
 
 ## The bank — features discussed but not built
 

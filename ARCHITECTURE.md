@@ -7,7 +7,7 @@ The whole app is one HTML file: markup, CSS, and JavaScript in a single `<script
 The HTML file is roughly:
 
 1. `<head>` — fonts (Lora, IBM Plex Mono via Google Fonts), inline `<style>` block (~400 lines of CSS).
-2. `<body>` — splash screen, sidebar, main canvas, floating toolbars, modals, hidden file inputs.
+2. `<body>` — splash launch page (map cards + begin tiles), burger + drawer (map navigation), main canvas, toolbar + right tool panel, modals, hidden file inputs.
 3. `<script>` — all logic.
 
 There is intentionally no separation into modules. The trade-off is faster iteration and trivial deployment (drag-and-drop on any static host) at the cost of a long file. Use your editor's symbol search.
@@ -20,7 +20,7 @@ The app's entire state lives in one global `state` object, persisted to `localSt
 state = {
   maps: [Map],
   currentMapId: string,
-  folders: [Folder],
+  folders: [Folder],     // legacy (pre-v11 "projects") — preserved in saves, no UI
   ai: { enabled, apiKey, model, provider,   // global AI config
         ollamaUrl, ollamaModel },           // Ollama fields parked, unused
 }
@@ -32,6 +32,7 @@ A `Map` is:
 {
   id: string,
   name: string,
+  updatedAt: number,      // last-edited stamp; feeds the splash cards
   nodes: [Node],
   edges: [Edge],
   bg: string,             // canvas background colour
@@ -122,7 +123,7 @@ Text-shape nodes don't visibly animate because their early-return branch in `dra
 
 ## AI features
 
-Optional, off by default. Global config lives in `state.ai` (provider, API key, model); per-map context in `map.legend`. Both are defaulted in `loadState`. Calls go straight from the browser to `api.anthropic.com` (via the `anthropic-dangerous-direct-browser-access` header) — no backend, key stored only in localStorage.
+Optional, off by default. Global config lives in `state.ai` (provider, API key, model); per-map context in `map.legend`. Both are defaulted in `loadState`. Config is edited only via the splash settings gear (`#sp-gear` → `#ai-ov`); the canvas keeps in-map actions (suggestions, new from prompt) in the right panel's AI group. Calls go straight from the browser to `api.anthropic.com` (via the `anthropic-dangerous-direct-browser-access` header) — no backend, key stored only in localStorage.
 
 - **Suggest children** — `Tab` with a node selected calls `requestAiSuggestions()`, which streams candidates (`streamAiSuggestions`) and renders them as ghost nodes to accept or dismiss. `Esc` cancels the request or dismisses ghosts.
 - **Generate from prompt** — the `#gen-ov` modal takes a topic and produces a whole starter map through the same API path.
