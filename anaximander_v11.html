@@ -930,7 +930,7 @@ function netRenderPalSwatches(n,pal){
   const sw=document.getElementById('net-pal-swatches');if(!sw)return;sw.innerHTML='';
   PALETTES[pal].forEach(c=>{const s=document.createElement('div');s.className='net-sw'+(c===n.color?' on':'');s.style.background=c;s.addEventListener('click',()=>{n.color=c;if(n.shape==='text')n.textColor=null;document.getElementById('net-fc-swatch').style.background=c;document.getElementById('net-fill-color-in').value=c;netRenderPalSwatches(n,pal);softSave();render();});sw.appendChild(s);});
   const fc=document.getElementById('net-fc-swatch');if(fc)fc.style.background=n.color;
-  const fci=document.getElementById('net-fill-color-in');if(fci)fci.value=n.color;
+  const fci=document.getElementById('net-fill-color-in');if(fci)fci.value=n.color||'#6a9a6a';
 }
 function netRenderUrls(n){
   const list=document.getElementById('net-url-list');if(!list)return;list.innerHTML='';
@@ -2977,7 +2977,7 @@ document.getElementById('file-imp-any').addEventListener('change',e=>{
   e.target.value='';
 });
 
-document.getElementById('rp-bg').addEventListener('click',()=>{document.getElementById('bg-pop').classList.toggle('vis');});
+document.getElementById('rp-bg').addEventListener('click',()=>{_bgMarkActive();document.getElementById('bg-pop').classList.toggle('vis');});
 document.getElementById('rp-history').addEventListener('click',()=>{const p=document.getElementById('hist-pop');p.classList.toggle('vis');if(p.classList.contains('vis'))renderHist();});
 document.getElementById('tmi-export-png').addEventListener('click',()=>{const url=cvs.toDataURL('image/png'),a=document.createElement('a');a.href=url;a.download=`${cmap()?.name||'anaximander'}.png`;a.click();});
 document.getElementById('tmi-export-jpg').addEventListener('click',()=>{const url=cvs.toDataURL('image/jpeg',0.95),a=document.createElement('a');a.href=url;a.download=`${cmap()?.name||'anaximander'}.jpg`;a.click();});
@@ -3357,6 +3357,9 @@ function _bgUpdatePreview(c){
 function _bgMarkActive(){
   const m=cmap();const cur=m&&m.bg?m.bg:'#0d1a0d';
   document.querySelectorAll('#bg-pop .bg-sw').forEach(s=>{s.classList.toggle('on',s.dataset.col===cur);});
+  // keep the custom input at the current colour — an unset input opens the
+  // native colour wheel at #000000, which renders the whole dial black
+  const _bc=document.getElementById('bg-custom');if(_bc)_bc.value=(cur&&cur!=='transparent')?cur:'#0d1a0d';
   _bgUpdatePreview(cur);
 }
 function _bgMakeSwatch(col,parent,isTransp){
