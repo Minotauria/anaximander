@@ -42,7 +42,7 @@ This project has been built iteratively over many sessions. The workflow that wo
 - **Spawn animation doesn't visibly fire on text-shape nodes.** Side-effect of where the text-shape early-return sits in `drawNode`. Accepted as-is; not a bug to fix.
 - **Imported `.mm` files don't lay out beautifully.** The Coggle position model doesn't fully translate. Run *untangle* afterwards. Acceptable, not a bug.
 - **Default colours and styling are botanical** — chrome `#1a201a`, borders `#2a3028` / `#303624`, text `#a09e8a` / `#909078` / `#c8c898` / `#dac888`, default node fill `#6a9a6a`, all UI in Lora serif. Don't drift from this palette without checking.
-- **Bevel gradient on nodes is capped at 14px from top.** Intentional — looks wrong if it scales with node size. The gradient spans exactly `bevelEnd` (not `bevelEnd*2`) so it's fully gone by 14px.
+- **Bevel gradient on nodes is capped at 14px from each shape's apex.** Intentional — looks wrong if it scales with node size. The per-shape gradient-origin logic is commented at the fix site in `drawNode`.
 - **Rhombus and diamond are aliases.** Old saves use `rhombus`, new saves use `diamond`. Both render identically. Don't remove the alias.
 - **Single-click selects a node; double-click opens the editor.** This is intentional — single-click needs to leave canvas focus intact so Tab can trigger AI suggestions.
 - **AI features require `state.ai` (global) and `map.legend` (per-map).** Both are defaulted in `loadState`. `state.ai = {enabled, apiKey, model}`. The localStorage key stays `anax_v7`.
@@ -59,11 +59,35 @@ This project has been built iteratively over many sessions. The workflow that wo
 6. Don't bump the version filename until we cut a real new release.
 7. **Keep the shortcuts menu current.** Any new keyboard shortcut or mouse gesture goes into the `SHORTCUTS` constant (near the bottom of the `<script>` block). Do this as part of the same change, not as a follow-up.
 
+## In progress — menu / UI rework
+
+Agreed and mocked up; not yet folded. Mockups in repo root: `mockup_splash_v2.html` and `mockup_canvas_nav_v2.html` (v1 files kept for comparison). Governing principle: **each thing lives in exactly one place.**
+
+Two app states:
+
+- **Splash (launch state).** Exists first; you enter a map to reach the canvas. Wordmark + settings gear. **Begin** section — three tiles: Blank map, From prompt (✦), From document (dimmed, "soon"). **Return** section — map cards with generated mini-preview, node count, edited time, legend colour chips, and a hover ⋯ menu (rename / duplicate / export / delete). Most-recent card gets a green top bar; `↵` reopens it. Footer: reopen hint + version.
+- **Canvas (working state).** Hamburger button labelled with the current map name (`≡ First map`) replaces the sidebar arrow. It opens a **popover drawer**: editable map name, maps list with ✓ on current, + new map, ⌂ all maps (→ splash), import file, export & share ▶, recycle bin. Toolbar: saved indicator · ↶ ↷ · `?` (shortcuts). Right panel in three groups — **Canvas** (background, legend), **Map** (history, ghost nodes), **AI** (suggestions, new from prompt) — collapsible via `»` to a thin `«` tab.
+
+Decisions and why:
+
+- Popover drawer over slide-in sidebar — lighter for desktop.
+- Export lives in the drawer only (was duplicated in the right panel).
+- "Save" button dropped — autosave plus the saved indicator make it redundant.
+- ⋮ overflow menu dropped — shortcuts move to the `?` button.
+- All preview/node colours come from the botanical palette.
+
+Fold order (one commit each): 1) splash page, 2) hamburger drawer replacing the sidebar, 3) right-panel regroup. Update `SHORTCUTS` and README's menu references as part of each fold.
+
+Open questions for Peter:
+
+- Does "new from prompt" in the right panel's AI group read clearly as *creates a new map*?
+- Should the splash settings gear own all AI config (key / model / provider), removing it from the canvas?
+
 ## The bank — features discussed but not built
 
 These have been thought about, sometimes deeply. None are committed-to. Treat as starting points, not specs.
 
-**Generate map from prompt** — Same code path as AI expansion, different entry point. Give Claude a topic / book / paper, get a starter map. Pairs naturally with AI expansion.
+**Generate map from document** — Upload a .pdf, .doc, or plain text file and have Claude produce a map summarising it. Natural companion to generate-from-prompt; same output path, different input. Could live inside the "generate from prompt" UI rather than as a separate entry point — same destination, different input method. Open questions: file format support (PDF text extraction vs OCR, .doc conversion), whether long documents need chunking, sensible scope limits.
 
 **Ollama + GPT providers** — Code skeleton for Ollama is already in v10 but parked. Revisit alongside a GPT/OpenAI option — do both at the same time so the provider tab pattern is complete in one go.
 
@@ -79,7 +103,7 @@ These have been thought about, sometimes deeply. None are committed-to. Treat as
 
 **Genogram symbols** — Standard genogram notation as a node shape set (circle = female, square = male, diamond = unknown/other, double-border = index person, X overlay = deceased, horizontal line = union, vertical drop = child). Rough idea, no design work done.
 
-**Node groups** — Select multiple nodes by click-dragging a marquee (or ⌘-click to add to selection). Grouped nodes can be given a title and moved together. Rough idea, no design work done.
+**Node groups** — Marquee multi-select, ⌘-click add-to-selection, drag-together, and the bulk edit bar are built. The remaining idea: naming a selection to create a persistent, titled group.
 
 ## What's deliberately not in this codebase
 

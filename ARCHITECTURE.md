@@ -8,7 +8,7 @@ The HTML file is roughly:
 
 1. `<head>` — fonts (Lora, IBM Plex Mono via Google Fonts), inline `<style>` block (~400 lines of CSS).
 2. `<body>` — splash screen, sidebar, main canvas, floating toolbars, modals, hidden file inputs.
-3. `<script>` — all logic, ~2900 lines.
+3. `<script>` — all logic.
 
 There is intentionally no separation into modules. The trade-off is faster iteration and trivial deployment (drag-and-drop on any static host) at the cost of a long file. Use your editor's symbol search.
 
@@ -21,6 +21,8 @@ state = {
   maps: [Map],
   currentMapId: string,
   folders: [Folder],
+  ai: { enabled, apiKey, model, provider,   // global AI config
+        ollamaUrl, ollamaModel },           // Ollama fields parked, unused
 }
 ```
 
@@ -36,6 +38,7 @@ A `Map` is:
   nextId: number,         // monotonic id counter
   history: [Snapshot],    // undo/redo stack for this map
   histIdx: number,
+  legend: { shapes, edges, colours, textWords },  // per-map meaning key; feeds AI prompts
 }
 ```
 
@@ -81,7 +84,7 @@ The app uses an always-running `requestAnimationFrame` loop (`animate`). Each fr
 
 `drawNode(n, sel)` is the workhorse. It branches by shape:
 
-- **Standard shapes** (rounded-rect, pill, longpill, circle, ellipse, diamond, parallelogram, hex) — fill + stroke + bevel gradient (capped at 18px from top), then `drawRichLabel`.
+- **Standard shapes** (rounded-rect, pill, longpill, circle, ellipse, diamond, parallelogram, hex) — fill + stroke + bevel gradient (capped at 14px from the shape's true apex — the gradient origin is computed per shape), then `drawRichLabel`.
 - **Image shapes** — `drawNode` returns early after rendering the image and optional caption.
 - **Text shapes** — no fill or stroke, just text. Returns early. Uses `n.textColor || n.color` so it always has a colour.
 
@@ -89,7 +92,7 @@ The app uses an always-running `requestAnimationFrame` loop (`animate`). Each fr
 
 ## Layout algorithms
 
-Two deterministic layouts in v9:
+Two deterministic layouts:
 
 - **`computeRadialTargets(map)` (untangle)** — BFS tree from `map.nodes[0]`, leaf-count-weighted angular wedges, ring radius depth-based. Root stays put; everything orbits.
 - **`computeTreeTargets(map)` (tidy up)** — Reingold-Tilford-style left-to-right. Subtree height computed bottom-up; siblings stacked vertically; depth × LGAP horizontal march.
@@ -116,6 +119,16 @@ Text-shape nodes don't visibly animate because their early-return branch in `dra
 - **Markdown** — flattens the BFS tree into nested bullets.
 - **PNG / JPG** — canvas snapshot at current zoom.
 - **`.mm` import** — `parseCoggleMm(xmlText, baseName)` parses Coggle / Freemind XML via `DOMParser`. Handles cross-link nodes (`X_COGGLE_JOINEDTO` becomes an edge-only). Position attributes preserved if present, otherwise fanned around parents radially.
+
+## AI features
+
+Optional, off by default. Global config lives in `state.ai` (provider, API key, model); per-map context in `map.legend`. Both are defaulted in `loadState`. Calls go straight from the browser to `api.anthropic.com` (via the `anthropic-dangerous-direct-browser-access` header) — no backend, key stored only in localStorage.
+
+- **Suggest children** — `Tab` with a node selected calls `requestAiSuggestions()`, which streams candidates (`streamAiSuggestions`) and renders them as ghost nodes to accept or dismiss. `Esc` cancels the request or dismisses ghosts.
+- **Generate from prompt** — the `#gen-ov` modal takes a topic and produces a whole starter map through the same API path.
+- **Legend** — `map.legend` assigns meanings to shapes, edge styles, and colours; it is serialised into AI prompts so suggestions respect the map's semantics.
+
+An Ollama provider skeleton exists in the config object but is parked and unused.
 
 ## Adding a feature
 
@@ -144,11 +157,4 @@ This is a personal tool that grew. It is not idiomatic modern frontend code. It 
 - LocalStorage is per-browser; switching machines means manual JSON export/import.
 - Imported `.mm` files don't always lay out beautifully — the Coggle position model doesn't fully translate. Run *untangle* afterwards.
 
-## Ideas in the bank (unbuilt)
-
-- AI-assisted node expansion (suggest children for a selected node).
-- Generate a starter map from a prompt.
-- Local-model fallback (Ollama).
-- Nested map rooms (a node containing a sub-map).
-- Temporal layers (versions of a map over time).
-- Touch / mobile interface.
+Unbuilt ideas are banked in `CLAUDE.md` — that list is the only one maintained.

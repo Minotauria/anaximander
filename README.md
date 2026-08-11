@@ -15,6 +15,8 @@ Open the HTML file in a browser. That's it.
 - **Notes** — attach long-form rich text to any node via a draggable, resizable side panel.
 - **Links** — attach URLs (Google Docs, anything) to a node; double-click the link badge to open.
 - **Layouts** — *untangle* (radial fan from root) and *tidy up* (left-to-right hierarchical tree). Both deterministic, smoothly animated.
+- **Multi-select** — drag a marquee (or ⌘-click) to select several nodes; move and restyle them together.
+- **AI assist** (optional, bring-your-own Anthropic API key) — `Tab` suggests children for the selected node; generate a starter map from a prompt; a per-map legend teaches the AI what your shapes and colours mean. Nothing is sent anywhere unless you turn it on.
 - **Multiple maps** in the sidebar, organisable into folders.
 - **History** — full undo/redo per map, with named snapshots.
 - **Import .mm** files (Coggle / Freemind XML).
@@ -23,7 +25,7 @@ Open the HTML file in a browser. That's it.
 
 ## Getting started
 
-Download `anaximander_v9.html`. Open it in any modern browser. Done.
+Download the latest `anaximander_vN.html` (highest version number in the repo). Open it in any modern browser. Done.
 
 To host: drop it on GitHub Pages, Netlify, or any static host. No build, no dependencies, no backend.
 
@@ -34,14 +36,9 @@ A reference is built into the app — open the ⋯ menu and click **shortcuts**.
 | | |
 |--|--|
 | `enter` | commit edit |
-| `shift + enter` | newline inside text |
 | `esc` | cancel edit / close panel |
-| `⌘B / ⌘I / ⌘U` | bold / italic / underline |
-| `⌘⇧S` | strikethrough |
 | `⌘Z / ⌘⇧Z` | undo / redo |
 | `⌘K` | search nodes |
-| `option + drag node` | move node only (without children) |
-| `delete` | delete selected node |
 
 ## Tech
 
