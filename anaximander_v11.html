@@ -13,9 +13,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #splash.gone{opacity:0;pointer-events:none;}
 #sp-motif{position:absolute;right:-120px;top:80px;width:760px;height:520px;opacity:0.045;pointer-events:none;}
 .sp-page{position:relative;max-width:880px;margin:0 auto;height:100%;padding:44px 40px 0;display:flex;flex-direction:column;}
-.sp-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:46px;}
-.sp-wordmark{font-size:21px;font-weight:500;color:#c8c898;letter-spacing:0.06em;}
-.sp-gear{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:#4a4a3c;font-size:14px;border:none;background:transparent;font-family:'Lora',serif;transition:background 0.15s,color 0.15s;}
+.sp-head{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:46px;padding:10px 0;}
+.sp-wordmark{font-size:34px;font-weight:500;color:#c8c898;letter-spacing:0.06em;}
+.sp-gear{position:absolute;right:0;top:50%;transform:translateY(-50%);width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:#4a4a3c;font-size:14px;border:none;background:transparent;font-family:'Lora',serif;transition:background 0.15s,color 0.15s;}
 .sp-gear:hover{background:#232b23;color:#a09e8a;}
 .sp-sec{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4a4a3c;font-weight:500;margin-bottom:12px;flex-shrink:0;}
 .sp-begin{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:42px;flex-shrink:0;}
@@ -239,6 +239,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sm-lblrow button:hover{color:#9a7878;}
 .sm-add{margin:4px 14px 6px;padding:5px;border-radius:7px;border:0.5px dashed #303624;background:none;color:#7a7858;font-size:11px;cursor:pointer;font-family:'Lora',serif;}
 .sm-add:hover{border-color:#3a4030;color:#dac888;}
+.sm-done{display:block;width:calc(100% - 28px);margin:4px 14px 6px;padding:5px;border-radius:7px;border:0.5px solid #303624;background:none;color:#a8c8a8;font-size:11px;cursor:pointer;font-family:'Lora',serif;}
+.sm-done:hover{border-color:#3a4838;color:#dac888;}
 .sm-shapes,.sm-edges{display:flex;flex-wrap:wrap;gap:4px;padding:0 14px 4px;}
 .sm-shape,.sm-edge{background:none;border:0.5px solid #303624;color:#a09e8a;padding:4px 6px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;min-width:32px;min-height:24px;}
 .sm-shape:hover,.sm-edge:hover{background:#26301e;border-color:#3a4030;color:#dac888;}
@@ -342,10 +344,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <input id="map-title-in" value="" placeholder="untitled"/>
         <span class="dd-edit">&#9998;</span>
       </div>
+      <div class="dd-item" id="dd-all-maps"><span class="dd-icon">&#8962;</span> home</div>
+      <div class="dd-rule"></div>
       <div class="dd-section">Maps</div>
       <div id="dd-maps"></div>
       <div class="dd-item quiet" id="dd-new-map"><span class="dd-icon">+</span> new map</div>
-      <div class="dd-item quiet" id="dd-all-maps"><span class="dd-icon">&#8962;</span> all maps</div>
       <div class="dd-rule"></div>
       <div class="dd-item" id="dd-import"><span class="dd-icon">&#8613;</span> import file</div>
       <div class="dd-item" id="dd-export"><span class="dd-icon">&#8615;</span> export &amp; share <span class="dd-chevron">&#9658;</span></div>
@@ -537,6 +540,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <button class="ai-pt" data-pal="muted">muted</button>
       </div>
       <div id="lgnd-colours"></div>
+      <button class="sm-done" id="legend-done-btn" title="done (Enter)" style="width:100%;margin:16px 0 0;padding:7px;font-size:12px;">&#10003; done</button>
     </div>
   </div>
   <!-- Generate from prompt modal -->
@@ -624,6 +628,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     <div id="ghost-labels-list"></div>
     <button class="sm-add" id="ghost-labels-add">+ add label</button>
   </div>
+  <div class="sm-sep"></div>
+  <button class="sm-done" id="ghost-done" title="done (Enter)">&#10003; done</button>
 </div>
 
 <script>
@@ -936,7 +942,7 @@ function netRenderUrls(n){
   const list=document.getElementById('net-url-list');if(!list)return;list.innerHTML='';
   (n.urls||[]).forEach((u,i)=>{
     const row=document.createElement('div');row.className='net-url-row';
-    const inp=document.createElement('input');inp.className='net-url-inp'+(i===(n.primaryUrl||0)?' pri':'');inp.placeholder='https://docs.google.com/…';inp.value=u.url||'';
+    const inp=document.createElement('input');inp.className='net-url-inp'+(i===(n.primaryUrl||0)?' pri':'');inp.placeholder='https://…';inp.value=u.url||'';
     inp.addEventListener('input',()=>u.url=inp.value);
     inp.addEventListener('keydown',ev=>{
       if(ev.key==='Escape'){ev.stopPropagation();netCloseAllPops();return;}
@@ -3207,7 +3213,7 @@ function renderGhostLabelsList(){
     const row=document.createElement('div');row.className='sm-lblrow';
     const inp=document.createElement('input');inp.type='text';inp.value=lbl;
     inp.addEventListener('input',()=>{ghostLabelPool[i]=inp.value;});
-    inp.addEventListener('keydown',ev=>ev.stopPropagation());
+    inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();closeAllSubs();}ev.stopPropagation();});
     inp.addEventListener('click',ev=>ev.stopPropagation());
     const del=document.createElement('button');del.textContent='\u2715';del.title='remove';
     del.addEventListener('click',ev=>{ev.stopPropagation();ghostLabelPool.splice(i,1);renderGhostLabelsList();});
@@ -3220,6 +3226,7 @@ document.getElementById('ghost-labels-add').addEventListener('click',ev=>{
   ev.stopPropagation();
   if(ghostLabelPool.length<10){ghostLabelPool.push('new prompt');renderGhostLabelsList();}
 });
+document.getElementById('ghost-done').addEventListener('click',ev=>{ev.stopPropagation();closeAllSubs();});
 renderGhostLabelsList();
 
 // ── Defaults settings ──
@@ -3253,7 +3260,7 @@ const SHORTCUTS=[
     ['esc','close dialog / card menu'],
   ]},
   {section:'editing',items:[
-    ['enter','commit edit'],
+    ['enter','commit edit · done in legend / ghost-node menus'],
     ['shift + enter','newline inside text'],
     ['esc','cancel edit · deselect · close panel · dismiss menu (layered)'],
     ['⌘B / ⌘I / ⌘U','bold / italic / underline'],
@@ -3483,6 +3490,7 @@ document.addEventListener('keydown',e=>{
       e.preventDefault();materialiseAiGhosts([...aiGhosts]);return;
     }
     if(editingNode){e.preventDefault();commitEdit();return;}
+    if(openSub){e.preventDefault();closeAllSubs();return;}
     document.getElementById('bg-pop').classList.remove('vis');
   }
   if((e.key==='Delete'||e.key==='Backspace')&&!e.target.matches('input,textarea,select,[contenteditable]')){const m=cmap();if(selSet.size){pushCanvasHistLocal('delete node');const ids=selSet;m.nodes=m.nodes.filter(n=>!ids.has(n.id));m.edges=m.edges.filter(ed=>!ids.has(ed.from)&&!ids.has(ed.to));if(activeNotesNode&&ids.has(activeNotesNode.id)){activeNotesNode=null;document.getElementById('notes-panel').classList.remove('vis');}selN=null;selSet=new Set();softSave();render();}}
@@ -4614,6 +4622,9 @@ function buildMapFromGenerated(topic,rawNodes){
   });
   document.getElementById('ai-close-btn')?.addEventListener('click',()=>{document.getElementById('ai-ov').style.display='none';});
   document.getElementById('legend-close-btn')?.addEventListener('click',()=>{document.getElementById('legend-ov').style.display='none';});
+  document.getElementById('legend-done-btn')?.addEventListener('click',()=>{document.getElementById('legend-ov').style.display='none';});
+  // Enter anywhere in the legend modal (including its inputs) = done
+  document.getElementById('legend-ov')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.stopPropagation();document.getElementById('legend-ov').style.display='none';}});
   document.getElementById('ai-ov')?.addEventListener('click',e=>{if(e.target===document.getElementById('ai-ov'))document.getElementById('ai-ov').style.display='none';});
   document.getElementById('legend-ov')?.addEventListener('click',e=>{if(e.target===document.getElementById('legend-ov'))document.getElementById('legend-ov').style.display='none';});
   document.getElementById('ai-enabled')?.addEventListener('change',e=>{state.ai.enabled=e.target.checked;softSave();updateWizard();});
