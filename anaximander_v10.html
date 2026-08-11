@@ -97,10 +97,25 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #map-title-in:focus{color:#e8d098;}
 #autosave-ind{font-size:11px;color:#45453a;font-family:'Lora',serif;transition:color 0.3s;padding-right:7px;margin-right:3px;border-right:0.5px solid #252e25;}
 #autosave-ind.saving{color:#9aa07a;}
-#top-menu{position:absolute;top:62px;right:14px;background:#1a201a;border:0.5px solid #2a3028;border-radius:12px;padding:5px 0;z-index:50;display:none;min-width:180px;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
-#top-menu.vis{display:block;}
 .tmi{padding:8px 18px;font-size:13px;cursor:pointer;color:#a09e8a;font-family:'Lora',serif;}
 .tmi:hover{background:#26301e;color:#dac888;}
+/* ── right tool panel ── */
+#rpanel{position:absolute;top:60px;right:14px;width:172px;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.5);z-index:19;animation:dropIn 0.14s ease;font-family:'Lora',serif;}
+#rpanel.hidden{display:none;}
+#rp-collapse{position:absolute;top:5px;right:6px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:4px;color:#4a4a3c;font-size:11px;cursor:pointer;font-family:'Lora',serif;transition:background 0.1s,color 0.1s;z-index:5;padding:0;}
+#rp-collapse:hover{background:#252e25;color:#a09e8a;}
+.rp-group{border-bottom:0.5px solid #222b22;}
+.rp-group:last-child{border-bottom:none;}
+.rp-label{padding:9px 14px 3px;font-size:9px;text-transform:uppercase;letter-spacing:0.13em;color:#4a4a3c;font-weight:500;}
+.rp-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12px;color:#8a8a76;cursor:pointer;transition:background 0.1s,color 0.1s;white-space:nowrap;}
+.rp-item:hover{background:#1d261d;color:#c8c898;}
+.rp-item.on{color:#c8c898;}
+.rp-icon{font-size:11px;width:13px;text-align:center;opacity:0.65;flex-shrink:0;}
+.rp-chevron{font-size:9px;color:#4a4a3c;margin-left:auto;}
+.rp-pad-btm{height:6px;}
+#panel-tab{position:absolute;top:60px;right:14px;width:30px;height:30px;display:none;align-items:center;justify-content:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;color:#6a6a5a;font-size:12px;z-index:19;transition:background 0.15s,border-color 0.15s,color 0.15s;font-family:'Lora',serif;}
+#panel-tab.vis{display:flex;}
+#panel-tab:hover{background:#1e271e;border-color:#3a4838;color:#a09e8a;}
 #canvas-wrap{flex:1;position:relative;overflow:hidden;}
 #cvs{display:block;}
 #inline-input{position:absolute;display:none;background:transparent;border:none;border-radius:0;outline:none!important;font-weight:400;padding:0;margin:0;line-height:1.5;pointer-events:none;white-space:pre-wrap;word-break:break-word;cursor:text;-webkit-user-select:text;user-select:text;}
@@ -150,7 +165,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .mbtns button:hover{background:#26301e;color:#dac888;}
 .mbtns button.pri{background:#26301e;color:#dac888;border-color:#3a4030;}
 .mbtns button.pri:hover{background:#2c3622;}
-#bg-pop{position:absolute;top:62px;right:14px;background:#1a201a;border:0.5px solid #2a3028;border-radius:14px;padding:16px;z-index:50;display:none;font-family:'Lora',serif;width:300px;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
+#bg-pop{position:absolute;top:62px;right:196px;background:#1a201a;border:0.5px solid #2a3028;border-radius:14px;padding:16px;z-index:50;display:none;font-family:'Lora',serif;width:300px;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
 #bg-pop.vis{display:block;}
 #bg-pop h4{font-size:10px;font-weight:500;margin-bottom:10px;color:#c8c898;text-transform:uppercase;letter-spacing:0.08em;}
 #bg-preview{height:60px;background:#0d1a0d;border-radius:8px;margin-bottom:10px;border:0.5px solid #2a3028;display:flex;align-items:center;justify-content:center;color:#7a7858;font-size:10px;font-family:monospace;transition:background 0.15s,color 0.15s;}
@@ -163,7 +178,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .bg-sw.transp{background:repeating-conic-gradient(#3a4030 0% 25%,#5a6048 0% 50%) 50% / 8px 8px;}
 .bg-custom-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:0.5px solid #2a3028;font-size:10px;color:#a09e8a;}
 .bg-custom-row input[type=color]{width:36px;height:26px;border:none;cursor:pointer;background:none;padding:0;border-radius:5px;}
-#hist-pop{position:absolute;top:62px;right:14px;background:#1a201a;border:0.5px solid #2a3028;border-radius:12px;padding:10px 12px;z-index:50;display:none;min-width:200px;font-family:'Lora',serif;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
+#hist-pop{position:absolute;top:62px;right:196px;background:#1a201a;border:0.5px solid #2a3028;border-radius:12px;padding:10px 12px;z-index:50;display:none;min-width:200px;font-family:'Lora',serif;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
 #hist-pop.vis{display:block;}
 #hist-pop h4{font-size:10px;font-weight:500;color:#c8c898;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em;}
 .hr{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:0.5px solid #2a3028;}
@@ -208,10 +223,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .net-url-inp{flex:1;background:#0d1a0d;border:0.5px solid #303624;border-radius:6px;color:#dac888;font-size:11px;padding:4px 8px;font-family:'Lora',serif;outline:none;min-width:0;}
 .net-url-inp:focus{border-color:#3a4030;}
 .net-url-inp.pri{border-color:#3a4030;}
-#layout-btn.active{color:#dac888;background:#252e25;}
-.lmi{padding:7px 16px;font-size:13px;color:#a09e8a;cursor:pointer;font-family:'Lora',serif;white-space:nowrap;}
-.lmi:hover{background:#26301e;color:#dac888;}
-.tmi-sub{display:flex;justify-content:space-between;align-items:center;}
 .submenu{position:fixed;background:#1a201a;border:0.5px solid #2a3028;border-radius:12px;padding:5px 0;min-width:200px;display:none;z-index:200;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
 .submenu.vis{display:block;}
 .sm-row{display:flex;align-items:center;gap:8px;padding:8px 14px;}
@@ -366,21 +377,32 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <button class="tb-btn" id="cvs-redo" title="Redo (⌘⇧Z)" disabled>&#8631;</button>
         <div class="tb-sep"></div>
         <button class="tb-btn" id="btn-fullscreen" title="Fullscreen (F11)">&#9635;</button>
-        <button class="tb-btn" id="layout-btn" title="Layout">&#9783;</button>
-        <button class="tb-btn" id="menu-btn">&#8943;</button>
         <div class="tb-sep"></div>
         <button class="tb-btn" id="btn-shortcuts" title="Keyboard shortcuts">?</button>
       </div>
-      <div id="top-menu">
-        <div class="tmi" id="tmi-bg">&#9632; background</div>
-        <div class="tmi" id="tmi-history">&#9201; history</div>
-        <div class="tmi tmi-sub" id="tmi-ghostmenu">&#9685; ghost nodes &#9658;</div>
-        <div class="tmi" id="tmi-ai">&#10022; AI suggestions</div>
-        <div class="tmi" id="tmi-gen">&#10022; generate from prompt</div>
-        <div class="tmi" id="tmi-legend">&#9671; legend</div>
+      <div id="rpanel">
+        <button id="rp-collapse" title="Collapse panel">&#187;</button>
+        <div class="rp-group">
+          <div class="rp-label">Canvas</div>
+          <div class="rp-item" id="rp-bg"><span class="rp-icon">&#9632;</span> background</div>
+          <div class="rp-item" id="rp-legend"><span class="rp-icon">&#9671;</span> legend</div>
+        </div>
+        <div class="rp-group">
+          <div class="rp-label">Map</div>
+          <div class="rp-item" id="rp-history"><span class="rp-icon">&#9201;</span> history</div>
+          <div class="rp-item" id="rp-ghosts"><span class="rp-icon">&#9685;</span> ghost nodes <span class="rp-chevron">&#9658;</span></div>
+          <div class="rp-item" id="rp-untangle"><span class="rp-icon">&#10022;</span> untangle</div>
+          <div class="rp-item" id="rp-tidy"><span class="rp-icon">&#10016;</span> tidy up</div>
+        </div>
+        <div class="rp-group">
+          <div class="rp-label">AI</div>
+          <div class="rp-item" id="rp-ai-sugg"><span class="rp-icon">&#10022;</span> suggestions</div>
+          <div class="rp-item" id="rp-gen"><span class="rp-icon">&#10022;</span> new from prompt</div>
+          <div class="rp-pad-btm"></div>
+        </div>
       </div>
-      <div id="layout-menu" style="position:absolute;top:62px;right:14px;background:#1a201a;border:0.5px solid #2a3028;border-radius:12px;padding:5px 0;z-index:60;display:none;min-width:180px;box-shadow:0 8px 30px rgba(0,0,0,0.5);"></div>
-      <div id="untangle-progress" style="position:absolute;top:62px;right:14px;width:160px;height:3px;background:#0d1a0d;border-radius:2px;display:none;"><div id="untangle-bar" style="height:100%;background:#dac888;width:0%;border-radius:2px;"></div></div>
+      <div id="panel-tab" title="Show tools">&#171;</div>
+      <div id="untangle-progress" style="position:absolute;top:62px;right:196px;width:160px;height:3px;background:#0d1a0d;border-radius:2px;display:none;"><div id="untangle-bar" style="height:100%;background:#dac888;width:0%;border-radius:2px;"></div></div>
       <div id="canvas-wrap">
         <canvas id="cvs" tabindex="0"></canvas>
         <div id="link-tooltip" style="position:absolute;display:none;background:#1a201a;color:#dac888;font-size:11px;padding:5px 10px;border-radius:7px;border:0.5px solid #2a3028;pointer-events:none;z-index:45;max-width:320px;word-break:break-word;font-family:'Lora',serif;box-shadow:0 4px 16px rgba(0,0,0,0.5);"></div>
@@ -2196,8 +2218,8 @@ function animate(){
       dirty=true;
     } else {
       const pb2=document.getElementById('untangle-progress');if(pb2)pb2.style.display='none';
-      const btn=document.getElementById('lmi-untangle');if(btn){btn.textContent='\u2746 untangle';btn.classList.remove('on');}
-      const btn2=document.getElementById('lmi-tidy');if(btn2){btn2.textContent='\u2726 tidy up';btn2.classList.remove('on');}
+      const rl=document.getElementById('rp-untangle');if(rl){rl.querySelector('.rp-icon').nextSibling.textContent=' untangle';rl.classList.remove('on');}
+      const rt=document.getElementById('rp-tidy');if(rt){rt.querySelector('.rp-icon').nextSibling.textContent=' tidy up';rt.classList.remove('on');}
       dirty=true;
     }
   }
@@ -2945,18 +2967,13 @@ document.getElementById('file-imp-any').addEventListener('change',e=>{
   e.target.value='';
 });
 
-const menuBtn=document.getElementById('menu-btn'),topMenu=document.getElementById('top-menu');
-menuBtn.addEventListener('click',e=>{e.stopPropagation();topMenu.classList.toggle('vis');});
-document.getElementById('tmi-bg').addEventListener('click',()=>{topMenu.classList.remove('vis');document.getElementById('bg-pop').classList.toggle('vis');});
-document.getElementById('tmi-history').addEventListener('click',()=>{topMenu.classList.remove('vis');const p=document.getElementById('hist-pop');p.classList.toggle('vis');if(p.classList.contains('vis'))renderHist();});
-document.getElementById('tmi-export-png').addEventListener('click',()=>{topMenu.classList.remove('vis');const url=cvs.toDataURL('image/png'),a=document.createElement('a');a.href=url;a.download=`${cmap()?.name||'anaximander'}.png`;a.click();});
-document.getElementById('tmi-export-jpg').addEventListener('click',()=>{topMenu.classList.remove('vis');const url=cvs.toDataURL('image/jpeg',0.95),a=document.createElement('a');a.href=url;a.download=`${cmap()?.name||'anaximander'}.jpg`;a.click();});
-document.getElementById('tmi-export-json').addEventListener('click',()=>{topMenu.classList.remove('vis');const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='anaximander.json';a.click();});
-document.getElementById('tmi-share').addEventListener('click',()=>{
-  topMenu.classList.remove('vis');shareViaUrl();
-});
+document.getElementById('rp-bg').addEventListener('click',()=>{document.getElementById('bg-pop').classList.toggle('vis');});
+document.getElementById('rp-history').addEventListener('click',()=>{const p=document.getElementById('hist-pop');p.classList.toggle('vis');if(p.classList.contains('vis'))renderHist();});
+document.getElementById('tmi-export-png').addEventListener('click',()=>{const url=cvs.toDataURL('image/png'),a=document.createElement('a');a.href=url;a.download=`${cmap()?.name||'anaximander'}.png`;a.click();});
+document.getElementById('tmi-export-jpg').addEventListener('click',()=>{const url=cvs.toDataURL('image/jpeg',0.95),a=document.createElement('a');a.href=url;a.download=`${cmap()?.name||'anaximander'}.jpg`;a.click();});
+document.getElementById('tmi-export-json').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='anaximander.json';a.click();});
+document.getElementById('tmi-share').addEventListener('click',()=>{shareViaUrl();});
 document.getElementById('tmi-export-md').addEventListener('click',()=>{
-  topMenu.classList.remove('vis');
   const map=cmap();if(!map)return;
   // build adjacency
   const childMap={};map.nodes.forEach(n=>{childMap[n.id]=[];});
@@ -2981,8 +2998,8 @@ document.getElementById('tmi-export-md').addEventListener('click',()=>{
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=(map.name||'anaximander')+'.md';a.click();
 });
-document.getElementById('tmi-import2').addEventListener('click',()=>{topMenu.classList.remove('vis');document.getElementById('file-imp').click();});
-document.getElementById('tmi-import-mm').addEventListener('click',()=>{topMenu.classList.remove('vis');closeAllSubs();document.getElementById('file-imp-mm').click();});
+document.getElementById('tmi-import2').addEventListener('click',()=>{document.getElementById('file-imp').click();});
+document.getElementById('tmi-import-mm').addEventListener('click',()=>{closeAllSubs();document.getElementById('file-imp-mm').click();});
 document.getElementById('file-imp-mm').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;
   const fr=new FileReader();
@@ -3104,42 +3121,23 @@ function parseCoggleMm(xmlText,baseName){
     history:[]
   };
 }
-// layout button
-const layoutBtn=document.getElementById('layout-btn');
-const layoutMenu=document.getElementById('layout-menu');
-// build layout menu items
-const lmiUntangle=document.createElement('div');lmiUntangle.className='lmi';lmiUntangle.id='lmi-untangle';lmiUntangle.innerHTML='&#10022; untangle';
-lmiUntangle.addEventListener('click',()=>{
+// layout actions (Map group of the right panel)
+const rpUntangle=document.getElementById('rp-untangle'),rpTidy=document.getElementById('rp-tidy');
+rpUntangle.addEventListener('click',()=>{
   if(layoutAnim)return;
-  lmiUntangle.textContent='untangling…';lmiUntangle.classList.add('on');
+  rpUntangle.querySelector('.rp-icon').nextSibling.textContent=' untangling\u2026';rpUntangle.classList.add('on');
   const pb=document.getElementById('untangle-progress');if(pb){pb.style.display='block';document.getElementById('untangle-bar').style.width='0%';}
-  layoutMenu.style.display='none';
   runRadialLayout();
 });
-layoutMenu.appendChild(lmiUntangle);
-const lmiTidy=document.createElement('div');lmiTidy.className='lmi';lmiTidy.id='lmi-tidy';lmiTidy.innerHTML='&#10016; tidy up';
-lmiTidy.addEventListener('click',()=>{
+rpTidy.addEventListener('click',()=>{
   if(layoutAnim)return;
-  lmiTidy.textContent='tidying…';lmiTidy.classList.add('on');
+  rpTidy.querySelector('.rp-icon').nextSibling.textContent=' tidying\u2026';rpTidy.classList.add('on');
   const pb=document.getElementById('untangle-progress');if(pb){pb.style.display='block';document.getElementById('untangle-bar').style.width='0%';}
-  layoutMenu.style.display='none';
   runTreeLayout();
-});
-layoutMenu.appendChild(lmiTidy);
-layoutBtn.addEventListener('click',ev=>{
-  ev.stopPropagation();
-  const vis=layoutMenu.style.display==='block';
-  layoutMenu.style.display=vis?'none':'block';
-  topMenu.classList.remove('vis');
-});
-document.addEventListener('click',e=>{
-  if(!e.target.closest('#layout-menu')&&!e.target.closest('#layout-btn'))
-    layoutMenu.style.display='none';
 });
 
 
 document.getElementById('tmi-ghosts').addEventListener('click',()=>{
-  topMenu.classList.remove('vis');
   ghostsEnabled=!ghostsEnabled;
   ghosts=[];
   document.getElementById('tmi-ghosts').textContent=ghostsEnabled?'⧅ ghost nodes: on':'⧅ ghost nodes: off';
@@ -3148,27 +3146,20 @@ document.getElementById('tmi-ghosts').addEventListener('click',()=>{
 // tmi-fullscreen moved to canvas button
 // tmi-new-map removed
 // ── Submenus ──
-const subMenuMap = {
-  'tmi-ghostmenu': 'sub-ghost',
-};
 let openSub = null;
 function closeAllSubs(){document.querySelectorAll('.submenu').forEach(s=>s.classList.remove('vis'));openSub=null;}
-Object.entries(subMenuMap).forEach(([triggerId, subId])=>{
-  const trigger=document.getElementById(triggerId);
-  const sub=document.getElementById(subId);
-  if(!trigger||!sub)return;
-  trigger.addEventListener('click',ev=>{
-    ev.stopPropagation();
-    const isOpen=sub.classList.contains('vis');
-    closeAllSubs();
-    if(!isOpen){
-      const tr=trigger.getBoundingClientRect();
-      sub.style.top=(tr.bottom+4)+'px';
-      sub.style.right=(window.innerWidth-tr.right)+'px';
-      sub.style.left='auto';
-      sub.classList.add('vis');openSub=sub;
-    }
-  });
+document.getElementById('rp-ghosts').addEventListener('click',ev=>{
+  ev.stopPropagation();
+  const sub=document.getElementById('sub-ghost');
+  const isOpen=sub.classList.contains('vis');
+  closeAllSubs();
+  if(!isOpen){
+    const tr=ev.currentTarget.getBoundingClientRect();
+    sub.style.top=tr.top+'px';
+    sub.style.right=(window.innerWidth-tr.left+8)+'px';
+    sub.style.left='auto';
+    sub.classList.add('vis');openSub=sub;
+  }
 });
 document.addEventListener('click',()=>closeAllSubs());
 // stop clicks inside submenus from bubbling to the document-level close handler
@@ -3178,7 +3169,13 @@ document.getElementById('sub-export').addEventListener('click',ev=>{if(ev.target
 
 // fullscreen button on canvas
 const _btnFs=document.getElementById('btn-fullscreen');if(_btnFs)_btnFs.addEventListener('click',toggleFullscreen);
-document.getElementById('tmi-fullscreen') && document.getElementById('tmi-fullscreen').remove();
+// right panel collapse — persisted as a global UI preference
+const _RP_KEY='anax_rpanel_collapsed';
+const rpanelEl=document.getElementById('rpanel'),panelTabEl=document.getElementById('panel-tab');
+function applyRpCollapsed(c){rpanelEl.classList.toggle('hidden',c);panelTabEl.classList.toggle('vis',c);}
+applyRpCollapsed(localStorage.getItem(_RP_KEY)==='1');
+document.getElementById('rp-collapse').addEventListener('click',()=>{applyRpCollapsed(true);try{localStorage.setItem(_RP_KEY,'1');}catch(e){}});
+panelTabEl.addEventListener('click',()=>{applyRpCollapsed(false);try{localStorage.setItem(_RP_KEY,'0');}catch(e){}});
 
 // ── Ghost node settings ──
 let ghostCount=3;
@@ -3283,7 +3280,7 @@ const SHORTCUTS=[
     ['right-click','context menu'],
   ]},
   {section:'generate map from prompt',items:[
-    ['menu → generate from prompt','open the generator'],
+    ['AI panel → new from prompt','open the generator (or ✦ From prompt on the home screen)'],
     ['enter','submit prompt (or click generate)'],
     ['shift + enter','newline in prompt'],
   ]},
@@ -3304,6 +3301,10 @@ const SHORTCUTS=[
     ['≡ button (top left)','open the drawer — switch, create, import, export'],
     ['map name field','rename the current map'],
     ['⌂ all maps','back to the home screen'],
+  ]},
+  {section:'tool panel',items:[
+    ['»','collapse the right panel to a thin tab'],
+    ['«','expand it again'],
   ]},
 ];
 function renderShortcuts(){
@@ -3409,9 +3410,8 @@ document.addEventListener('mouseup',()=>{mmDragging=false;});
 document.addEventListener('click',e=>{
   if(netOpenPicker&&!e.target.closest('.net-pop')&&!e.target.closest('#node-edit-toolbar'))netCloseAllPops();
   if(!e.target.closest('#ctx'))document.getElementById('ctx').style.display='none';
-  if(!e.target.closest('#hist-pop')&&!e.target.closest('#tmi-history'))document.getElementById('hist-pop').classList.remove('vis');
-  if(!e.target.closest('#bg-pop')&&!e.target.closest('#tmi-bg'))document.getElementById('bg-pop').classList.remove('vis');
-  if(!e.target.closest('#top-menu')&&!e.target.closest('#menu-btn'))topMenu.classList.remove('vis');
+  if(!e.target.closest('#hist-pop')&&!e.target.closest('#rp-history'))document.getElementById('hist-pop').classList.remove('vis');
+  if(!e.target.closest('#bg-pop')&&!e.target.closest('#rp-bg'))document.getElementById('bg-pop').classList.remove('vis');
 });
 
 document.addEventListener('keydown',e=>{
@@ -3456,7 +3456,6 @@ document.addEventListener('keydown',e=>{
     if(pickerFor){pickerFor=null;render();return;}
     if(document.getElementById('ctx').style.display==='block'){document.getElementById('ctx').style.display='none';return;}
     if(drawerEl.classList.contains('vis')){closeDrawer();return;}
-    if(topMenu.classList.contains('vis')){topMenu.classList.remove('vis');return;}
     if(document.getElementById('hist-pop').classList.contains('vis')){document.getElementById('hist-pop').classList.remove('vis');return;}
     if(document.getElementById('bg-pop').classList.contains('vis')){document.getElementById('bg-pop').classList.remove('vis');return;}
     if(selN||selSet.size){selN=null;selSet=new Set();render();return;}
@@ -4558,8 +4557,7 @@ function buildMapFromGenerated(topic,rawNodes){
 }
 
 ;(function wireGenUI(){
-  document.getElementById('tmi-gen')?.addEventListener('click',()=>{
-    topMenu.classList.remove('vis');
+  document.getElementById('rp-gen')?.addEventListener('click',()=>{
     document.getElementById('gen-status').textContent='';
     document.getElementById('gen-prompt').value='';
     document.getElementById('gen-btn').disabled=false;
@@ -4590,15 +4588,14 @@ function buildMapFromGenerated(topic,rawNodes){
 
 // ── AI UI wiring ────────────────────────────────────────────────────────────
 (function wireAiUI(){
-  document.getElementById('tmi-ai')?.addEventListener('click',()=>{
-    topMenu.classList.remove('vis');
-    syncAiUI();
-    document.getElementById('ai-ov').style.display='flex';
-  });
-  document.getElementById('tmi-legend')?.addEventListener('click',()=>{
-    topMenu.classList.remove('vis');
+  document.getElementById('rp-legend')?.addEventListener('click',()=>{
     buildLegendUI();
     document.getElementById('legend-ov').style.display='flex';
+  });
+  document.getElementById('rp-ai-sugg')?.addEventListener('click',()=>{
+    if(!state.ai||!state.ai.enabled){showToast('Enable AI first \u2014 \u2699 settings on the home screen');return;}
+    if(!selN){showToast('Select a node first \u2014 Tab does this too');return;}
+    requestAiSuggestions();
   });
   document.getElementById('ai-close-btn')?.addEventListener('click',()=>{document.getElementById('ai-ov').style.display='none';});
   document.getElementById('legend-close-btn')?.addEventListener('click',()=>{document.getElementById('legend-ov').style.display='none';});
