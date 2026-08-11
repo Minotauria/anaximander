@@ -18,7 +18,7 @@ Open the HTML file in a browser. That's it.
 - **Layouts** — *untangle* (radial fan from root) and *tidy up* (left-to-right hierarchical tree). Both deterministic, smoothly animated.
 - **Multi-select** — drag a marquee (or ⌘-click) to select several nodes; move and restyle them together.
 - **AI assist** (optional, bring-your-own Anthropic API key) — `Tab` suggests children for the selected node; generate a starter map from a prompt; a per-map legend teaches the AI what your shapes and colours mean. Nothing is sent anywhere unless you turn it on.
-- **Multiple maps** in the sidebar, organisable into folders.
+- **Multiple maps** — the `≡` drawer on the canvas switches, creates, imports and exports maps; the home screen shows them all as cards.
 - **History** — full undo/redo per map, with named snapshots.
 - **Import .mm** files (Coggle / Freemind XML).
 - **Export** to PNG, JPG, JSON, Markdown; share via URL.
@@ -32,7 +32,7 @@ To host: drop it on GitHub Pages, Netlify, or any static host. No build, no depe
 
 ## Keyboard shortcuts
 
-A reference is built into the app — open the ⋯ menu and click **shortcuts**. Highlights:
+A reference is built into the app — click the **?** button in the toolbar. Highlights:
 
 | | |
 |--|--|

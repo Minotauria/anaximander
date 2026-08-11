@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Anaximander — splash mockup v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #1a201a; font-family: 'Lora', serif; color: #a09e8a; }
+
+/* faint background motif */
+#motif {
+  position: fixed;
+  right: -120px; top: 80px;
+  width: 760px; height: 520px;
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+.page {
+  position: relative;
+  max-width: 880px;
+  margin: 0 auto;
+  height: 100vh;
+  padding: 44px 40px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── header ── */
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 46px;
+}
+.wordmark {
+  font-size: 21px;
+  font-weight: 500;
+  color: #c8c898;
+  letter-spacing: 0.06em;
+}
+.gear {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #4a4a3c;
+  font-size: 14px;
+  border: none; background: transparent;
+  font-family: 'Lora', serif;
+  transition: background 0.15s, color 0.15s;
+}
+.gear:hover { background: #232b23; color: #a09e8a; }
+
+/* ── section labels ── */
+.sec {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #4a4a3c;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+/* ── begin tiles ── */
+.begin {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 42px;
+}
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 17px;
+  background: #1d261d;
+  border: 0.5px solid #272f27;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+.tile:hover { border-color: #3a4a38; background: #202a20; }
+.tile-icon {
+  font-size: 17px;
+  color: #6a6a58;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.tile:hover .tile-icon { color: #a09e8a; }
+.tile-icon.ai { color: #7ec87e; }
+.tile:hover .tile-icon.ai { color: #9ada9a; }
+.tile-name { font-size: 13px; color: #c8c898; margin-bottom: 2px; }
+.tile-desc { font-size: 10.5px; color: #55554a; line-height: 1.35; }
+.tile.dim { opacity: 0.45; pointer-events: none; }
+.soon {
+  font-size: 9px;
+  color: #4a4a3a;
+  background: #232b23;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  letter-spacing: 0.05em;
+  vertical-align: 1px;
+}
+
+/* ── map cards ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 10px;
+}
+.card {
+  position: relative;
+  background: #1d261d;
+  border: 0.5px solid #272f27;
+  border-radius: 10px;
+  padding: 15px 15px 12px;
+  cursor: pointer;
+  min-height: 148px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-color 0.18s, background 0.18s;
+}
+.card:hover { border-color: #3a4a38; background: #202a20; }
+.card.recent::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #5a8a5a 0%, transparent 70%);
+}
+@keyframes cardFlash {
+  0%, 100% { border-color: #272f27; }
+  40% { border-color: #7ec87e; }
+}
+.card.flash { animation: cardFlash 0.7s ease; }
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-name { font-size: 13px; color: #c8c898; font-weight: 500; line-height: 1.3; }
+
+.dots {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+  border: none; background: transparent;
+  color: #4a4a3c;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Lora', serif;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.card:hover .dots { opacity: 1; }
+.dots:hover { background: #252e25; color: #a09e8a; }
+
+.card-preview {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.38;
+  padding: 4px 0;
+}
+.card-preview svg { width: 118px; height: 54px; overflow: visible; }
+
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-meta { font-size: 10px; color: #45453a; }
+.chips { display: flex; gap: 3px; }
+.chip { width: 6px; height: 6px; border-radius: 50%; opacity: 0.55; }
+
+/* card menu */
+.card-menu {
+  position: absolute;
+  top: 34px; right: 10px;
+  background: #1a201a;
+  border: 0.5px solid #2f382e;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  z-index: 50;
+  display: none;
+  min-width: 108px;
+  padding: 4px 0;
+}
+.card-menu.vis { display: block; }
+.cm-item {
+  padding: 6px 13px;
+  font-size: 11.5px;
+  color: #8a8a76;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.cm-item:hover { background: #1d261d; color: #c8c898; }
+.cm-rule { height: 0.5px; background: #252e25; margin: 4px 0; }
+.cm-item.del { color: #6a5a48; }
+.cm-item.del:hover { color: #a08a6a; }
+
+/* ── footer ── */
+.foot {
+  margin-top: auto;
+  padding: 18px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hint { font-size: 10.5px; color: #3a3a30; letter-spacing: 0.03em; }
+.hint .key {
+  display: inline-block;
+  border: 0.5px solid #2f382e;
+  border-radius: 4px;
+  padding: 0 5px;
+  margin-right: 4px;
+  font-size: 10px;
+  color: #55554a;
+}
+.ver { font-size: 10px; color: #30302a; letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+
+<div id="motif"></div>
+
+<div class="page">
+
+  <div class="head">
+    <span class="wordmark">Anaximander</span>
+    <button class="gear" title="Settings — AI provider, key, defaults">&#9881;</button>
+  </div>
+
+  <div class="sec">Begin</div>
+  <div class="begin">
+    <div class="tile">
+      <span class="tile-icon">+</span>
+      <span>
+        <span class="tile-name">Blank map</span>
+        <div class="tile-desc">an empty canvas</div>
+      </span>
+    </div>
+    <div class="tile">
+      <span class="tile-icon ai">&#10022;</span>
+      <span>
+        <span class="tile-name">From prompt</span>
+        <div class="tile-desc">Claude drafts a starter map</div>
+      </span>
+    </div>
+    <div class="tile dim">
+      <span class="tile-icon">&#8613;</span>
+      <span>
+        <span class="tile-name">From document<span class="soon">soon</span></span>
+        <div class="tile-desc">summarise a .pdf or .doc</div>
+      </span>
+    </div>
+  </div>
+
+  <div class="sec">Return</div>
+  <div class="grid" id="grid"></div>
+
+  <div class="foot">
+    <span class="hint"><span class="key">&#8629;</span>reopen First map</span>
+    <span class="ver">v10</span>
+  </div>
+
+</div>
+
+<script>
+// seeded rng
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+
+const PALETTE = ['#6a9a6a','#5a8a7a','#8a6a5a','#7a8a6a','#8a7a5a','#6a8a5a','#8a8a5a'];
+
+// radial mini-map generator — mirrors the app's actual layout idiom
+function genMap(seed, w, h, s) {
+  const r = mulberry32(seed);
+  const cx = w/2, cy = h/2;
+  const used = [];
+  const pick = () => { const c = PALETTE[Math.floor(r()*PALETTE.length)]; used.push(c); return c; };
+  let out = '';
+  const n = 4 + Math.floor(r()*3);
+  const off = r() * Math.PI * 2;
+  const crx = 14*s, cry = 8*s;
+  for (let i = 0; i < n; i++) {
+    const a = off + i * Math.PI*2/n + (r()-0.5)*0.6;
+    const dist = Math.min(w,h)*0.42 + (r()-0.5)*Math.min(w,h)*0.12;
+    const ex = cx + Math.cos(a)*dist*1.25, ey = cy + Math.sin(a)*dist*0.8;
+    const erx = (7+r()*2)*s, ery = (4+r()*1.3)*s;
+    out += `<line x1="${cx+Math.cos(a)*crx*0.9}" y1="${cy+Math.sin(a)*cry*0.9}" x2="${ex-Math.cos(a)*erx*0.9}" y2="${ey-Math.sin(a)*ery*0.9}" stroke="#4a5a48" stroke-width="${0.9*s}" stroke-dasharray="${2*s} ${1.6*s}"/>`;
+    out += `<ellipse cx="${ex}" cy="${ey}" rx="${erx}" ry="${ery}" fill="${pick()}"/>`;
+  }
+  out += `<ellipse cx="${cx}" cy="${cy}" rx="${crx}" ry="${cry}" fill="${pick()}"/>`;
+  return { svg: `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${out}</svg>`, colors: [...new Set(used)] };
+}
+
+// background motif
+const motif = genMap(7, 760, 520, 3.1);
+document.getElementById('motif').innerHTML = motif.svg;
+
+// map cards
+const MAPS = [
+  { name: 'First map',      nodes: 12, edited: 'today',       seed: 3,  recent: true },
+  { name: 'Research notes', nodes: 34, edited: '2 days ago',  seed: 11 },
+  { name: 'Project ideas',  nodes: 8,  edited: 'last week',   seed: 19 },
+  { name: 'Reading list',   nodes: 21, edited: '3 weeks ago', seed: 27 },
+];
+
+const grid = document.getElementById('grid');
+MAPS.forEach((m, i) => {
+  const pv = genMap(m.seed, 120, 56, 1);
+  const card = document.createElement('div');
+  card.className = 'card' + (m.recent ? ' recent' : '');
+  card.innerHTML = `
+    <div class="card-top">
+      <span class="card-name">${m.name}</span>
+      <button class="dots">&#8943;</button>
+    </div>
+    <div class="card-preview">${pv.svg}</div>
+    <div class="card-foot">
+      <span class="card-meta">${m.nodes} nodes &middot; ${m.edited}</span>
+      <span class="chips">${pv.colors.slice(0,4).map(c=>`<span class="chip" style="background:${c}"></span>`).join('')}</span>
+    </div>
+    <div class="card-menu">
+      <div class="cm-item">Rename</div>
+      <div class="cm-item">Duplicate</div>
+      <div class="cm-item">Export</div>
+      <div class="cm-rule"></div>
+      <div class="cm-item del">Delete</div>
+    </div>`;
+  grid.appendChild(card);
+
+  const dots = card.querySelector('.dots');
+  const menu = card.querySelector('.card-menu');
+  dots.addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelectorAll('.card-menu.vis').forEach(el => { if (el !== menu) el.classList.remove('vis'); });
+    menu.classList.toggle('vis');
+  });
+});
+document.addEventListener('click', () => document.querySelectorAll('.card-menu.vis').forEach(el => el.classList.remove('vis')));
+
+// ↵ reopens most recent map
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const c = document.querySelector('.card.recent');
+    c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Anaximander — canvas nav mockup v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #1a201a; font-family: 'Lora', serif; color: #a09e8a; }
+
+canvas { position: fixed; inset: 0; }
+
+/* ── burger + map name ─────────────────────── */
+.burger {
+  position: fixed;
+  top: 14px; left: 14px;
+  height: 34px;
+  display: flex; align-items: center;
+  gap: 9px;
+  padding: 0 13px 0 11px;
+  background: #1a201a;
+  border: 0.5px solid #2a3028;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 200;
+  color: #909078;
+  font-size: 12.5px;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.burger:hover { background: #1e271e; border-color: #3a4838; color: #c8c898; }
+.burger.open { border-color: #5a8a5a; color: #c8c898; background: #1e271e; }
+.burger-glyph { font-size: 14px; letter-spacing: -1px; color: #6a6a58; }
+.burger:hover .burger-glyph, .burger.open .burger-glyph { color: #a09e8a; }
+
+/* ── drawer ────────────────────────────────── */
+.drawer {
+  position: fixed;
+  top: 57px; left: 14px;
+  width: 232px;
+  background: #1a201a;
+  border: 0.5px solid #2a3028;
+  border-radius: 10px;
+  z-index: 199;
+  box-shadow: 0 14px 44px rgba(0,0,0,0.65);
+  overflow: hidden;
+  display: none;
+  animation: dropIn 0.14s ease;
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.drawer.vis { display: block; }
+
+.dd-mapname {
+  padding: 11px 15px 10px;
+  border-bottom: 0.5px solid #252e25;
+  font-size: 13px;
+  color: #c8c898;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: text;
+}
+.dd-mapname:hover { background: #1d261d; }
+.dd-edit { font-size: 10px; color: #4a4a3c; opacity: 0; transition: opacity 0.15s; }
+.dd-mapname:hover .dd-edit { opacity: 1; }
+
+.dd-section {
+  padding: 9px 15px 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: #4a4a3c;
+  font-weight: 500;
+}
+
+.dd-item {
+  padding: 7px 15px;
+  font-size: 12px;
+  color: #8a8a76;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition: background 0.1s, color 0.1s;
+}
+.dd-item:hover { background: #1d261d; color: #c8c898; }
+.dd-item.active { color: #c8c898; }
+.dd-item.quiet { color: #5a5a4a; font-size: 11.5px; }
+.dd-item.quiet:hover { color: #a09e8a; }
+.dd-check { font-size: 9px; color: #7ec87e; width: 10px; flex-shrink: 0; }
+.dd-gap   { width: 10px; flex-shrink: 0; }
+.dd-icon  { font-size: 11px; width: 13px; text-align: center; opacity: 0.7; flex-shrink: 0; }
+.dd-chevron { font-size: 9px; color: #4a4a3c; margin-left: auto; }
+
+.dd-rule { height: 0.5px; background: #252e25; margin: 6px 0; }
+.dd-pad-btm { height: 7px; }
+
+/* ── top-right toolbar ─────────────────────── */
+.toolbar {
+  position: fixed;
+  top: 12px; right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #1a201a;
+  border: 0.5px solid #2a3028;
+  border-radius: 8px;
+  padding: 4px 7px;
+  z-index: 200;
+}
+.tb-saved {
+  font-size: 11px;
+  color: #45453a;
+  padding-right: 7px;
+  margin-right: 3px;
+  border-right: 0.5px solid #252e25;
+}
+.tb-btn {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #6a6a5a;
+  font-size: 13px;
+  border: none; background: transparent;
+  font-family: 'Lora', serif;
+  transition: background 0.1s, color 0.1s;
+}
+.tb-btn:hover { background: #252e25; color: #a09e8a; }
+.tb-sep { width: 0.5px; height: 16px; background: #252e25; margin: 0 3px; }
+
+/* ── right panel ───────────────────────────── */
+.rpanel {
+  position: fixed;
+  top: 60px; right: 12px;
+  width: 172px;
+  background: #1a201a;
+  border: 0.5px solid #2a3028;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  z-index: 150;
+  animation: dropIn 0.14s ease;
+}
+.rpanel.hidden { display: none; }
+
+.rp-collapse {
+  position: absolute;
+  top: 5px; right: 6px;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent;
+  border-radius: 4px;
+  color: #4a4a3c;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: 'Lora', serif;
+  transition: background 0.1s, color 0.1s;
+  z-index: 5;
+}
+.rp-collapse:hover { background: #252e25; color: #a09e8a; }
+
+.rp-group { border-bottom: 0.5px solid #222b22; }
+.rp-group:last-child { border-bottom: none; }
+
+.rp-label {
+  padding: 9px 14px 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: #4a4a3c;
+  font-weight: 500;
+}
+
+.rp-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  color: #8a8a76;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+.rp-item:hover { background: #1d261d; color: #c8c898; }
+.rp-icon { font-size: 11px; width: 13px; text-align: center; opacity: 0.65; flex-shrink: 0; }
+.rp-chevron { font-size: 9px; color: #4a4a3c; margin-left: auto; }
+.rp-pad-btm { height: 6px; }
+
+/* collapsed panel tab */
+.panel-tab {
+  position: fixed;
+  top: 60px; right: 12px;
+  width: 30px; height: 30px;
+  display: none;
+  align-items: center; justify-content: center;
+  background: #1a201a;
+  border: 0.5px solid #2a3028;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #6a6a5a;
+  font-size: 12px;
+  z-index: 150;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.panel-tab.vis { display: flex; }
+.panel-tab:hover { background: #1e271e; border-color: #3a4838; color: #a09e8a; }
+
+/* ── zoom ──────────────────────────────────── */
+.zoom {
+  position: fixed;
+  bottom: 20px; right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 150;
+}
+.zoom-btn {
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  background: #1a201a;
+  border: 0.5px solid #2a3028;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #6a6a5a;
+  font-size: 14px;
+  user-select: none;
+  transition: all 0.15s;
+}
+.zoom-btn:hover { background: #1d261d; color: #a09e8a; }
+.zoom-pct { font-size: 10px; color: #3a3a2e; padding: 2px 0; letter-spacing: 0.04em; }
+
+/* ── mockup note ───────────────────────────── */
+.note {
+  position: fixed;
+  bottom: 20px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #3a3a2e;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<canvas id="cv"></canvas>
+
+<!-- burger with current map name -->
+<div class="burger" id="burger">
+  <span class="burger-glyph">&#9776;</span> First map
+</div>
+
+<!-- drawer -->
+<div class="drawer" id="drawer">
+
+  <div class="dd-mapname">
+    First map <span class="dd-edit">&#9998;</span>
+  </div>
+
+  <div class="dd-section">Maps</div>
+  <div class="dd-item active">
+    <span class="dd-check">&#10003;</span> First map
+  </div>
+  <div class="dd-item">
+    <span class="dd-gap"></span> Research notes
+  </div>
+  <div class="dd-item">
+    <span class="dd-gap"></span> Project ideas
+  </div>
+  <div class="dd-item">
+    <span class="dd-gap"></span> Reading list
+  </div>
+  <div class="dd-item quiet">
+    <span class="dd-icon">+</span> new map
+  </div>
+  <div class="dd-item quiet">
+    <span class="dd-icon">&#8962;</span> all maps
+  </div>
+
+  <div class="dd-rule"></div>
+
+  <div class="dd-item">
+    <span class="dd-icon">&#8613;</span> import file
+  </div>
+  <div class="dd-item">
+    <span class="dd-icon">&#8615;</span> export &amp; share <span class="dd-chevron">&#9658;</span>
+  </div>
+
+  <div class="dd-rule"></div>
+
+  <div class="dd-item quiet">
+    <span class="dd-icon">&#9109;</span> recycle bin
+  </div>
+  <div class="dd-pad-btm"></div>
+
+</div>
+
+<!-- toolbar: saved · undo/redo · shortcuts -->
+<div class="toolbar">
+  <span class="tb-saved">saved</span>
+  <button class="tb-btn" title="Undo">&#8630;</button>
+  <button class="tb-btn" title="Redo">&#8631;</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" title="Keyboard shortcuts">?</button>
+</div>
+
+<!-- right panel: grouped tools, collapsible -->
+<div class="rpanel" id="rpanel">
+  <button class="rp-collapse" id="rpCollapse" title="Collapse panel">&#187;</button>
+
+  <div class="rp-group">
+    <div class="rp-label">Canvas</div>
+    <div class="rp-item"><span class="rp-icon">&#9632;</span> background</div>
+    <div class="rp-item"><span class="rp-icon">&#9783;</span> legend</div>
+  </div>
+
+  <div class="rp-group">
+    <div class="rp-label">Map</div>
+    <div class="rp-item"><span class="rp-icon">&#8857;</span> history</div>
+    <div class="rp-item"><span class="rp-icon">&#9671;</span> ghost nodes <span class="rp-chevron">&#9658;</span></div>
+  </div>
+
+  <div class="rp-group">
+    <div class="rp-label">AI</div>
+    <div class="rp-item"><span class="rp-icon">&#10022;</span> suggestions</div>
+    <div class="rp-item"><span class="rp-icon">&#10022;</span> new from prompt</div>
+    <div class="rp-pad-btm"></div>
+  </div>
+
+</div>
+
+<!-- collapsed panel tab -->
+<div class="panel-tab" id="panelTab" title="Show tools">&#171;</div>
+
+<!-- zoom -->
+<div class="zoom">
+  <div class="zoom-btn">+</div>
+  <span class="zoom-pct">100%</span>
+  <div class="zoom-btn">&minus;</div>
+</div>
+
+<p class="note">&#9776; opens the map drawer &middot; &#187; collapses the tool panel</p>
+
+<script>
+// ── canvas: fake map, palette-true colours ───
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const DPR = window.devicePixelRatio || 1;
+
+function resize() {
+  cv.width  = window.innerWidth  * DPR;
+  cv.height = window.innerHeight * DPR;
+  cv.style.width  = window.innerWidth  + 'px';
+  cv.style.height = window.innerHeight + 'px';
+  draw();
+}
+
+function bevelFill(sry) {
+  const bevelEnd = Math.min(sry, 14 * DPR);
+  const g = ctx.createLinearGradient(0, -sry, 0, -sry + bevelEnd);
+  g.addColorStop(0, 'rgba(255,255,255,0.13)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  return g;
+}
+
+function drawPill(x, y, rx, ry, fill, label) {
+  ctx.save();
+  ctx.translate(x * DPR, y * DPR);
+  const r = ry * DPR, srx = rx * DPR, sry = ry * DPR;
+  const path = () => {
+    ctx.beginPath();
+    ctx.moveTo(-srx + r, -sry);
+    ctx.lineTo(srx - r, -sry);
+    ctx.arc(srx - r, 0, r, -Math.PI/2, Math.PI/2);
+    ctx.lineTo(-srx + r, sry);
+    ctx.arc(-srx + r, 0, r, Math.PI/2, Math.PI * 1.5);
+    ctx.closePath();
+  };
+  path();
+  ctx.fillStyle = fill; ctx.fill();
+  path();
+  ctx.fillStyle = bevelFill(sry); ctx.fill();
+  if (label) {
+    ctx.font = `400 ${11 * DPR}px 'Lora', serif`;
+    const luma = parseInt(fill.slice(1,3),16)*0.299 + parseInt(fill.slice(3,5),16)*0.587 + parseInt(fill.slice(5,7),16)*0.114;
+    ctx.fillStyle = luma > 128 ? 'rgba(0,0,0,0.7)' : '#dac888';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, 0, 0);
+  }
+  ctx.restore();
+}
+
+function drawCircleNode(x, y, r, fill, label) {
+  ctx.save();
+  ctx.translate(x * DPR, y * DPR);
+  const sr = r * DPR;
+  ctx.beginPath(); ctx.arc(0, 0, sr, 0, Math.PI * 2);
+  ctx.fillStyle = fill; ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, sr, 0, Math.PI * 2); ctx.clip();
+  ctx.fillStyle = bevelFill(sr);
+  ctx.fillRect(-sr - 5, -sr, sr * 2 + 10, sr * 2);
+  ctx.restore();
+  if (label) {
+    ctx.font = `400 ${12 * DPR}px 'Lora', serif`;
+    ctx.fillStyle = '#dac888';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, 0, 0);
+  }
+  ctx.restore();
+}
+
+function edge(x1, y1, x2, y2) {
+  ctx.save();
+  ctx.strokeStyle = '#344034'; ctx.lineWidth = 1.2 * DPR;
+  ctx.setLineDash([4 * DPR, 3 * DPR]);
+  ctx.beginPath();
+  ctx.moveTo(x1 * DPR, y1 * DPR);
+  ctx.lineTo(x2 * DPR, y2 * DPR);
+  ctx.stroke(); ctx.restore();
+}
+
+function draw() {
+  ctx.fillStyle = '#1a201a';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+
+  const cx = window.innerWidth / 2 + 20;
+  const cy = window.innerHeight / 2 + 10;
+
+  edge(cx, cy, cx - 210, cy - 90);
+  edge(cx, cy, cx - 195, cy + 75);
+  edge(cx, cy, cx + 185, cy - 65);
+  edge(cx, cy, cx + 170, cy + 85);
+
+  drawCircleNode(cx, cy, 68, '#8a6a54', 'new node');
+  drawPill(cx - 210, cy - 90, 54, 17, '#6a9a6a', 'new node');
+  drawPill(cx - 195, cy + 75, 54, 17, '#5a8a7a', 'new node');
+  drawPill(cx + 185, cy - 65, 58, 17, '#7a8a5a', 'new node');
+  drawPill(cx + 170, cy + 85, 62, 18, '#8a7a5a', 'related idea');
+}
+
+window.addEventListener('resize', resize);
+resize();
+
+// ── drawer toggle ────────────────────────────
+const burger = document.getElementById('burger');
+const drawer = document.getElementById('drawer');
+
+burger.addEventListener('click', e => {
+  e.stopPropagation();
+  const open = drawer.classList.toggle('vis');
+  burger.classList.toggle('open', open);
+});
+document.addEventListener('click', () => {
+  drawer.classList.remove('vis');
+  burger.classList.remove('open');
+});
+drawer.addEventListener('click', e => e.stopPropagation());
+
+// ── panel collapse ───────────────────────────
+const rpanel = document.getElementById('rpanel');
+const panelTab = document.getElementById('panelTab');
+document.getElementById('rpCollapse').addEventListener('click', () => {
+  rpanel.classList.add('hidden');
+  panelTab.classList.add('vis');
+});
+panelTab.addEventListener('click', () => {
+  rpanel.classList.remove('hidden');
+  panelTab.classList.remove('vis');
+});
+</script>
+</body>
+</html>
