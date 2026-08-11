@@ -7,6 +7,7 @@ Project-specific context for Claude Code sessions. Read this first.
 How Peter likes to work — match this register and these defaults.
 
 - **Conversational and direct.** No unnecessary preamble or padding. Don't pitch additional features before a build. Don't over-explain reasoning unless asked.
+- **Be concise with all of your responses.**
 - **Precision in language.** Peter notices and cares about word choice.
 - **Output first, questions after.** When iterating on something, give the working output, then the questions.
 - **Match register.** Relaxed and informal in conversation. Precise in outputs.
@@ -61,18 +62,13 @@ This project has been built iteratively over many sessions. The workflow that wo
 
 ## Menu / UI rework — landed in v11 (2026-08-11)
 
-Folded in three commits (splash page → hamburger drawer → right-panel regroup), then cut `anaximander_v11.html`. Mockups (`mockup_*_v2.html`) kept in the repo root for reference. Governing principle: **each thing lives in exactly one place.**
-
-The two app states, as built:
-
-- **Splash (launch state).** You enter a map to reach the canvas. Wordmark + settings gear (the gear owns all AI config — key / model / provider). **Begin** — Blank map, From prompt (✦), From document (dimmed, "soon"). **Return** — map cards with a real mini-preview of the map's nodes, node count, edited time (`updatedAt`, stamped in `pushCanvasHistLocal`), colour chips, hover ⋯ menu (rename / duplicate / export / delete). Most-recent card gets the green top bar; `↵` reopens it.
-- **Canvas (working state).** `≡ <map name>` burger opens a popover drawer: editable map name, flat maps list with ✓, + new map, ⌂ all maps (→ splash), import file (one dialog for .json and .mm), export & share ▶, recycle bin. Toolbar: saved · ↶ ↷ · ⛶ · `?`. Right panel — **Canvas** (background, legend), **Map** (history, ghost nodes ▶, untangle, tidy up), **AI** (suggestions, new from prompt) — collapses via `»` to a `«` tab (persisted).
+Splash launch page, hamburger drawer, right-panel regroup — three fold commits, then `anaximander_v11.html` cut. The built design is documented in `ARCHITECTURE.md`; mockups (`mockup_*_v2.html`) kept in the repo root. Governing principle: **each thing lives in exactly one place.**
 
 Post-design calls made during the fold (flag to Peter if they bother him):
 
-- Untangle / tidy up had no home in the approved design — they went into the right panel's **Map** group; the layout button died with the ⋯ menu.
-- Fullscreen kept a small toolbar button (⛶) — the mockup omitted it, but F11-only felt too hidden.
-- **Folders/projects have no UI in the new design.** `state.folders` and `map.folderId` are preserved in saves (old bin entries still restore) but maps list flat everywhere.
+- Untangle / tidy up went into the right panel's **Map** group (no home in the approved design).
+- Fullscreen kept a small toolbar button (⛶) — F11-only felt too hidden.
+- **Folders/projects have no UI.** `state.folders` and `map.folderId` are preserved in saves (old bin entries still restore) but maps list flat everywhere.
 - Single-map JSON (from a card's Export) imports as a new map; full-state JSON still replaces everything.
 
 ## The bank — features discussed but not built
