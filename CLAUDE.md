@@ -61,7 +61,7 @@ This project has been built iteratively over many sessions. The workflow that wo
 
 ## In progress — menu / UI rework
 
-Agreed and mocked up; not yet folded. Mockups in repo root: `mockup_splash_v2.html` and `mockup_canvas_nav_v2.html` (v1 files kept for comparison). Governing principle: **each thing lives in exactly one place.**
+Design approved by Peter (2026-08-11); not yet folded. Mockups in repo root: `mockup_splash_v2.html` and `mockup_canvas_nav_v2.html` (v1 files kept for comparison). Governing principle: **each thing lives in exactly one place.**
 
 Two app states:
 
@@ -75,13 +75,10 @@ Decisions and why:
 - "Save" button dropped — autosave plus the saved indicator make it redundant.
 - ⋮ overflow menu dropped — shortcuts move to the `?` button.
 - All preview/node colours come from the botanical palette.
+- "New from prompt" stays in the right panel's AI group — confirmed it reads as *creates a new map*.
+- The splash settings gear owns all AI config (key / model / provider). AI settings come out of the canvas entirely; the canvas AI group keeps only in-map actions (suggestions, new from prompt).
 
-Fold order (one commit each): 1) splash page, 2) hamburger drawer replacing the sidebar, 3) right-panel regroup. Update `SHORTCUTS` and README's menu references as part of each fold.
-
-Open questions for Peter:
-
-- Does "new from prompt" in the right panel's AI group read clearly as *creates a new map*?
-- Should the splash settings gear own all AI config (key / model / provider), removing it from the canvas?
+Fold order (one commit each): 1) splash page — including AI config moving into its settings gear, 2) hamburger drawer replacing the sidebar, 3) right-panel regroup — including removing AI settings from the canvas. Update `SHORTCUTS` and README's menu references as part of each fold. Stay on v10 while folding; cut `anaximander_v11.html` when all three stages have landed.
 
 ## The bank — features discussed but not built
 
