@@ -1012,6 +1012,9 @@ function normalizeState(){
     if(map.legend.textWords==null)map.legend.textWords=40;
     map.edges.forEach(e=>{if(!e.keyframes||!e.keyframes.length)initKf(e,map);if(e.thickness===undefined||e.thickness===null)e.thickness=3.5;});
     map.nodes.forEach(n=>{if(!n.notes)n.notes=[];});
+    // strip stray collapsed flags on childless nodes (set by the old always-live
+    // corner click zone) — they made future children spawn hidden
+    map.nodes.forEach(n=>{if(n.collapsed&&!map.edges.some(e=>e.from===n.id))n.collapsed=false;});
     // migrate prior default bg ('#111' / '#111111') to new default
     if(map.bg==='#111'||map.bg==='#111111')map.bg='#0d1a0d';
     // initialise history
@@ -1233,6 +1236,7 @@ function parentEdgeAttrs(n,map){
 }
 function spawnChild(n,dir,style){
   const map=cmap(),off=DIR_OFFSET[dir];
+  n.collapsed=false; // a collapsed parent would hide the new child instantly
   // distance scaled to parent's actual extent so children spawn outside the parent,
   // not inside it. "gap" is the world-space gap from parent edge to child centre.
   const gap=140;
@@ -1971,6 +1975,7 @@ function materialiseGhost(idx){
   const g=ghosts[idx];if(!g)return;
   const map=cmap();if(!map)return;
   const parent=map.nodes.find(n=>n.id===g.parentId);
+  if(parent)parent.collapsed=false;
   pushCanvasHistLocal('materialise ghost');
   const child={id:map.nextId++,x:g.x,y:g.y,label:g.label,
     urls:[],primaryUrl:0,color:parent?parent.color:'#b5d89b',
@@ -2346,12 +2351,15 @@ cvs.addEventListener('mousedown',ev=>{
   if(editingNode){commitEdit();return;}
   if(pickerFor){const ct=hitPicker(sx,sy,pickerFor.node,pickerFor.dir);if(ct){spawnChild(pickerFor.node,pickerFor.dir,ct.id);return;}pickerFor=null;render();return;}
   const map=cmap();if(!map)return;
-  // check collapse indicator click
-for(const _n of map.nodes){
-  const _sp=w2s(_n.x,_n.y),_srx=nrx(_n)*T.s,_sry=nry(_n)*T.s;
+  // check collapse indicator click — only when the badge is actually drawn
+  // (node has children AND is the hovered node), else clicks near any node's
+  // top-right corner silently toggle collapsed and future children spawn hidden
+{const _act=findActiveNode(sx,sy);
+if(_act&&map.edges.some(e=>e.from===_act.id)){
+  const _sp=w2s(_act.x,_act.y),_srx=nrx(_act)*T.s,_sry=nry(_act)*T.s;
   const _r=8*T.s,_bx=_sp.x+_srx-_r*0.5,_by=_sp.y-_sry+_r*0.5;
-  if(Math.sqrt((sx-_bx)**2+(sy-_by)**2)<_r+4){toggleCollapse(_n);return;}
-}
+  if(Math.sqrt((sx-_bx)**2+(sy-_by)**2)<_r+4){toggleCollapse(_act);return;}
+}}
   // swallow mousedown on link badge so dblclick can fire cleanly without entering edit/drag
   if(hitLinkIcon(sx,sy))return;
   // hover-resize: bottom-right handle grabbable without entering edit mode
@@ -2391,6 +2399,7 @@ cvs.addEventListener('mouseup',ev=>{
         }
       } else if(!target){
         // spawn child at cursor position
+        fromN.collapsed=false; // a collapsed parent would hide the new child instantly
         const w=s2w(sx,sy);
         const c=nextPalColor(fromN,map);
         const child={id:map.nextId++,x:w.x,y:w.y,label:'new node',urls:[],primaryUrl:0,
@@ -2602,6 +2611,7 @@ function spawnBranchFromKf(e,kfIdx){
   const distB=Math.hypot(candB.x-a.x,candB.y-a.y);
   const pick=distA>=distB?candA:candB;
   // create child node, inheriting sensible defaults from parent (from-node)
+  a.collapsed=false;
   const color=nextPalColor(a,map);
   const child={
     id:map.nextId++,x:pick.x,y:pick.y,label:'new node',urls:[],primaryUrl:0,
@@ -3893,6 +3903,7 @@ function makeAiGhost(parent,gx,gy,sugg,idx){
 function materialiseAiGhost(ghost){
   const map=cmap();if(!map)return;
   const parent=map.nodes.find(n=>n.id===ghost.parentId);
+  if(parent)parent.collapsed=false;
   pushCanvasHistLocal('ai suggestion');
   const child={id:map.nextId++,x:ghost.x,y:ghost.y,label:ghost.label,
     shape:ghost.shape,color:ghost.color,font:ghost.font||"'Lora',serif",
@@ -3911,6 +3922,7 @@ function materialiseAiGhosts(list){
   pushCanvasHistLocal('ai suggestions');
   for(const ghost of list){
     const parent=map.nodes.find(n=>n.id===ghost.parentId);
+    if(parent)parent.collapsed=false;
     const child={id:map.nextId++,x:ghost.x,y:ghost.y,label:ghost.label,
       shape:ghost.shape,color:ghost.color,font:ghost.font||"'Lora',serif",
       outlined:false,scale:1,palKey:ghost.palKey||'muted',
