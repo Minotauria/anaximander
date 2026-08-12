@@ -41,8 +41,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sp-dots{width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:none;background:transparent;color:#4a4a3c;font-size:13px;cursor:pointer;font-family:'Lora',serif;opacity:0;transition:opacity 0.15s,background 0.15s,color 0.15s;flex-shrink:0;}
 .sp-card:hover .sp-dots{opacity:1;}
 .sp-dots:hover{background:#252e25;color:#a09e8a;}
-.sp-card-preview{flex:1;display:flex;align-items:center;justify-content:center;opacity:0.38;padding:4px 0;}
-.sp-card-preview svg{width:118px;height:54px;overflow:visible;}
+.sp-card-preview{flex:1;display:flex;align-items:center;justify-content:center;padding:4px 0;margin:6px 0 8px;border-radius:7px;}
+.sp-card-preview svg{width:118px;height:54px;overflow:visible;opacity:0.38;}
 .sp-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .sp-card-meta{font-size:10px;color:#45453a;}
 .sp-chips{display:flex;gap:3px;}
@@ -433,6 +433,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <button class="zm" id="zin">+</button>
           <div id="zoom-lbl">100%</div>
           <button class="zm" id="zout">−</button>
+          <button class="zm" id="btn-fit" title="fit to page"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2H2v3"/><path d="M11 2h3v3"/><path d="M14 11v3h-3"/><path d="M2 11v3h3"/><rect x="5.5" y="6" width="5" height="4" rx="1.2"/></svg></button>
           <button class="zm" id="btn-mm" style="margin-top:6px;font-size:18px;border-top:0.5px solid #2a3028;border-radius:0 0 8px 8px;padding-top:6px;height:36px;">&#9638;</button>
         </div>
         <canvas id="minimap" width="225" height="150"></canvas>
@@ -3390,6 +3391,24 @@ function renderHist(){const map=cmap(),list=document.getElementById('hist-list')
 const _btnSearch=document.getElementById('btn-search');if(_btnSearch)_btnSearch.addEventListener('click',()=>openSearch());
 document.getElementById('zin').addEventListener('click',()=>{const c={x:cvs.width/2,y:cvs.height/2},ns=Math.min(6,T.s*1.2);T.x=c.x-(c.x-T.x)*(ns/T.s);T.y=c.y-(c.y-T.y)*(ns/T.s);T.s=ns;if(editingNode)positionInput(editingNode);render();});
 document.getElementById('zout').addEventListener('click',()=>{const c={x:cvs.width/2,y:cvs.height/2},ns=Math.max(0.05,T.s/1.2);T.x=c.x-(c.x-T.x)*(ns/T.s);T.y=c.y-(c.y-T.y)*(ns/T.s);T.s=ns;if(editingNode)positionInput(editingNode);render();});
+// fit to page — zoom/pan so every visible node fits with a margin (capped at 100%)
+function fitToPage(){
+  const map=cmap();if(!map||!map.nodes.length)return;
+  const hid=getCollapsedHidden();
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  map.nodes.forEach(n=>{
+    if(hid.has(n.id))return;
+    const rx=nrx(n),ry=nry(n);
+    x0=Math.min(x0,n.x-rx);y0=Math.min(y0,n.y-ry);x1=Math.max(x1,n.x+rx);y1=Math.max(y1,n.y+ry);
+  });
+  if(x0===Infinity)return;
+  const pad=60,bw=x1-x0+pad*2,bh=y1-y0+pad*2;
+  const s=Math.max(0.05,Math.min(1,Math.min(cvs.width/bw,cvs.height/bh)));
+  T.s=s;T.x=cvs.width/2-(x0+x1)/2*s;T.y=cvs.height/2-(y0+y1)/2*s;
+  if(editingNode)positionInput(editingNode);
+  render();
+}
+document.getElementById('btn-fit').addEventListener('click',fitToPage);
 // click zoom % label → reset to 100% centred on canvas
 const _zoomLbl=document.getElementById('zoom-lbl');
 _zoomLbl.style.cursor='pointer';
@@ -3597,10 +3616,12 @@ function renderSplash(){
     card.className='sp-card'+(recent&&m.id===recent.id?' recent':'');
     card.dataset.mapId=m.id;
     const chips=mapChipColors(m);
+    // preview panel shows the map's canvas colour; transparent keeps the card colour
+    const pvBg=m.bg==='transparent'?'':` style="background:${m.bg||'#0d1a0d'}"`;
     const meta=[m.nodes.length+(m.nodes.length===1?' node':' nodes'),relTime(m.updatedAt)].filter(Boolean).join(' &middot; ');
     card.innerHTML=`
       <div class="sp-card-top"><span class="sp-card-name"></span><button class="sp-dots">&#8943;</button></div>
-      <div class="sp-card-preview">${mapThumb(m,120,56)}</div>
+      <div class="sp-card-preview"${pvBg}>${mapThumb(m,120,56)}</div>
       <div class="sp-card-foot"><span class="sp-card-meta">${meta}</span>
         <span class="sp-chips">${chips.map(c=>`<span class="sp-chip" style="background:${c}"></span>`).join('')}</span></div>
       <div class="sp-card-menu">
