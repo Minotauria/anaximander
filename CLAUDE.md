@@ -78,6 +78,8 @@ These have been thought about, sometimes deeply. None are committed-to. Treat as
 
 **Generate map from document** — Upload a .pdf, .doc, or plain text file and have Claude produce a map summarising it. Natural companion to generate-from-prompt; same output path, different input. Could live inside the "generate from prompt" UI rather than as a separate entry point — same destination, different input method. Open questions: file format support (PDF text extraction vs OCR, .doc conversion), whether long documents need chunking, sensible scope limits.
 
+**Export to .mm** — Import (Coggle-flavoured FreeMind) already exists in `parseCoggleMm`. The missing half is export: recursive XML serializer over the BFS tree (~80 lines + menu entry). Labels, hierarchy, colours, font sizes, positions (`X_COGGLE_POSX/POSY`), cross-links (`X_COGGLE_JOINEDTO` connector nodes, which our importer round-trips) and notes (`richcontent TYPE="NOTE"`) all survive; shapes, edge styles/labels, images are inherently lossy in the format. Decision made: emit Coggle-flavoured rather than pure FreeMind. Assessed 2026-08-13, ~half a session of work.
+
 **Ollama + GPT providers** — Code skeleton for Ollama is already in v10 but parked. Revisit alongside a GPT/OpenAI option — do both at the same time so the provider tab pattern is complete in one go.
 
 **Per-map AI toggle** — A switch on each map disabling AI features for that map specifically. For sensitive content. Requires the AI features to exist first.
