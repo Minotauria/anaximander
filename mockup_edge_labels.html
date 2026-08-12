@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>mockup — always-visible edge labels + label editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Cinzel:wght@400;700&family=Caveat:wght@400;700&family=IBM+Plex+Mono:wght@400&family=Lora:ital,wght@0,400;0,700&family=EB+Garamond:wght@400&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#141a14;overflow:hidden;}
+  #note{position:fixed;top:12px;left:14px;font-family:'Lora',serif;font-size:11px;color:#5a5a48;line-height:1.6;pointer-events:none;}
+  canvas{display:block;cursor:default;}
+
+  /* edge-label editor popover */
+  #lbl-pop{position:fixed;display:none;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;
+    box-shadow:0 10px 34px rgba(0,0,0,0.6);font-family:'Lora',serif;padding:10px;width:196px;z-index:50;}
+  #lbl-pop h4{margin:0 0 8px;font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:0.13em;color:#4a4a3c;}
+  #lbl-text{width:100%;box-sizing:border-box;font-size:12px;padding:5px 8px;border:0.5px solid #303624;border-radius:6px;
+    background:#0d1a0d;color:#e8d098;font-family:'Lora',serif;outline:none;margin-bottom:8px;}
+  .lbl-row{display:flex;gap:6px;margin-bottom:8px;}
+  #lbl-pop select{flex:1;min-width:0;font-size:11px;padding:3px 4px;border:0.5px solid #303624;border-radius:6px;
+    background:#0d1a0d;color:#a09e8a;font-family:'Lora',serif;outline:none;}
+  #lbl-size{flex:0 0 52px;}
+  #lbl-sw{display:flex;gap:5px;align-items:center;margin-bottom:9px;}
+  .lsw{width:16px;height:16px;border-radius:4px;cursor:pointer;border:0.5px solid #303624;box-sizing:border-box;}
+  .lsw.on{border:1.5px solid #dac888;}
+  .lsw.inherit{background:#a09e8a;position:relative;}
+  .lsw.inherit::after{content:'↩';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:9px;color:#141a14;}
+  #lbl-custom{width:1px;height:1px;opacity:0;position:fixed;left:-999px;}
+  .lbl-btns{display:flex;gap:6px;}
+  .lbl-btns button{flex:1;font-size:11px;padding:5px;border-radius:6px;border:0.5px solid #303624;background:none;
+    cursor:pointer;font-family:'Lora',serif;color:#a09e8a;}
+  .lbl-btns button:hover{background:#232b23;}
+  #lbl-ok{color:#dac888;}
+</style>
+</head>
+<body>
+<div id="note">
+  mockup — click any edge label to edit it<br>
+  the line breaks where the label sits — any line crossing the label area is cleared too<br>
+  the “renders” edge has a midpoint branch to show the break winning over the junction
+</div>
+<canvas id="cv"></canvas>
+
+<div id="lbl-pop">
+  <h4>label edge</h4>
+  <input id="lbl-text" placeholder="label text…">
+  <div class="lbl-row">
+    <select id="lbl-font"></select>
+    <select id="lbl-size"></select>
+  </div>
+  <div id="lbl-sw"></div>
+  <input type="color" id="lbl-custom">
+  <div class="lbl-btns"><button id="lbl-ok">apply</button><button id="lbl-clear">clear label</button></div>
+</div>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const BG='#141a14';
+
+const FONTS=[
+  ["'Nunito',sans-serif",'Nunito'],
+  ["'Lora',serif",'Lora'],
+  ["'Cinzel',serif",'Cinzel'],
+  ["'EB Garamond',serif",'EB Garamond'],
+  ["'Caveat',cursive",'Caveat'],
+  ["'IBM Plex Mono',monospace",'IBM Plex Mono'],
+  ["'Special Elite',cursive",'Special Elite'],
+];
+const SWATCHES=['#a09e8a','#dac888','#7ec87e','#6a9ac8','#c87e7e','#b08ac8'];
+
+const nodes=[
+  {id:1,x:0,   y:0,   label:'Anaximander', fill:'#6a9a6a', font:"'Cinzel',serif",        fs:15, depth:0},
+  {id:2,x:-260,y:-130,label:'ideas',       fill:'#9a8a5a', font:"'Caveat',cursive",      fs:18, depth:1},
+  {id:3,x:250, y:-140,label:'maps',        fill:'#5a8a9a', font:"'Nunito',sans-serif",   fs:13, depth:1},
+  {id:4,x:-300,y:90,  label:'sketches',    fill:'#8a6a8a', font:"'IBM Plex Mono',monospace",fs:12, depth:1},
+  {id:5,x:290, y:110, label:'projects',    fill:'#9a6a5a', font:"'Nunito',sans-serif",   fs:13, depth:1},
+  {id:6,x:105, y:-265,label:'exports',     fill:'#8a9a5a', font:"'Nunito',sans-serif",   fs:12, depth:2, branchOf:[1,3]},
+];
+const edges=[
+  {from:1,to:2,label:'inspires'},
+  {from:1,to:3,label:'renders'},
+  {from:1,to:4,label:'collects'},
+  {from:1,to:5,label:'organises'},
+  {from:3,to:5,label:'exported into',cross:true},
+  {from:2,to:4,label:'become',cross:true},
+];
+const byId={};nodes.forEach(n=>byId[n.id]=n);
+
+function parentMost(e){const a=byId[e.from],b=byId[e.to];return a.depth<=b.depth?a:b;}
+function labelFont(e){return e.labelFont||parentMost(e).font;}
+function labelSize(e){return e.labelSize||Math.max(10,Math.round(parentMost(e).fs*0.8));}
+function labelColor(e){return e.labelColor||'#a09e8a';}
+
+function nodeR(n){ctx.font=`700 ${n.fs}px ${n.font}`;return{w:ctx.measureText(n.label).width/2+22,h:n.fs+18};}
+
+function draw(){
+  const W=innerWidth,H=innerHeight,dpr=devicePixelRatio||1;
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+  const ox=W/2,oy=H/2+20;
+  const P=n=>({x:ox+n.x,y:oy+n.y});
+
+  edges.forEach(e=>{
+    const a=P(byId[e.from]),b=P(byId[e.to]);
+    ctx.save();
+    ctx.strokeStyle=e.cross?'rgba(160,158,138,0.45)':'rgba(160,158,138,0.6)';
+    ctx.lineWidth=e.cross?1.5:2.5;
+    if(e.cross)ctx.setLineDash([2,5]);
+    const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+    const bow=e.cross?26:12;
+    const cx=mx-dy/len*bow,cy=my+dx/len*bow;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(cx,cy,b.x,b.y);ctx.stroke();
+    ctx.restore();
+    e._mid={x:(a.x+2*cx+b.x)/4,y:(a.y+2*cy+b.y)/4};
+    e._chord={dx,dy,len};
+  });
+
+  // branch from an edge midpoint — the case that used to cover the label
+  nodes.filter(n=>n.branchOf).forEach(n=>{
+    const be=edges.find(e=>e.from===n.branchOf[0]&&e.to===n.branchOf[1]);
+    if(!be)return;
+    const p=P(n);
+    ctx.save();
+    ctx.strokeStyle='rgba(160,158,138,0.6)';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(be._mid.x,be._mid.y);ctx.lineTo(p.x,p.y);ctx.stroke();
+    ctx.fillStyle='#7ec87e';
+    ctx.beginPath();ctx.arc(be._mid.x,be._mid.y,4.5,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+
+  // label pass — after ALL lines (edges + branches), so the break clears everything.
+  // The line "breaks" where the label sits: a bg-coloured rect knocks out anything
+  // passing through the label's bounds, then the text draws in the gap.
+  edges.forEach(e=>{
+    if(!e.label){e._box=null;return;}
+    const fs=labelSize(e);
+    const lx=e._mid.x,ly=e._mid.y;
+    ctx.save();
+    ctx.font=`400 ${fs}px ${labelFont(e)}`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    const lw=ctx.measureText(e.label).width;
+    const padX=8,padY=3;
+    ctx.fillStyle=BG;
+    ctx.fillRect(lx-lw/2-padX,ly-fs/2-padY-1,lw+padX*2,fs+padY*2+2);
+    ctx.fillStyle=labelColor(e);
+    ctx.fillText(e.label,lx,ly);
+    e._box={x:lx-lw/2-6,y:ly-fs/2-5,w:lw+12,h:fs+10};
+    ctx.restore();
+  });
+
+  nodes.forEach(n=>{
+    const p=P(n),{w,h}=nodeR(n);
+    ctx.save();
+    ctx.fillStyle=n.fill;
+    ctx.beginPath();ctx.roundRect(p.x-w,p.y-h/2-4,w*2,h+8,(h+8)/2);ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.25)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#12180f';
+    ctx.font=`700 ${n.fs}px ${n.font}`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(n.label,p.x,p.y);
+    ctx.restore();
+  });
+}
+
+/* ---------- editor popover ---------- */
+const pop=document.getElementById('lbl-pop');
+const tIn=document.getElementById('lbl-text');
+const fSel=document.getElementById('lbl-font');
+const sSel=document.getElementById('lbl-size');
+const swRow=document.getElementById('lbl-sw');
+const custom=document.getElementById('lbl-custom');
+let cur=null,curColor=null; // null colour = inherit
+
+function openPop(e){
+  cur=e;curColor=e.labelColor||null;
+  tIn.value=e.label||'';
+  // font select: inherit first
+  fSel.innerHTML='';
+  const inh=document.createElement('option');inh.value='';inh.textContent='inherit ('+FONTS.find(f=>f[0]===parentMost(e).font)?.[1]+')';
+  fSel.appendChild(inh);
+  FONTS.forEach(([v,name])=>{const o=document.createElement('option');o.value=v;o.textContent=name;o.style.fontFamily=v;
+    if(e.labelFont===v)o.selected=true;fSel.appendChild(o);});
+  // size select: inherit first
+  sSel.innerHTML='';
+  const si=document.createElement('option');si.value='';si.textContent='auto';sSel.appendChild(si);
+  [8,9,10,11,12,13,14,16,18,20,24].forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;
+    if(e.labelSize===s)o.selected=true;sSel.appendChild(o);});
+  renderSw();
+  const x=Math.min(innerWidth-216,Math.max(8,e._mid.x-98));
+  const y=Math.min(innerHeight-190,e._mid.y+16);
+  pop.style.left=x+'px';pop.style.top=y+'px';pop.style.display='block';
+  tIn.focus();tIn.select();
+}
+function renderSw(){
+  swRow.innerHTML='';
+  const inh=document.createElement('div');inh.className='lsw inherit'+(curColor===null?' on':'');
+  inh.title='inherit (standard text)';
+  inh.onclick=()=>{curColor=null;applyLive();renderSw();};
+  swRow.appendChild(inh);
+  SWATCHES.slice(1).forEach(c=>{const s=document.createElement('div');s.className='lsw'+(curColor===c?' on':'');
+    s.style.background=c;s.onclick=()=>{curColor=c;applyLive();renderSw();};swRow.appendChild(s);});
+  const cu=document.createElement('div');cu.className='lsw'+(curColor&&!SWATCHES.includes(curColor)?' on':'');
+  cu.style.background=curColor&&!SWATCHES.includes(curColor)?curColor:'linear-gradient(135deg,#c87e7e,#6a9ac8,#7ec87e)';
+  cu.title='custom…';cu.onclick=()=>custom.click();swRow.appendChild(cu);
+}
+custom.oninput=ev=>{curColor=ev.target.value;applyLive();renderSw();};
+function applyLive(){
+  if(!cur)return;
+  cur.label=tIn.value.trim();
+  cur.labelFont=fSel.value||undefined;
+  cur.labelSize=sSel.value?parseInt(sSel.value,10):undefined;
+  cur.labelColor=curColor||undefined;
+  draw();
+}
+tIn.addEventListener('input',applyLive);
+fSel.addEventListener('change',applyLive);
+sSel.addEventListener('change',applyLive);
+tIn.addEventListener('keydown',ev=>{if(ev.key==='Enter'){applyLive();closePop();}if(ev.key==='Escape')closePop();});
+document.getElementById('lbl-ok').onclick=()=>{applyLive();closePop();};
+document.getElementById('lbl-clear').onclick=()=>{if(cur){cur.label='';cur.labelFont=cur.labelSize=cur.labelColor=undefined;}closePop();draw();};
+function closePop(){pop.style.display='none';cur=null;}
+
+cv.addEventListener('mousedown',ev=>{
+  const hit=edges.find(e=>e._box&&ev.clientX>=e._box.x&&ev.clientX<=e._box.x+e._box.w&&ev.clientY>=e._box.y&&ev.clientY<=e._box.y+e._box.h);
+  if(hit)openPop(hit);else closePop();
+});
+cv.addEventListener('mousemove',ev=>{
+  const hit=edges.some(e=>e._box&&ev.clientX>=e._box.x&&ev.clientX<=e._box.x+e._box.w&&ev.clientY>=e._box.y&&ev.clientY<=e._box.y+e._box.h);
+  cv.style.cursor=hit?'pointer':'default';
+});
+
+addEventListener('resize',draw);
+document.fonts.ready.then(draw);
+draw();setTimeout(draw,300);
+</script>
+</body>
+</html>

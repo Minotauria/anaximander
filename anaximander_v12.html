@@ -298,6 +298,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #gen-est{font-size:11px;color:#5a5a48;min-height:15px;margin:0 0 6px;font-family:'IBM Plex Mono',monospace;}
 #gen-detail{display:none;background:#0d1a0d;border:0.5px solid #303624;border-radius:7px;color:#a09e8a;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.5;padding:8px 10px;margin-bottom:10px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-word;}
 #gen-detail.vis{display:block;}
+/* edge-label popover */
+#elp{position:fixed;display:none;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,0.6);font-family:'Lora',serif;padding:10px;width:200px;z-index:60;}
+#elp h4{margin:0 0 8px;font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:0.13em;color:#4a4a3c;}
+#elp-text{width:100%;box-sizing:border-box;font-size:12px;padding:5px 8px;border:0.5px solid #303624;border-radius:6px;background:#0d1a0d;color:#e8d098;font-family:'Lora',serif;outline:none;margin-bottom:8px;}
+.elp-row{display:flex;gap:6px;margin-bottom:8px;}
+#elp select{flex:1;min-width:0;font-size:11px;padding:3px 4px;border:0.5px solid #303624;border-radius:6px;background:#0d1a0d;color:#a09e8a;font-family:'Lora',serif;outline:none;}
+#elp-size{flex:0 0 56px;}
+#elp-sw{display:flex;gap:5px;align-items:center;margin-bottom:9px;flex-wrap:wrap;}
+.elp-sw{width:16px;height:16px;border-radius:4px;cursor:pointer;border:0.5px solid #303624;box-sizing:border-box;}
+.elp-sw.on{border:1.5px solid #dac888;}
+.elp-btns{display:flex;gap:6px;}
+.elp-btns button{flex:1;font-size:11px;padding:5px;border-radius:6px;border:0.5px solid #303624;background:none;cursor:pointer;font-family:'Lora',serif;color:#a09e8a;}
+.elp-btns button:hover{background:#232b23;}
+#elp-ok{color:#dac888;}
 .ai-h4{font-size:11px;color:#c8c898;text-transform:uppercase;letter-spacing:0.1em;font-weight:500;margin-bottom:14px;}
 .ai-sl{font-size:11px;color:#7a7858;text-transform:uppercase;letter-spacing:0.08em;margin:14px 0 6px;}
 .ai-field{margin-bottom:12px;}
@@ -618,6 +632,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     </div>
   </div>
   <div id="ai-toast"></div>
+  <div id="elp">
+    <h4>label edge</h4>
+    <input id="elp-text" placeholder="label text…">
+    <div class="elp-row"><select id="elp-font"></select><select id="elp-size"></select></div>
+    <div id="elp-sw"></div>
+    <input type="color" id="elp-custom" style="position:fixed;left:-999px;top:-999px;width:1px;height:1px;opacity:0;">
+    <div class="elp-btns"><button id="elp-ok">apply</button><button id="elp-clear">clear label</button></div>
+  </div>
   <div id="ctx"></div>
   <div id="modal-ov"><div id="modal-box"><h4 id="modal-ttl">name</h4><input id="modal-in"/><div class="mbtns"><button id="modal-cancel">cancel</button><button class="pri" id="modal-ok">ok</button></div></div></div>
   <div id="shortcuts-ov" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;">
@@ -1891,22 +1913,10 @@ function drawEdgeBody(e,hovered,pts0,map){
     if(pathPts.length>=2)drawCoggleSeg(pathPts,e.style||'straight',col,thick,finSize);
   }
 
-  // edge relationship label at midpoint — only visible on hover
+  // stash the label anchor (screen coords) — labels draw in their own pass in render()
+  // AFTER all edges, so the line-break under the text clears crossing lines too
   const drawPts=pathPts&&pathPts.length?pathPts:pts0;
-  if(e.label&&hovered){
-    const mid=drawPts[Math.floor(drawPts.length/2)];
-    const fs=Math.round(10*T.s);
-    ctx.save();
-    ctx.font=`400 ${fs}px 'Nunito',sans-serif`;
-    const lw=ctx.measureText(e.label).width;
-    const pad=4*T.s,rh=fs+pad*1.5;
-    ctx.fillStyle='rgba(20,20,20,0.82)';
-    ctx.beginPath();ctx.roundRect(mid.x-lw/2-pad,mid.y-rh/2,lw+pad*2,rh,rh/2);ctx.fill();
-    ctx.strokeStyle=col;ctx.lineWidth=0.5;ctx.stroke();
-    ctx.fillStyle='#ddd';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(e.label,mid.x,mid.y);
-    ctx.restore();
-  }
+  e._lblMid=e.label?drawPts[Math.floor(drawPts.length/2)]:null;
   if(hovered&&e.keyframes){
     const ci=Math.floor(e.keyframes.length/2);
     e.keyframes.forEach((kf,i)=>{
@@ -1916,6 +1926,30 @@ function drawEdgeBody(e,hovered,pts0,map){
       ctx.strokeStyle='#111';ctx.lineWidth=0.8;ctx.stroke();
     });
   }
+}
+
+// edge relationship label — always visible, plain text amidst the line (no pill).
+// Font/size/colour inherit from the parent-most endpoint unless overridden on the edge
+// (e.labelFont / e.labelSize / e.labelColor). A bg-coloured rect breaks the line where
+// the label sits; drawn after all edges so it clears crossing lines and branches too.
+function drawEdgeLabel(e,map){
+  const mid=e._lblMid;if(!mid)return;
+  const a=map.nodes.find(n=>n.id===e.from),b=map.nodes.find(n=>n.id===e.to);
+  const src=(a&&b)?(((_lblDepths.get(a.id)??0)<=(_lblDepths.get(b.id)??0))?a:b):(a||b);
+  const baseFs=e.labelSize||(src?Math.max(10,Math.round(FONT_SIZE(src)*(src.scale||1)*0.8)):10);
+  const fs=Math.round(baseFs*T.s);
+  ctx.save();
+  ctx.font=`400 ${fs}px ${e.labelFont||(src&&src.font)||"'Nunito',sans-serif"}`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const lbg=map.bg||'#0d1a0d';
+  if(lbg!=='transparent'){
+    const lw=ctx.measureText(e.label).width,padX=8*T.s,padY=3*T.s;
+    ctx.fillStyle=lbg;
+    ctx.fillRect(mid.x-lw/2-padX,mid.y-fs/2-padY-1,lw+padX*2,fs+padY*2+2);
+  }
+  ctx.fillStyle=e.labelColor||'#a09e8a';
+  ctx.fillText(e.label,mid.x,mid.y);
+  ctx.restore();
 }
 
 function drawPlusButtons(n){
@@ -2218,10 +2252,29 @@ function resetAllKf(){
     if(a&&b)e.keyframes=[{x:(a.x+b.x)/2,y:(a.y+b.y)/2}];
   });
 }
+// node id → hop distance from the root (nodes[0]), undirected BFS over edges.
+// Used by edge labels to pick the parent-most endpoint whose font they inherit.
+let _lblDepths=new Map();
+function computeLabelDepths(map){
+  const d=new Map();if(!map.nodes.length)return d;
+  const adj=new Map();
+  map.edges.forEach(e=>{
+    if(!adj.has(e.from))adj.set(e.from,[]);
+    if(!adj.has(e.to))adj.set(e.to,[]);
+    adj.get(e.from).push(e.to);adj.get(e.to).push(e.from);
+  });
+  const q=[map.nodes[0].id];d.set(map.nodes[0].id,0);
+  while(q.length){
+    const id=q.shift();
+    (adj.get(id)||[]).forEach(nb=>{if(!d.has(nb)){d.set(nb,d.get(id)+1);q.push(nb);}});
+  }
+  return d;
+}
 function render(){
   const map=cmap();if(!map)return;
   ctx.clearRect(0,0,cvs.width,cvs.height);
   const bg=map.bg||'#0d1a0d';if(bg!=='transparent'){ctx.fillStyle=bg;ctx.fillRect(0,0,cvs.width,cvs.height);}
+  _lblDepths=computeLabelDepths(map);
   const _hidden=getCollapsedHidden();
   // draw ghosts behind nodes
   ghosts.forEach((g,i)=>drawGhost(g,i));
@@ -2239,6 +2292,16 @@ function render(){
     const eid=e.id||`${e.from}-${e.to}`;
     if(_focusDim&&!_focusDim.edges.has(eid)){ctx.save();ctx.globalAlpha=0.1;drawEdge(e,false);ctx.restore();}
     else drawEdge(e,e===hoveredEdge);
+  });
+  // label pass — after all edges so the line-break under each label clears crossings
+  map.edges.forEach(e=>{
+    if(!e.label||!e._lblMid)return;
+    if(_hidden.has(e.from)||_hidden.has(e.to))return;
+    const eid=e.id||`${e.from}-${e.to}`;
+    const dim=_focusDim&&!_focusDim.edges.has(eid);
+    ctx.save();if(dim)ctx.globalAlpha=0.1;
+    drawEdgeLabel(e,map);
+    ctx.restore();
   });
   map.nodes.forEach(n=>{
     if(_hidden.has(n.id))return;
@@ -2652,8 +2715,8 @@ function showEdgeCtx(sx,sy,e){
   const sep3=document.createElement('div');sep3.className='ci-sep';menu.appendChild(sep3);
   const ri=document.createElement('div');ri.className='ci';ri.textContent='reset curve';ri.addEventListener('click',()=>{const map=cmap();const a=map.nodes.find(n=>n.id===e.from),b=map.nodes.find(n=>n.id===e.to);if(a&&b){e.keyframes=[{x:a.x+(b.x-a.x)*0.5,y:a.y+(b.y-a.y)*0.5}];}menu.style.display='none';softSave();render();});menu.appendChild(ri);
   const sep4a=document.createElement('div');sep4a.className='ci-sep';menu.appendChild(sep4a);
-  const li=document.createElement('div');li.className='ci';li.textContent='edit label';
-  li.addEventListener('click',()=>{menu.style.display='none';const lbl=prompt('Edge label (empty to clear):',e.label||'');if(lbl!==null){e.label=lbl.trim();softSave();render();}});menu.appendChild(li);
+  const li=document.createElement('div');li.className='ci';li.textContent='label edge';
+  li.addEventListener('click',()=>{menu.style.display='none';openEdgeLabelPop(e,sx,sy);});menu.appendChild(li);
   const sep4=document.createElement('div');sep4.className='ci-sep';menu.appendChild(sep4);
   const di=document.createElement('div');di.className='ci red';di.textContent='delete edge';di.addEventListener('click',()=>{pushCanvasHistLocal('delete edge');const map=cmap();map.edges=map.edges.filter(ed=>ed.id!==e.id);hoveredEdge=null;menu.style.display='none';softSave();render();});menu.appendChild(di);
   menu.style.left=(sx-wr.left)+'px';menu.style.top=(sy-wr.top)+'px';menu.style.display='block';
@@ -2744,13 +2807,65 @@ function showKfCtx(sx,sy,e,kfIdx){
     const sep3=document.createElement('div');sep3.className='ci-sep';menu.appendChild(sep3);
     const ri=document.createElement('div');ri.className='ci';ri.textContent='reset curve';ri.addEventListener('click',()=>{const map=cmap();const a=map.nodes.find(n=>n.id===e.from),b=map.nodes.find(n=>n.id===e.to);if(a&&b){e.keyframes=[{x:a.x+(b.x-a.x)*0.5,y:a.y+(b.y-a.y)*0.5}];}menu.style.display='none';softSave();render();});menu.appendChild(ri);
     const sep4a=document.createElement('div');sep4a.className='ci-sep';menu.appendChild(sep4a);
-    const li=document.createElement('div');li.className='ci';li.textContent='edit label';
-    li.addEventListener('click',()=>{menu.style.display='none';const lbl=prompt('Edge label (empty to clear):',e.label||'');if(lbl!==null){e.label=lbl.trim();softSave();render();}});menu.appendChild(li);
+    const li=document.createElement('div');li.className='ci';li.textContent='label edge';
+    li.addEventListener('click',()=>{menu.style.display='none';openEdgeLabelPop(e,sx,sy);});menu.appendChild(li);
     const sep4=document.createElement('div');sep4.className='ci-sep';menu.appendChild(sep4);
     const di=document.createElement('div');di.className='ci red';di.textContent='delete edge';di.addEventListener('click',()=>{pushCanvasHistLocal('delete edge');const map=cmap();map.edges=map.edges.filter(ed=>ed.id!==e.id);hoveredEdge=null;menu.style.display='none';softSave();render();});menu.appendChild(di);
   }
   menu.style.left=(sx-wr.left)+'px';menu.style.top=(sy-wr.top)+'px';menu.style.display='block';
 }
+
+// ── edge label popover ──
+// Labels inherit font/size from the parent-most endpoint and the standard text colour;
+// e.labelFont / e.labelSize / e.labelColor are stored on the edge only when overridden.
+let elpEdge=null;
+const ELP_SW=['#7ec87e','#a8cce8','#f0c8a0','#e8b8c8','#c8b8e8','#ffffff'];
+function openEdgeLabelPop(e,sx,sy){
+  elpEdge=e;
+  document.getElementById('elp-text').value=e.label||'';
+  const fSel=document.getElementById('elp-font');
+  populateFontSelect(fSel,e.labelFont||null);
+  const inh=document.createElement('option');inh.value='';inh.textContent='inherit (parent node)';
+  fSel.insertBefore(inh,fSel.firstChild);
+  if(!e.labelFont)inh.selected=true;
+  const sSel=document.getElementById('elp-size');sSel.innerHTML='';
+  const so=document.createElement('option');so.value='';so.textContent='auto';sSel.appendChild(so);
+  [8,9,10,11,12,13,14,16,18,20,24].forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;if(e.labelSize===s)o.selected=true;sSel.appendChild(o);});
+  elpRenderSw();
+  const pop=document.getElementById('elp');
+  pop.style.left=Math.min(innerWidth-220,Math.max(8,sx-100))+'px';
+  pop.style.top=Math.min(innerHeight-210,Math.max(8,sy+10))+'px';
+  pop.style.display='block';
+  const tIn=document.getElementById('elp-text');tIn.focus();tIn.select();
+}
+function elpRenderSw(){
+  const row=document.getElementById('elp-sw');row.innerHTML='';
+  const cur=elpEdge?elpEdge.labelColor:null;
+  const mk=(bgc,on,title,fn)=>{const s=document.createElement('div');s.className='elp-sw'+(on?' on':'');s.style.background=bgc;s.title=title;s.addEventListener('click',fn);row.appendChild(s);return s;};
+  const inh=mk('#a09e8a',!cur,'inherit (standard text)',()=>{if(elpEdge){delete elpEdge.labelColor;elpApply();}});
+  inh.textContent='↩';inh.style.cssText+=';display:flex;align-items:center;justify-content:center;font-size:9px;color:#141a14;';
+  ELP_SW.forEach(c=>mk(c,cur===c,c,()=>{if(elpEdge){elpEdge.labelColor=c;elpApply();}}));
+  mk(cur&&!ELP_SW.includes(cur)?cur:'linear-gradient(135deg,#c87e7e,#6a9ac8,#7ec87e)',!!(cur&&!ELP_SW.includes(cur)),'custom…',()=>document.getElementById('elp-custom').click());
+}
+function elpApply(){
+  if(!elpEdge)return;
+  elpEdge.label=document.getElementById('elp-text').value.trim();
+  const f=document.getElementById('elp-font').value;
+  if(f)elpEdge.labelFont=f;else delete elpEdge.labelFont;
+  const s=document.getElementById('elp-size').value;
+  if(s)elpEdge.labelSize=parseInt(s,10);else delete elpEdge.labelSize;
+  elpRenderSw();
+  softSave();render();
+}
+function closeElp(){document.getElementById('elp').style.display='none';elpEdge=null;}
+document.getElementById('elp-text').addEventListener('input',elpApply);
+document.getElementById('elp-text').addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter'){elpApply();closeElp();}if(ev.key==='Escape')closeElp();});
+document.getElementById('elp-font').addEventListener('change',elpApply);
+document.getElementById('elp-size').addEventListener('change',elpApply);
+document.getElementById('elp-custom').addEventListener('input',ev=>{if(elpEdge){elpEdge.labelColor=ev.target.value;elpApply();}});
+document.getElementById('elp-ok').addEventListener('click',()=>{elpApply();closeElp();});
+document.getElementById('elp-clear').addEventListener('click',()=>{if(elpEdge){elpEdge.label='';delete elpEdge.labelFont;delete elpEdge.labelSize;delete elpEdge.labelColor;softSave();render();}closeElp();});
+document.addEventListener('mousedown',ev=>{const p=document.getElementById('elp');if(p.style.display==='block'&&!p.contains(ev.target))closeElp();});
 
 function showNotesPanel(n){
   activeNotesNode=n;editingNoteId=null;activeEditor=null;
@@ -3367,6 +3482,7 @@ const SHORTCUTS=[
     ['double-click link badge','open link'],
     ['drag node corner','resize node + scale text'],
     ['right-click','context menu'],
+    ['right-click edge → label edge','name the relationship (font, size + colour editable)'],
   ]},
   {section:'generate from prompt',items:[
     ['AI panel → generate in map','extend the current map from a prompt'],
