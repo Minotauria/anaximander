@@ -7,7 +7,7 @@ The whole app is one HTML file: markup, CSS, and JavaScript in a single `<script
 The HTML file is roughly:
 
 1. `<head>` — fonts (Lora, IBM Plex Mono via Google Fonts), inline `<style>` block (~400 lines of CSS).
-2. `<body>` — splash launch page (map cards + begin tiles), burger + drawer (map navigation), main canvas, toolbar + right tool panel, modals, hidden file inputs.
+2. `<body>` — splash launch page (project folder cards + map cards + begin tiles, breadcrumbs, footer recycle bin), burger + drawer (map navigation), main canvas, toolbar + right tool panel, modals, hidden file inputs.
 3. `<script>` — all logic.
 
 There is intentionally no separation into modules. The trade-off is faster iteration and trivial deployment (drag-and-drop on any static host) at the cost of a long file. Use your editor's symbol search.
@@ -20,7 +20,8 @@ The app's entire state lives in one global `state` object, persisted to `localSt
 state = {
   maps: [Map],
   currentMapId: string,
-  folders: [Folder],     // legacy (pre-v11 "projects") — preserved in saves, no UI
+  folders: [Folder],     // splash projects (v12): {id, name, parentId, icon?} — icon is a small
+                         // data-URL cover image (≤320px JPEG); parentId nests folders
   ai: { enabled, apiKey, model, provider,   // global AI config
         ollamaUrl, ollamaModel },           // Ollama fields parked, unused
 }
@@ -33,6 +34,7 @@ A `Map` is:
   id: string,
   name: string,
   updatedAt: number,      // last-edited stamp; feeds the splash cards
+  folderId: string|null,  // splash project the map is filed in (null = top level)
   nodes: [Node],
   edges: [Edge],
   bg: string,             // canvas background colour

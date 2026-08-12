@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8"/>
-<title>Anaximander v11</title>
+<title>Anaximander v12</title>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Marcellus&family=IM+Fell+English+SC&family=Almendra+SC:wght@400;700&family=UnifrakturMaguntia&family=Pirata+One&family=Spectral:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Unna:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&family=Source+Sans+3:wght@400;700&family=Work+Sans:wght@400;700&family=DM+Sans:wght@400;700&family=Manrope:wght@400;700&family=Outfit:wght@400;700&family=Raleway:wght@400;700&family=Caveat:wght@400;700&family=Caveat+Brush&family=Kalam:wght@400;700&family=Shadows+Into+Light&family=Reenie+Beanie&family=Permanent+Marker&family=Special+Elite&family=JetBrains+Mono:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cutive+Mono&family=Bungee&family=Limelight&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -18,15 +18,40 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sp-gear{position:absolute;right:0;top:50%;transform:translateY(-50%);width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:#4a4a3c;font-size:14px;border:none;background:transparent;font-family:'Lora',serif;transition:background 0.15s,color 0.15s;}
 .sp-gear:hover{background:#232b23;color:#a09e8a;}
 .sp-sec{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4a4a3c;font-weight:500;margin-bottom:12px;flex-shrink:0;}
-.sp-begin{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:42px;flex-shrink:0;}
-.sp-tile{display:flex;align-items:center;gap:13px;padding:15px 17px;background:#1d261d;border:0.5px solid #272f27;border-radius:10px;cursor:pointer;transition:border-color 0.18s,background 0.18s;}
+#sp-crumbs{display:none;align-items:center;gap:7px;margin-bottom:12px;font-size:12px;flex-shrink:0;}
+#sp-crumbs.vis{display:flex;}
+.sp-crumb{color:#7a7868;cursor:pointer;padding:3px 9px;border-radius:6px;border:0.5px solid transparent;transition:background 0.15s,color 0.15s,border-color 0.15s;}
+.sp-crumb:hover{color:#c8c898;background:#202a20;}
+.sp-crumb.here{color:#c8c898;cursor:default;}
+.sp-crumb.here:hover{background:none;}
+.sp-crumb.dropready{border-color:#7ec87e;color:#c8c898;background:#202a20;}
+.sp-crumb-sep{color:#3a3a30;font-size:11px;}
+.sp-folder{position:relative;background:#1f271f;border:0.5px solid #2d372b;border-radius:10px;padding:15px 15px 12px;cursor:pointer;min-height:148px;display:flex;flex-direction:column;transition:border-color 0.18s,background 0.18s,opacity 0.18s;}
+.sp-folder:hover{border-color:#3a4a38;background:#222d22;}
+.sp-folder.dragging,.sp-card.dragging{opacity:0.35;}
+.sp-folder.dropready{border-color:#7ec87e;background:#223022;}
+.sp-folder-top{display:flex;align-items:center;gap:9px;}
+.sp-folder-top .sp-dots{margin-left:auto;}
+.sp-folder-icon{color:#8a9a6a;flex-shrink:0;}
+.sp-folder-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;z-index:0;}
+.sp-folder-shade{position:absolute;inset:0;border-radius:inherit;z-index:1;background:linear-gradient(180deg,rgba(14,18,14,0.72) 0%,rgba(14,18,14,0.2) 42%,rgba(14,18,14,0.68) 100%);}
+.sp-folder.has-cover .sp-folder-top,.sp-folder.has-cover .sp-folder-meta{position:relative;z-index:2;}
+.sp-folder.has-cover .sp-folder-peek{visibility:hidden;}
+.sp-folder.has-cover .sp-folder-name{color:#e0dcc0;text-shadow:0 1px 3px rgba(0,0,0,0.6);}
+.sp-folder.has-cover .sp-folder-meta{color:#b8b49a;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
+.sp-folder-name{font-size:13px;color:#c8c898;font-weight:500;line-height:1.3;}
+.sp-folder-peek{flex:1;padding:10px 2px 4px;display:flex;flex-direction:column;gap:4px;overflow:hidden;}
+.sp-folder-peek span{font-size:10.5px;color:#55554a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp-folder-peek span::before{content:'·';margin-right:6px;color:#3a4030;}
+.sp-folder-meta{font-size:10px;color:#45453a;}
+.sp-begin{display:flex;gap:8px;margin-bottom:34px;flex-shrink:0;flex-wrap:wrap;}
+.sp-tile{display:flex;align-items:center;gap:9px;padding:8px 15px;background:#1d261d;border:0.5px solid #272f27;border-radius:8px;cursor:pointer;transition:border-color 0.18s,background 0.18s;}
 .sp-tile:hover{border-color:#3a4a38;background:#202a20;}
-.sp-tile-icon{font-size:17px;color:#6a6a58;width:20px;text-align:center;flex-shrink:0;}
+.sp-tile-icon{font-size:14px;color:#6a6a58;text-align:center;flex-shrink:0;line-height:1;}
 .sp-tile:hover .sp-tile-icon{color:#a09e8a;}
 .sp-tile-icon.ai{color:#7ec87e;}
 .sp-tile:hover .sp-tile-icon.ai{color:#9ada9a;}
-.sp-tile-name{font-size:13px;color:#c8c898;margin-bottom:2px;}
-.sp-tile-desc{font-size:10.5px;color:#55554a;line-height:1.35;}
+.sp-tile-name{font-size:12px;color:#c8c898;}
 .sp-tile.dim{opacity:0.45;pointer-events:none;}
 .sp-soon{font-size:9px;color:#4a4a3a;background:#232b23;border-radius:3px;padding:1px 5px;margin-left:5px;letter-spacing:0.05em;vertical-align:1px;}
 .sp-scroll{flex:1;overflow-y:auto;min-height:0;}
@@ -38,11 +63,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sp-card.flash{animation:spCardFlash 0.7s ease;}
 .sp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
 .sp-card-name{font-size:13px;color:#c8c898;font-weight:500;line-height:1.3;}
-.sp-dots{width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:none;background:transparent;color:#4a4a3c;font-size:13px;cursor:pointer;font-family:'Lora',serif;opacity:0;transition:opacity 0.15s,background 0.15s,color 0.15s;flex-shrink:0;}
-.sp-card:hover .sp-dots{opacity:1;}
+.sp-dots{width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:none;background:transparent;color:#4a4a3c;font-size:13px;cursor:pointer;font-family:'Lora',serif;transition:background 0.15s,color 0.15s;flex-shrink:0;}
 .sp-dots:hover{background:#252e25;color:#a09e8a;}
-.sp-card-preview{flex:1;display:flex;align-items:center;justify-content:center;opacity:0.38;padding:4px 0;}
-.sp-card-preview svg{width:118px;height:54px;overflow:visible;}
+.sp-card-preview{flex:1;display:flex;align-items:center;justify-content:center;padding:4px 0;margin:6px 0 8px;border-radius:7px;}
+.sp-card-preview svg{width:118px;height:54px;overflow:visible;opacity:0.38;}
 .sp-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .sp-card-meta{font-size:10px;color:#45453a;}
 .sp-chips{display:flex;gap:3px;}
@@ -54,10 +78,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sp-cm-rule{height:0.5px;background:#252e25;margin:4px 0;}
 .sp-cm-item.del{color:#6a5a48;}
 .sp-cm-item.del:hover{color:#a08a6a;}
-.sp-foot{margin-top:auto;padding:18px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.sp-cm-item{white-space:nowrap;}
+.sp-cm-item.dim{opacity:0.35;pointer-events:none;}
+.sp-cm-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:#4a4a3c;padding:5px 13px 3px;cursor:default;}
+.sp-foot{margin-top:auto;padding:18px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;}
 .sp-hint{font-size:10.5px;color:#3a3a30;letter-spacing:0.03em;}
 .sp-key{display:inline-block;border:0.5px solid #2f382e;border-radius:4px;padding:0 5px;margin-right:4px;font-size:10px;color:#55554a;}
 .sp-ver{font-size:10px;color:#30302a;letter-spacing:0.06em;}
+.sp-bin-link{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:#4a4a3c;letter-spacing:0.03em;cursor:pointer;transition:color 0.15s;}
+.sp-bin-link:hover{color:#a09e8a;}
+#sp-bin-count{color:#55544a;}
+#sp-bin-pop{position:absolute;bottom:48px;right:0;width:238px;max-height:300px;overflow-y:auto;background:#1a201a;border:0.5px solid #2f382e;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none;padding:5px 0;z-index:110;}
+#sp-bin-pop.vis{display:block;}
+.sp-bin-hdr{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:#4a4a3c;padding:4px 13px 5px;}
+.sp-bin-none{padding:4px 13px 8px;font-size:11px;color:#55544a;font-style:italic;}
+.sp-bin-row{display:flex;align-items:center;gap:8px;padding:5px 13px;font-size:11.5px;color:#8a8a76;}
+.sp-bin-row:hover{background:#202a20;}
+.sp-bin-lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sp-bin-act{background:none;border:none;cursor:pointer;font-size:11.5px;color:#55554a;padding:1px 3px;font-family:'Lora',serif;line-height:1;transition:color 0.12s;}
+.sp-bin-act:hover{color:#c8c898;}
+.sp-bin-act.del:hover{color:#c87e7e;}
+#sp-bin-empty{margin:4px 9px 3px;padding:4px;text-align:center;font-size:10.5px;color:#7a4a4a;border:0.5px solid #3a2a2a;border-radius:6px;cursor:pointer;transition:color 0.15s,border-color 0.15s;}
+#sp-bin-empty:hover{color:#c87e7e;border-color:#4a2a2a;}
 #app{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.4s;}
 #app.vis{opacity:1;pointer-events:all;}
 /* ── burger + drawer (map navigation) ── */
@@ -314,26 +356,35 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       </div>
       <div class="sp-sec">Begin</div>
       <div class="sp-begin">
-        <div class="sp-tile" id="sp-tile-blank">
+        <div class="sp-tile" id="sp-tile-project" title="a folder to file maps in">
+          <span class="sp-tile-icon"><svg width="15" height="13" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M1.5 3.5a1 1 0 011-1h4l1.6 2h7.4a1 1 0 011 1v7a1 1 0 01-1 1h-13a1 1 0 01-1-1z"/></svg></span>
+          <span class="sp-tile-name">New project</span>
+        </div>
+        <div class="sp-tile" id="sp-tile-blank" title="an empty canvas">
           <span class="sp-tile-icon">+</span>
-          <span><span class="sp-tile-name">Blank map</span><div class="sp-tile-desc">an empty canvas</div></span>
+          <span class="sp-tile-name">Blank map</span>
         </div>
-        <div class="sp-tile" id="sp-tile-prompt">
+        <div class="sp-tile" id="sp-tile-prompt" title="Claude drafts a starter map">
           <span class="sp-tile-icon ai">&#10022;</span>
-          <span><span class="sp-tile-name">From prompt</span><div class="sp-tile-desc">Claude drafts a starter map</div></span>
+          <span class="sp-tile-name">From prompt</span>
         </div>
-        <div class="sp-tile dim" id="sp-tile-doc">
+        <div class="sp-tile dim" id="sp-tile-doc" title="summarise a .pdf or .doc">
           <span class="sp-tile-icon">&#8613;</span>
-          <span><span class="sp-tile-name">From document<span class="sp-soon">soon</span></span><div class="sp-tile-desc">summarise a .pdf or .doc</div></span>
+          <span class="sp-tile-name">From document<span class="sp-soon">soon</span></span>
         </div>
       </div>
       <div class="sp-scroll">
         <div class="sp-sec">Return</div>
+        <div id="sp-crumbs"></div>
         <div class="sp-grid" id="sp-grid"></div>
       </div>
       <div class="sp-foot">
         <span class="sp-hint" id="sp-hint" style="visibility:hidden;"><span class="sp-key">&#8629;</span>reopen <span id="sp-hint-name"></span></span>
-        <span class="sp-ver">v11</span>
+        <span style="display:flex;align-items:center;gap:16px;">
+          <span class="sp-bin-link" id="sp-bin-link"><span style="font-size:11px;">&#9109;</span>recycle bin <span id="sp-bin-count"></span></span>
+          <span class="sp-ver">v12</span>
+        </span>
+        <div id="sp-bin-pop"></div>
       </div>
     </div>
   </div>
@@ -433,6 +484,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <button class="zm" id="zin">+</button>
           <div id="zoom-lbl">100%</div>
           <button class="zm" id="zout">−</button>
+          <button class="zm" id="btn-fit" title="fit to page"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2H2v3"/><path d="M11 2h3v3"/><path d="M14 11v3h-3"/><path d="M2 11v3h3"/><rect x="5.5" y="6" width="5" height="4" rx="1.2"/></svg></button>
           <button class="zm" id="btn-mm" style="margin-top:6px;font-size:18px;border-top:0.5px solid #2a3028;border-radius:0 0 8px 8px;padding-top:6px;height:36px;">&#9638;</button>
         </div>
         <canvas id="minimap" width="225" height="150"></canvas>
@@ -663,8 +715,8 @@ const FONTS=[
   {l:'Unna',v:"'Unna',serif"},
   {l:'Work Sans',v:"'Work Sans',sans-serif"},
 ];
-const BG_DARK=['#0d1a0d','#111111','#1a1a1a','#0d0d0d','#141414','#0d0d1a','#1a0d0d','#1a1a0d','#0d1a1a','#1a0d1a','#0a1520','#1a1208','#2a2a2a'];
-const BG_LIGHT=['#faf8f5','#f5f0eb','#f0ece4','#e8f0e8','#e8e8f5','#f0e8e8','#f5ede8','#edf5f0','#f5f0e8','#ede8f5','#dff0e8','#e8dff0','#f0dfdf','#dfe8f0','#f0f0df','#ffffff','#f8f8f8','#f0f0f0'];
+const BG_DARK=['#0d1a0d','#0f2018','#15261a','#0d1a1a','#0f2a2a','#0a1520','#101c30','#141430','#201430','#2a1626','#261418','#2a1a12','#282010','#1c2410','#181d24','#111111','#222222'];
+const BG_LIGHT=['#faf8f5','#f5efe0','#f0e6d0','#e6f0d8','#d6e8cc','#d4ecea','#d6e6f4','#dcdef4','#e8dcf4','#f4dce8','#f4d8d0','#f2ecca','#dfe8dc','#e8e8e8','#ffffff'];
 const BG_COLORS=[...BG_DARK,...BG_LIGHT]; // legacy compatibility
 const DIRS=['r','l','t','b'];
 const DIR_OFFSET={r:{dx:1,dy:0},l:{dx:-1,dy:0},t:{dx:0,dy:-1},b:{dx:0,dy:1}};
@@ -1013,6 +1065,9 @@ function normalizeState(){
   if(!state.ai.provider)state.ai.provider='claude';
   if(!state.ai.ollamaUrl)state.ai.ollamaUrl='http://localhost:11434';
   if(!state.ai.ollamaModel)state.ai.ollamaModel='llama3.2';
+  // folders: normalise missing/orphaned references so nothing points at an absent parent
+  state.folders.forEach(f=>{if(!f.parentId||!state.folders.find(x=>x.id===f.parentId))f.parentId=null;});
+  state.maps.forEach(m=>{if(!m.folderId||!state.folders.find(f=>f.id===m.folderId))m.folderId=null;});
   state.maps.forEach(map=>{
     if(!map.legend)map.legend={shapes:{},edges:{},colours:{}};
     if(map.legend.textWords==null)map.legend.textWords=40;
@@ -2822,8 +2877,8 @@ burgerEl.addEventListener('click',e=>{
 });
 drawerEl.addEventListener('click',e=>{e.stopPropagation();if(!e.target.closest('#dd-export'))closeAllSubs();});
 document.addEventListener('click',()=>closeDrawer());
-// folders are legacy data (pre-drawer "projects") — kept in saves so old bin
-// entries still restore, but the drawer and splash list maps flat
+// folders surface on the splash grid (drag-drop filing, nesting, breadcrumbs);
+// the drawer still lists maps flat
 function sbGetChildren(pid){return state.folders.filter(f=>f.parentId===pid);}
 function sbDeleteTobin(type,id){
   const label=type==='folder'?state.folders.find(f=>f.id===id)?.name:state.maps.find(m=>m.id===id)?.name;
@@ -2840,8 +2895,13 @@ function sbDeleteTobin(type,id){
 }
 function sbRestoreFromBin(binId,targetFolderId){
   sbSnap('before restore');const entry=(state.bin||[]).find(b=>b.id===binId);if(!entry)return;
-  entry.deletedFolders.forEach(f=>{f.parentId=targetFolderId!==undefined?targetFolderId:entry.originalParentId;state.folders.push(f);});
+  // only the root of the deleted tree is re-parented; descendants keep their
+  // stored parentId so the folder structure survives the round trip
+  entry.deletedFolders.forEach((f,i)=>{if(i===0)f.parentId=targetFolderId!==undefined?targetFolderId:entry.originalParentId;state.folders.push(f);});
   entry.deletedMaps.forEach(m=>{if(entry.type==='map')m.folderId=targetFolderId!==undefined?targetFolderId:entry.originalFolderId;state.maps.push(m);});
+  // the original parent may itself have been binned since — drop orphaned refs
+  state.folders.forEach(f=>{if(f.parentId&&!state.folders.find(x=>x.id===f.parentId))f.parentId=null;});
+  state.maps.forEach(m=>{if(m.folderId&&!state.folders.find(f=>f.id===m.folderId))m.folderId=null;});
   state.bin=state.bin.filter(b=>b.id!==binId);sbSnap('restored: '+entry.label);softSave();renderSB();renderBin();
 }
 function sbPermDelete(binId){sbSnap('before perm delete');state.bin=state.bin.filter(b=>b.id!==binId);sbSnap('perm deleted');softSave();renderBin();}
@@ -3258,6 +3318,9 @@ const SHORTCUTS=[
   {section:'home screen',items:[
     ['enter','reopen the most recent map'],
     ['esc','close dialog / card menu'],
+    ['drag card onto folder','file a map / nest a folder'],
+    ['drag card onto breadcrumb','move it up to that level'],
+    ['&#8943; &rarr; move to&#8230;','file a card into any project from its menu'],
   ]},
   {section:'editing',items:[
     ['enter','commit edit · done in legend / ghost-node menus'],
@@ -3390,6 +3453,24 @@ function renderHist(){const map=cmap(),list=document.getElementById('hist-list')
 const _btnSearch=document.getElementById('btn-search');if(_btnSearch)_btnSearch.addEventListener('click',()=>openSearch());
 document.getElementById('zin').addEventListener('click',()=>{const c={x:cvs.width/2,y:cvs.height/2},ns=Math.min(6,T.s*1.2);T.x=c.x-(c.x-T.x)*(ns/T.s);T.y=c.y-(c.y-T.y)*(ns/T.s);T.s=ns;if(editingNode)positionInput(editingNode);render();});
 document.getElementById('zout').addEventListener('click',()=>{const c={x:cvs.width/2,y:cvs.height/2},ns=Math.max(0.05,T.s/1.2);T.x=c.x-(c.x-T.x)*(ns/T.s);T.y=c.y-(c.y-T.y)*(ns/T.s);T.s=ns;if(editingNode)positionInput(editingNode);render();});
+// fit to page — zoom/pan so every visible node fits with a margin (capped at 100%)
+function fitToPage(){
+  const map=cmap();if(!map||!map.nodes.length)return;
+  const hid=getCollapsedHidden();
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  map.nodes.forEach(n=>{
+    if(hid.has(n.id))return;
+    const rx=nrx(n),ry=nry(n);
+    x0=Math.min(x0,n.x-rx);y0=Math.min(y0,n.y-ry);x1=Math.max(x1,n.x+rx);y1=Math.max(y1,n.y+ry);
+  });
+  if(x0===Infinity)return;
+  const pad=60,bw=x1-x0+pad*2,bh=y1-y0+pad*2;
+  const s=Math.max(0.05,Math.min(1,Math.min(cvs.width/bw,cvs.height/bh)));
+  T.s=s;T.x=cvs.width/2-(x0+x1)/2*s;T.y=cvs.height/2-(y0+y1)/2*s;
+  if(editingNode)positionInput(editingNode);
+  render();
+}
+document.getElementById('btn-fit').addEventListener('click',fitToPage);
 // click zoom % label → reset to 100% centred on canvas
 const _zoomLbl=document.getElementById('zoom-lbl');
 _zoomLbl.style.cursor='pointer';
@@ -3446,7 +3527,7 @@ document.addEventListener('keydown',e=>{
       if(_aiOv.style.display==='flex'){_aiOv.style.display='none';}
       else if(document.getElementById('gen-ov').classList.contains('vis')){if(_genAbort)_genAbort.cancelled=true;document.getElementById('gen-ov').classList.remove('vis');}
       else if(document.getElementById('modal-ov').classList.contains('vis')){document.getElementById('modal-ov').classList.remove('vis');}
-      else document.querySelectorAll('.sp-card-menu.vis').forEach(el=>el.classList.remove('vis'));
+      else{document.querySelectorAll('.sp-card-menu.vis').forEach(el=>el.classList.remove('vis'));document.getElementById('sp-bin-pop').classList.remove('vis');}
     }
     return;
   }
@@ -3583,52 +3664,165 @@ function mostRecentMap(){
   if(!best.updatedAt){const cur=cmap();if(cur)best=cur;}
   return best;
 }
+// ── splash folders ──
+let spHere=null; // folder id currently open on the splash grid (null = top level)
+let spDrag=null; // {type:'map'|'folder', id} while a card drag is in flight
+function spFolderChain(id){const c=[];while(id){const f=state.folders.find(f=>f.id===id);if(!f)break;c.unshift(f);id=f.parentId;}return c;}
+function spIsDescendant(fid,maybeAncestor){let f=state.folders.find(x=>x.id===fid);while(f){if(f.parentId===maybeAncestor)return true;f=state.folders.find(x=>x.id===f.parentId);}return false;}
+function spCountIn(fid){return sbGetChildren(fid).reduce((a,f)=>a+spCountIn(f.id),state.maps.filter(m=>m.folderId===fid).length);}
+function spDropInto(target){ // target = folder id or null (top level)
+  if(!spDrag)return;
+  if(spDrag.type==='map'){state.maps.find(m=>m.id===spDrag.id).folderId=target;}
+  else{
+    const f=state.folders.find(f=>f.id===spDrag.id);
+    if(f.id!==target&&!(target&&spIsDescendant(target,f.id)))f.parentId=target;
+  }
+  spDrag=null;softSave();renderSplash();
+}
+function renderSpCrumbs(){
+  const el=document.getElementById('sp-crumbs');
+  el.classList.toggle('vis',!!spHere);
+  el.innerHTML='';
+  if(!spHere)return;
+  const chain=spFolderChain(spHere);
+  const mk=(label,target,isHere)=>{
+    const c=document.createElement('span');c.className='sp-crumb'+(isHere?' here':'');c.textContent=label;
+    if(!isHere)c.addEventListener('click',()=>{spHere=target;renderSplash();});
+    c.addEventListener('dragover',ev=>{if(!spDrag)return;if(spDrag.type==='folder'&&target===spDrag.id)return;ev.preventDefault();c.classList.add('dropready');});
+    c.addEventListener('dragleave',()=>c.classList.remove('dropready'));
+    c.addEventListener('drop',ev=>{ev.preventDefault();c.classList.remove('dropready');spDropInto(target);});
+    el.appendChild(c);
+  };
+  mk('Return',null,false);
+  chain.forEach((f,i)=>{
+    const sep=document.createElement('span');sep.className='sp-crumb-sep';sep.textContent='/';el.appendChild(sep);
+    mk(f.name,f.id,i===chain.length-1);
+  });
+}
 function renderSplash(){
   const motif=document.getElementById('sp-motif');
   if(!motif.innerHTML)motif.innerHTML=genMotif(7,760,520,3.1);
+  // guard: the open folder may have been deleted
+  if(spHere&&!state.folders.find(f=>f.id===spHere))spHere=null;
+  renderSpCrumbs();
   const grid=document.getElementById('sp-grid');
   grid.innerHTML='';
   const recent=mostRecentMap();
   const hint=document.getElementById('sp-hint');
   hint.style.visibility=recent?'visible':'hidden';
   if(recent)document.getElementById('sp-hint-name').textContent=recent.name;
-  state.maps.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).forEach(m=>{
+  // folder cards first
+  sbGetChildren(spHere).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).forEach(f=>{
+    const card=document.createElement('div');card.className='sp-folder';card.draggable=true;
+    const sub=sbGetChildren(f.id),inner=state.maps.filter(m=>m.folderId===f.id);
+    const peek=[...sub.map(s=>s.name+' /'),...inner.map(m=>m.name)].slice(0,4);
+    const total=spCountIn(f.id);
+    card.innerHTML=`
+      <div class="sp-folder-top">
+        <svg class="sp-folder-icon" width="17" height="15" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M1.5 3.5a1 1 0 011-1h4l1.6 2h7.4a1 1 0 011 1v7a1 1 0 01-1 1h-13a1 1 0 01-1-1z"/></svg>
+        <span class="sp-folder-name"></span>
+        <button class="sp-dots">&#8943;</button>
+      </div>
+      <div class="sp-folder-peek">${peek.map(()=>'<span></span>').join('')}</div>
+      <div class="sp-folder-meta">${total}${total===1?' map':' maps'}</div>
+      <div class="sp-card-menu">
+        <div class="sp-cm-item" data-act="rename">Rename</div>
+        <div class="sp-cm-item" data-act="icon">Set icon&#8230;</div>
+        ${f.icon?'<div class="sp-cm-item" data-act="noicon">Remove icon</div>':''}
+        <div class="sp-cm-item" data-act="move">Move to&#8230;</div>
+        <div class="sp-cm-rule"></div>
+        <div class="sp-cm-item del" data-act="delete">Delete</div>
+      </div>`;
+    card.querySelector('.sp-folder-name').textContent=f.name;
+    if(f.icon){card.classList.add('has-cover');const cov=document.createElement('img');cov.className='sp-folder-cover';cov.draggable=false;cov.src=f.icon;const sh=document.createElement('div');sh.className='sp-folder-shade';card.prepend(sh);card.prepend(cov);}
+    card.querySelectorAll('.sp-folder-peek span').forEach((el,i)=>el.textContent=peek[i]);
+    const menu=card.querySelector('.sp-card-menu');
+    const menuHTML=menu.innerHTML;
+    card.querySelector('.sp-dots').addEventListener('click',ev=>{
+      ev.stopPropagation();
+      document.querySelectorAll('.sp-card-menu.vis').forEach(el=>{if(el!==menu)el.classList.remove('vis');});
+      menu.innerHTML=menuHTML; // reset in case it was left showing the move list
+      menu.classList.toggle('vis');
+    });
+    menu.addEventListener('click',ev=>{
+      ev.stopPropagation();
+      const act=ev.target.dataset.act;
+      if(act!=='move')menu.classList.remove('vis');
+      if(!act)return;
+      if(act==='rename')promptM('Folder name',f.name,v=>{f.name=v;softSave();renderSplash();});
+      else if(act==='icon')pickFolderIcon(f);
+      else if(act==='noicon'){delete f.icon;softSave();renderSplash();}
+      else if(act==='move')spShowMoveMenu(menu,f.id,f.parentId||null,id=>{f.parentId=id;softSave();renderSplash();});
+      else if(act==='delete'){sbDeleteTobin('folder',f.id);softSave();renderSplash();}
+    });
+    card.addEventListener('click',()=>{if(!spDrag){spHere=f.id;renderSplash();}});
+    card.addEventListener('dragstart',ev=>{spDrag={type:'folder',id:f.id};card.classList.add('dragging');ev.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',()=>{spDrag=null;card.classList.remove('dragging');renderSplash();});
+    card.addEventListener('dragover',ev=>{
+      if(!spDrag)return;
+      if(spDrag.type==='folder'&&(spDrag.id===f.id||spIsDescendant(f.id,spDrag.id)))return; // no self-drop, no cycles
+      ev.preventDefault();card.classList.add('dropready');
+    });
+    card.addEventListener('dragleave',()=>card.classList.remove('dropready'));
+    card.addEventListener('drop',ev=>{ev.preventDefault();card.classList.remove('dropready');spDropInto(f.id);});
+    grid.appendChild(card);
+  });
+  state.maps.filter(m=>(m.folderId||null)===spHere).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).forEach(m=>{
     const card=document.createElement('div');
     card.className='sp-card'+(recent&&m.id===recent.id?' recent':'');
     card.dataset.mapId=m.id;
+    card.draggable=true;
+    card.addEventListener('dragstart',ev=>{spDrag={type:'map',id:m.id};card.classList.add('dragging');ev.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',()=>{spDrag=null;card.classList.remove('dragging');renderSplash();});
     const chips=mapChipColors(m);
+    // preview panel shows the map's canvas colour; transparent keeps the card colour
+    const pvBg=m.bg==='transparent'?'':` style="background:${m.bg||'#0d1a0d'}"`;
     const meta=[m.nodes.length+(m.nodes.length===1?' node':' nodes'),relTime(m.updatedAt)].filter(Boolean).join(' &middot; ');
     card.innerHTML=`
       <div class="sp-card-top"><span class="sp-card-name"></span><button class="sp-dots">&#8943;</button></div>
-      <div class="sp-card-preview">${mapThumb(m,120,56)}</div>
+      <div class="sp-card-preview"${pvBg}>${mapThumb(m,120,56)}</div>
       <div class="sp-card-foot"><span class="sp-card-meta">${meta}</span>
         <span class="sp-chips">${chips.map(c=>`<span class="sp-chip" style="background:${c}"></span>`).join('')}</span></div>
       <div class="sp-card-menu">
         <div class="sp-cm-item" data-act="rename">Rename</div>
         <div class="sp-cm-item" data-act="duplicate">Duplicate</div>
         <div class="sp-cm-item" data-act="export">Export</div>
+        <div class="sp-cm-item" data-act="move">Move to&#8230;</div>
         <div class="sp-cm-rule"></div>
         <div class="sp-cm-item del" data-act="delete">Delete</div>
       </div>`;
     card.querySelector('.sp-card-name').textContent=m.name;
     const menu=card.querySelector('.sp-card-menu');
+    const menuHTML=menu.innerHTML;
     card.querySelector('.sp-dots').addEventListener('click',ev=>{
       ev.stopPropagation();
       document.querySelectorAll('.sp-card-menu.vis').forEach(el=>{if(el!==menu)el.classList.remove('vis');});
+      menu.innerHTML=menuHTML; // reset in case it was left showing the move list
       menu.classList.toggle('vis');
     });
     menu.addEventListener('click',ev=>{
-      ev.stopPropagation();menu.classList.remove('vis');
-      const act=ev.target.dataset.act;if(!act)return;
+      ev.stopPropagation();
+      const act=ev.target.dataset.act;
+      if(act!=='move')menu.classList.remove('vis');
+      if(!act)return;
       if(act==='rename')promptM('Map name',m.name,v=>{m.name=v;if(m.id===state.currentMapId)document.getElementById('map-title-in').value=v;softSave();renderSB();renderSplash();});
       else if(act==='duplicate'){sbSnap('before dup');const copy=JSON.parse(JSON.stringify(m));copy.id='m'+Date.now();copy.name=m.name+'_copy';copy.updatedAt=Date.now();state.maps.push(copy);sbSnap('duplicated');softSave();renderSB();renderSplash();}
       else if(act==='export'){const blob=new Blob([JSON.stringify(m,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(m.name||'map')+'.json';a.click();}
+      else if(act==='move')spShowMoveMenu(menu,null,m.folderId||null,id=>{m.folderId=id;softSave();renderSplash();});
       else if(act==='delete'){sbDeleteTobin('map',m.id);renderSplash();}
     });
-    card.addEventListener('click',()=>openMapFromSplash(m.id));
+    card.addEventListener('click',()=>{if(!spDrag)openMapFromSplash(m.id);});
     grid.appendChild(card);
   });
+  renderSpBin();
 }
+document.getElementById('sp-tile-project').addEventListener('click',()=>{
+  promptM('Folder name','New project',v=>{
+    if(!v)return;
+    state.folders.push({id:'f'+Date.now(),name:v,parentId:spHere});
+    softSave();renderSplash();
+  });
+});
 function openMapFromSplash(id){
   const card=document.querySelector(`.sp-card[data-map-id="${id}"]`);
   if(card){card.classList.remove('flash');void card.offsetWidth;card.classList.add('flash');}
@@ -3647,7 +3841,76 @@ document.getElementById('sp-tile-prompt').addEventListener('click',()=>{
   document.getElementById('gen-ov').classList.add('vis');
   setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
 });
-document.getElementById('splash').addEventListener('click',()=>document.querySelectorAll('.sp-card-menu.vis').forEach(el=>el.classList.remove('vis')));
+// ── move to… — flat indented folder tree; excludeId hides that folder + descendants (cycle guard) ──
+function spMoveTargets(excludeId){
+  const out=[{id:null,name:'⌂ top level',depth:0}];
+  (function walk(pid,depth){
+    sbGetChildren(pid).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).forEach(f=>{
+      if(excludeId&&(f.id===excludeId||spIsDescendant(f.id,excludeId)))return;
+      out.push({id:f.id,name:f.name,depth});
+      walk(f.id,depth+1);
+    });
+  })(null,1);
+  return out;
+}
+function spShowMoveMenu(menu,excludeId,currentId,onPick){
+  menu.innerHTML='';
+  const lbl=document.createElement('div');lbl.className='sp-cm-label';lbl.textContent='move to';menu.appendChild(lbl);
+  spMoveTargets(excludeId).forEach(t=>{
+    const it=document.createElement('div');
+    it.className='sp-cm-item'+((t.id||null)===(currentId||null)?' dim':'');
+    it.style.paddingLeft=(13+t.depth*11)+'px';
+    it.textContent=t.name;
+    it.addEventListener('click',ev=>{ev.stopPropagation();menu.classList.remove('vis');onPick(t.id);});
+    menu.appendChild(it);
+  });
+  menu.classList.add('vis');
+}
+function pickFolderIcon(f){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.addEventListener('change',()=>{
+    const file=inp.files[0];if(!file)return;
+    const img=new Image();
+    img.onload=()=>{
+      const M=320,sc=Math.min(1,M/Math.max(img.width,img.height));
+      const w=Math.max(1,Math.round(img.width*sc)),h=Math.max(1,Math.round(img.height*sc));
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      const x=c.getContext('2d');
+      x.fillStyle='#1f271f';x.fillRect(0,0,w,h); // composite under transparency — JPEG has no alpha
+      x.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(img.src);
+      f.icon=c.toDataURL('image/jpeg',0.82);
+      softSave();renderSplash();
+    };
+    img.src=URL.createObjectURL(file);
+  });
+  inp.click();
+}
+document.getElementById('splash').addEventListener('click',()=>{document.querySelectorAll('.sp-card-menu.vis').forEach(el=>el.classList.remove('vis'));document.getElementById('sp-bin-pop').classList.remove('vis');});
+
+// ── splash recycle bin ──
+function renderSpBin(){
+  const bin=state.bin||[],pop=document.getElementById('sp-bin-pop');
+  document.getElementById('sp-bin-count').textContent=bin.length?'('+bin.length+')':'';
+  if(!pop.classList.contains('vis'))return;
+  pop.innerHTML='<div class="sp-bin-hdr">recycle bin</div>';
+  if(!bin.length){const none=document.createElement('div');none.className='sp-bin-none';none.textContent='nothing here';pop.appendChild(none);return;}
+  bin.forEach(entry=>{
+    const row=document.createElement('div');row.className='sp-bin-row';
+    const icon=document.createElement('span');icon.style.cssText='font-size:10px;flex-shrink:0;';icon.textContent=entry.type==='folder'?'\u{1F4C1}':'\u{1F5FA}';
+    const lbl=document.createElement('span');lbl.className='sp-bin-lbl';lbl.textContent=entry.label;
+    const res=document.createElement('button');res.className='sp-bin-act';res.title='restore';res.innerHTML='&#8617;';
+    res.addEventListener('click',ev=>{ev.stopPropagation();sbRestoreFromBin(entry.id,undefined);renderSplash();});
+    const del=document.createElement('button');del.className='sp-bin-act del';del.title='delete permanently';del.textContent='✕';
+    del.addEventListener('click',ev=>{ev.stopPropagation();if(del.dataset.armed){sbPermDelete(entry.id);renderSpBin();}else{del.dataset.armed='1';del.textContent='sure?';del.style.color='#c87e7e';}});
+    row.append(icon,lbl,res,del);pop.appendChild(row);
+  });
+  const empty=document.createElement('div');empty.id='sp-bin-empty';empty.textContent='empty bin permanently';
+  empty.addEventListener('click',ev=>{ev.stopPropagation();if(empty.dataset.armed){state.bin=[];sbSnap('emptied bin');softSave();renderBin();renderSplash();}else{empty.dataset.armed='1';empty.textContent='click again to confirm';}});
+  pop.appendChild(empty);
+}
+document.getElementById('sp-bin-link').addEventListener('click',ev=>{ev.stopPropagation();document.getElementById('sp-bin-pop').classList.toggle('vis');renderSpBin();});
+document.getElementById('sp-bin-pop').addEventListener('click',ev=>ev.stopPropagation());
 let mcb=null;
 function promptM(title,def,cb){mcb=cb;document.getElementById('modal-ttl').textContent=title;document.getElementById('modal-in').value=def;document.getElementById('modal-ov').classList.add('vis');setTimeout(()=>document.getElementById('modal-in').select(),40);}
 document.getElementById('modal-ok').addEventListener('click',()=>{const v=document.getElementById('modal-in').value.trim();document.getElementById('modal-ov').classList.remove('vis');if(v&&mcb)mcb(v);});

@@ -70,6 +70,7 @@ Post-design calls made during the fold (flag to Peter if they bother him):
 - Fullscreen kept a small toolbar button (⛶) — F11-only felt too hidden.
 - **Folders live on the splash page** (added 2026-08-12): folder cards in the Return grid, drag a map onto a folder to file it, folders nest via drag, breadcrumbs to navigate/un-file, "New project" tile in the Begin row (creates a folder at the current breadcrumb level). `state.folders` (with `parentId`) and `map.folderId` persist; the recycle bin handles folder delete/restore recursively. The drawer still lists maps flat.
 - Single-map JSON (from a card's Export) imports as a new map; full-state JSON still replaces everything.
+- **v12 cut (2026-08-12)** — splash projects release: everything above plus a splash recycle bin (footer link, restore / two-step permanent delete), project cover images (⋯ → Set icon…, stored as small data URLs in `folder.icon`), always-visible card ⋯ menus, and Move to… in card menus (indented project tree, cycle-guarded).
 
 ## The bank — features discussed but not built
 
