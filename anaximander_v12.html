@@ -462,8 +462,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <div class="rp-label">Map</div>
           <div class="rp-item" id="rp-history"><span class="rp-icon">&#9201;</span> history</div>
           <div class="rp-item" id="rp-ghosts"><span class="rp-icon">&#9685;</span> ghost nodes <span class="rp-chevron">&#9658;</span></div>
-          <div class="rp-item" id="rp-untangle"><span class="rp-icon">&#10022;</span> untangle</div>
-          <div class="rp-item" id="rp-tidy"><span class="rp-icon">&#10016;</span> tidy up</div>
+          <div class="rp-item" id="rp-untangle"><span class="rp-icon">&#10022;</span> organise radial</div>
+          <div class="rp-item" id="rp-tidy"><span class="rp-icon">&#10016;</span> organise tree</div>
         </div>
         <div class="rp-group">
           <div class="rp-label">AI</div>
@@ -2094,7 +2094,7 @@ function materialiseGhost(idx){
   e.thickness=2;initKf(e,map);map.edges.push(e);
   if(parent)startSpawnAnim(child.id,parent.x,parent.y);
   selN=child.id;selSet=new Set([child.id]);softSave();
-  ghosts=[];
+  ghosts.splice(idx,1); // remaining ghosts stay up for chained clicks
   render();
   setTimeout(()=>startEdit(child),150);
 }
@@ -2146,7 +2146,6 @@ function computeRadialTargets(map){
   function place(id,depth,angleStart,angleEnd){
     const kids=children[id]||[];
     if(!kids.length)return;
-    const ringRadius=root && depth===1?260:260+(depth-1)*220;
     const totalLeaves=leafCount[id];
     let cursor=angleStart;
     for(const kid of kids){
@@ -2155,7 +2154,7 @@ function computeRadialTargets(map){
       const px=targets.get(id).x;
       const py=targets.get(id).y;
       // place at angle from PARENT, at fixed ring radius from parent
-      const r=depth===1?260:200;
+      const r=depth===1?340:280;
       targets.set(kid,{x:px+Math.cos(angle)*r,y:py+Math.sin(angle)*r});
       place(kid,depth+1,cursor,cursor+slice);
       cursor+=slice;
@@ -2164,44 +2163,117 @@ function computeRadialTargets(map){
   place(root.id,1,0,Math.PI*2);
   // any orphan nodes (not reached by BFS) stay where they are
   for(const n of map.nodes)if(!targets.has(n.id))targets.set(n.id,{x:n.x,y:n.y});
+  resolveNodeOverlaps(map,targets,new Set([root.id]));
   return targets;
 }
 
-// HIERARCHICAL TREE — Reingold–Tilford style, left-to-right.
-// Each level pushes its children right by LGAP. Subtree height is computed
-// bottom-up so siblings stack without overlap.
+// True half-extents of a node's drawn footprint. Circles and squares render at
+// max(nrx,nry) in BOTH axes (see drawNode), so their vertical extent is far larger
+// than nry suggests — layout code must use this, not raw nrx/nry.
+function nodeHalfExtents(n){
+  const rx=nrx(n),ry=nry(n);
+  if(n.shape==='circle'||n.shape==='square'){const r=Math.max(rx,ry);return{rx:r,ry:r};}
+  return{rx,ry};
+}
+
+// Iteratively push overlapping nodes apart, mutating the positions in `targets`
+// (a Map of id → {x,y}). Uses real half-extents plus padding, treating each node
+// as an ellipse. Ids in `pinned` never move. Pairs joined by a labelled
+// edge get extra separation so the mid-edge text isn't jammed against the borders.
+function resolveNodeOverlaps(map,targets,pinned){
+  pinned=pinned||new Set();
+  const ns=map.nodes.filter(n=>targets.has(n.id));
+  if(ns.length<2)return targets;
+  const rx=new Map(),ry=new Map();
+  ns.forEach(n=>{const h=nodeHalfExtents(n);rx.set(n.id,h.rx);ry.set(n.id,h.ry);});
+  const PAD=80;
+  const lblNeed=new Map(); // 'lo|hi' id pair → extra world units for the edge label
+  map.edges.forEach(e=>{
+    if(!e.label||!targets.has(e.from)||!targets.has(e.to))return;
+    const src=map.nodes.find(n=>n.id===e.from);
+    const fs=e.labelSize||(src?Math.max(10,Math.round(FONT_SIZE(src)*(src.scale||1)*0.8)):10);
+    ctx.font=`400 ${Math.round(fs*T.s)}px ${e.labelFont||(src&&src.font)||"'Nunito',sans-serif"}`;
+    const w=ctx.measureText(e.label).width/T.s;
+    const key=Math.min(e.from,e.to)+'|'+Math.max(e.from,e.to);
+    lblNeed.set(key,Math.max(lblNeed.get(key)||0,w+28));
+  });
+  // ellipse radius along a unit direction (ct,st)
+  const rAt=(id,ct,st)=>1/Math.sqrt((ct/rx.get(id))**2+(st/ry.get(id))**2);
+  for(let it=0;it<80;it++){
+    let worst=0;
+    for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){
+      const A=ns[i],B=ns[j];
+      const aPin=pinned.has(A.id),bPin=pinned.has(B.id);
+      if(aPin&&bPin)continue;
+      const pa=targets.get(A.id),pb=targets.get(B.id);
+      let dx=pb.x-pa.x,dy=pb.y-pa.y,d=Math.hypot(dx,dy);
+      if(d<1){dx=Math.cos(i*2.399963+j);dy=Math.sin(i*2.399963+j);d=1;} // coincident: deterministic nudge direction
+      const ct=dx/d,st=dy/d;
+      const key=Math.min(A.id,B.id)+'|'+Math.max(A.id,B.id);
+      const req=rAt(A.id,ct,st)+rAt(B.id,ct,st)+PAD+(lblNeed.get(key)||0);
+      if(d>=req)continue;
+      worst=Math.max(worst,req-d);
+      const push=(req-d)*0.55; // damped for stability across iterations
+      if(aPin){pb.x+=ct*push;pb.y+=st*push;}
+      else if(bPin){pa.x-=ct*push;pa.y-=st*push;}
+      else{pa.x-=ct*push/2;pa.y-=st*push/2;pb.x+=ct*push/2;pb.y+=st*push/2;}
+    }
+    if(worst<0.5)break;
+  }
+  return targets;
+}
+
+// HIERARCHICAL TREE — Reingold–Tilford style, left-to-right, size-aware.
+// Subtree heights come from real node heights (nry) so tall/multi-line nodes
+// get room; each level's column x comes from the widest node at that depth.
 function computeTreeTargets(map){
   if(!map.nodes.length)return new Map();
   const root=map.nodes[0];
   const{children}=buildLayoutTree(map,root.id);
-  const LGAP=240, NGAP=70; // horizontal level gap, vertical between siblings
-  // height of each subtree in "node-gap units"
+  const byId=new Map(map.nodes.map(n=>[n.id,n]));
+  const VGAP=44, HGAP=160; // vertical breathing room, gap between level columns
+  // height of each subtree in world units, bottom-up
   const subtreeH={};
   function measure(id){
     const kids=children[id]||[];
-    if(!kids.length){subtreeH[id]=1;return 1;}
+    const own=nodeHalfExtents(byId.get(id)).ry*2+VGAP;
+    if(!kids.length){subtreeH[id]=own;return own;}
     let s=0;for(const k of kids)s+=measure(k);
-    subtreeH[id]=Math.max(1,s);return subtreeH[id];
+    subtreeH[id]=Math.max(own,s);return subtreeH[id];
   }
   measure(root.id);
-  const targets=new Map();
-  // root anchored at its current position; everything else relative to it
-  const rootX=root.x, rootY=root.y;
-  targets.set(root.id,{x:rootX,y:rootY});
-  function place(id,depth,centreY){
-    const kids=children[id]||[];
-    if(!kids.length)return;
-    const totalH=subtreeH[id]*NGAP;
-    let cursorY=centreY-totalH/2;
-    for(const kid of kids){
-      const kidH=subtreeH[kid]*NGAP;
-      const kidCentreY=cursorY+kidH/2;
-      targets.set(kid,{x:rootX+depth*LGAP,y:kidCentreY});
-      place(kid,depth+1,kidCentreY);
-      cursorY+=kidH;
+  // widest node at each depth sets that column's width
+  const depthOf={[root.id]:0};
+  const maxHalfW={0:nodeHalfExtents(root).rx};
+  {
+    const q=[root.id];
+    while(q.length){
+      const id=q.shift();
+      for(const k of children[id]||[]){
+        depthOf[k]=depthOf[id]+1;
+        maxHalfW[depthOf[k]]=Math.max(maxHalfW[depthOf[k]]||0,nodeHalfExtents(byId.get(k)).rx);
+        q.push(k);
+      }
     }
   }
-  place(root.id,1,rootY);
+  const colX={0:root.x};
+  for(let d=1;maxHalfW[d]!==undefined;d++)colX[d]=colX[d-1]+maxHalfW[d-1]+maxHalfW[d]+HGAP;
+  const targets=new Map();
+  // root anchored at its current position; everything else relative to it
+  targets.set(root.id,{x:root.x,y:root.y});
+  function place(id,centreY){
+    const kids=children[id]||[];
+    if(!kids.length)return;
+    const kidsTotal=kids.reduce((s,k)=>s+subtreeH[k],0);
+    let cursorY=centreY-kidsTotal/2;
+    for(const kid of kids){
+      const kidCentreY=cursorY+subtreeH[kid]/2;
+      targets.set(kid,{x:colX[depthOf[kid]],y:kidCentreY});
+      place(kid,kidCentreY);
+      cursorY+=subtreeH[kid];
+    }
+  }
+  place(root.id,root.y);
   for(const n of map.nodes)if(!targets.has(n.id))targets.set(n.id,{x:n.x,y:n.y});
   return targets;
 }
@@ -2235,12 +2307,12 @@ function stepLayoutAnim(){
 
 function runRadialLayout(){
   const map=cmap();if(!map||!map.nodes.length)return;
-  pushCanvasHistLocal('untangle');
+  pushCanvasHistLocal('organise radial');
   animateLayout(computeRadialTargets(map));
 }
 function runTreeLayout(){
   const map=cmap();if(!map||!map.nodes.length)return;
-  pushCanvasHistLocal('tidy up');
+  pushCanvasHistLocal('organise tree');
   animateLayout(computeTreeTargets(map));
 }
 
@@ -2356,8 +2428,8 @@ function animate(){
       dirty=true;
     } else {
       const pb2=document.getElementById('untangle-progress');if(pb2)pb2.style.display='none';
-      const rl=document.getElementById('rp-untangle');if(rl){rl.querySelector('.rp-icon').nextSibling.textContent=' untangle';rl.classList.remove('on');}
-      const rt=document.getElementById('rp-tidy');if(rt){rt.querySelector('.rp-icon').nextSibling.textContent=' tidy up';rt.classList.remove('on');}
+      const rl=document.getElementById('rp-untangle');if(rl){rl.querySelector('.rp-icon').nextSibling.textContent=' organise radial';rl.classList.remove('on');}
+      const rt=document.getElementById('rp-tidy');if(rt){rt.querySelector('.rp-icon').nextSibling.textContent=' organise tree';rt.classList.remove('on');}
       dirty=true;
     }
   }
@@ -2466,13 +2538,8 @@ cvs.addEventListener('mousedown',ev=>{
   if(aiGhosts.length){
     const _ag=hitAiGhostScreen(sx,sy);
     if(_ag){
-      if(ev.metaKey||ev.ctrlKey){_ag._sel=!_ag._sel;aiDirty=true;return;}
-      else{
-        // single click selects/deselects; if already selected, materialise it
-        if(_ag._sel){materialiseAiGhosts([_ag]);}
-        else{aiGhosts.forEach(g=>g._sel=false);_ag._sel=true;aiDirty=true;}
-        return;
-      }
+      // click toggles selection additively (⌘ optional) — build a set, Enter materialises
+      _ag._sel=!_ag._sel;aiDirty=true;return;
     }
     // clicked outside AI ghosts — do NOT dismiss; user must press Esc or Enter
   }
@@ -3325,13 +3392,13 @@ function parseCoggleMm(xmlText,baseName){
 const rpUntangle=document.getElementById('rp-untangle'),rpTidy=document.getElementById('rp-tidy');
 rpUntangle.addEventListener('click',()=>{
   if(layoutAnim)return;
-  rpUntangle.querySelector('.rp-icon').nextSibling.textContent=' untangling\u2026';rpUntangle.classList.add('on');
+  rpUntangle.querySelector('.rp-icon').nextSibling.textContent=' organising\u2026';rpUntangle.classList.add('on');
   const pb=document.getElementById('untangle-progress');if(pb){pb.style.display='block';document.getElementById('untangle-bar').style.width='0%';}
   runRadialLayout();
 });
 rpTidy.addEventListener('click',()=>{
   if(layoutAnim)return;
-  rpTidy.querySelector('.rp-icon').nextSibling.textContent=' tidying\u2026';rpTidy.classList.add('on');
+  rpTidy.querySelector('.rp-icon').nextSibling.textContent=' organising\u2026';rpTidy.classList.add('on');
   const pb=document.getElementById('untangle-progress');if(pb){pb.style.display='block';document.getElementById('untangle-bar').style.width='0%';}
   runTreeLayout();
 });
@@ -3481,6 +3548,7 @@ const SHORTCUTS=[
     ['double-click note drop','open notes panel'],
     ['double-click link badge','open link'],
     ['drag node corner','resize node + scale text'],
+    ['click ghost node','materialise it — the rest stay up for more clicks'],
     ['right-click','context menu'],
     ['right-click edge → label edge','name the relationship (font, size + colour editable)'],
   ]},
@@ -3494,8 +3562,7 @@ const SHORTCUTS=[
     ['tab','suggest child nodes for selected node (AI must be enabled)'],
     ['enter','accept selected suggestions (or all if none selected)'],
     ['esc','cancel request → dismiss suggestions (press twice if needed)'],
-    ['click suggestion','select it'],
-    ['⌘ / ctrl + click suggestion','toggle individual suggestion'],
+    ['click suggestion','toggle it in the selection — pick several, then enter'],
     ['double-click suggestion','edit label before accepting'],
   ]},
   {section:'bulk edit (2+ nodes selected)',items:[
@@ -3511,6 +3578,8 @@ const SHORTCUTS=[
   {section:'tool panel',items:[
     ['»','collapse the right panel to a thin tab'],
     ['«','expand it again'],
+    ['&#10022; organise radial','arrange the map in rings around the root'],
+    ['&#10016; organise tree','arrange the map as a left-to-right tree'],
   ]},
 ];
 function renderShortcuts(){
@@ -4855,8 +4924,25 @@ const GEN_TOK_PER_NODE=50;
 function serializeMapForAi(map){
   const parentOf={};
   map.edges.forEach(e=>{if(!(e.to in parentOf))parentOf[e.to]=e.from;});
-  return map.nodes.map(n=>({id:String(n.id),label:n.label,shape:n.shape,color:n.color,
-    parent:(n.id in parentOf)?String(parentOf[n.id]):null}));
+  const strip=h=>{const d=document.createElement('div');d.innerHTML=h||'';return d.textContent.trim();};
+  return map.nodes.map(n=>{
+    const o={id:String(n.id),label:n.label,shape:n.shape,color:n.color,
+      parent:(n.id in parentOf)?String(parentOf[n.id]):null};
+    const notes=(n.notes||[]).map(nt=>strip(nt.html)).filter(Boolean);
+    if(notes.length)o.notes=notes;
+    return o;
+  });
+}
+
+// convert AI-emitted note strings into real note objects (escaped, dated, pastel)
+function aiNotesToObjects(arr,existingCount){
+  if(!Array.isArray(arr))return[];
+  const now=new Date().toLocaleDateString([],{month:'short',day:'numeric'})+' '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  return arr.filter(s=>typeof s==='string'&&s.trim()).map((s,i)=>{
+    const base=PASTEL_NOTE_COLS[((existingCount||0)+i)%PASTEL_NOTE_COLS.length];
+    const esc=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    return{id:nextNoteId++,html:esc,date:now,color:base,baseColor:base,font:"'Nunito',sans-serif",size:13};
+  });
 }
 
 function updateGenEstimate(){
@@ -4917,7 +5003,7 @@ async function generateMapFromPrompt(promptText){
   const pal=PALETTES.muted.join(', ');
   const schemaLines=[
     '  id        — unique string',
-    '  label     — concise phrase, max 6 words',
+    '  label     — concise phrase, up to 12 words, shorter when it can be; specific and meaningful — never empty, never a placeholder like "node"',
     '  shape     — one of: longpill, pill, circle, ellipse, diamond, hex, rect, text',
     '  color     — a hex colour chosen from: '+pal,
     '  parent    — id of parent node',
@@ -4925,8 +5011,16 @@ async function generateMapFromPrompt(promptText){
     '  edgeLabel — optional: short label naming the relationship to the parent',
     '  links     — optional: cross-connections to other nodes beyond the parent,',
     '              an array of {to: <node id>, edge: <style>, label: <optional short label>}',
+    '  notes     — optional: longer supporting prose, an array of short paragraph strings',
+    '              shown in the node\'s notes panel — any text too long for a label goes here',
   ];
-  const graphHint='Mind maps are graphs, not strict trees — where concepts relate across branches, connect them with links, and use edgeLabel or a link label to name relationships worth naming.';
+  const graphHint='Mind maps are graphs, not strict trees — where concepts relate across branches, connect them with links. Include several cross-branch links, each labelled with a verb phrase naming the relationship ("contradicts", "feeds", "predates") — verbs, not nouns.';
+  const craftLines=[
+    'Shapes carry meaning — choose deliberately: circle = core concept, rect = fact or definition, diamond = decision or counterpoint, hex = process or action, ellipse = concrete example, text = open question or uncertainty, pill/longpill = general idea.',
+    'Colour is taxonomy, not decoration: assign one hue per major branch and keep descendants in their branch\'s hue. When extending an existing map, match the hue of the branch being added to.',
+    'Vary the register of nodes: mix facts, open questions, provocations, concrete examples, and counterpoints. A map of only facts is flat.',
+    'Depth should be asymmetric — go deep (4–5 levels) where the topic is rich, stay shallow where it is thin. Uniform depth everywhere is a failure mode.',
+  ];
   const inmap=_genMode==='inmap';
   let systemPrompt,userMsg;
   if(inmap){
@@ -4936,10 +5030,12 @@ async function generateMapFromPrompt(promptText){
       ...schemaLines,
       'The array may contain:',
       '  — NEW nodes: fresh ids "x1","x2",…; parent must be an existing node id or another new node id.',
-      '  — MODIFIED existing nodes: same id as in the current map, with updated label, shape, or color. Omit parent and edge for these (links may be included to add cross-connections from an existing node).',
+      '  — MODIFIED existing nodes: same id as in the current map, with updated label, shape, or color, or added notes (notes append to the node\'s existing notes). Omit parent and edge for these (links may be included to add cross-connections from an existing node).',
       'Do not include unchanged existing nodes. Never re-parent or delete existing nodes.',
       graphHint,
-      'No commentary. No markdown fences. Only the JSON array.',
+      ...craftLines,
+      'No commentary. No markdown fences. Output exactly one JSON array — never emit a revised second version; get it right the first time.',
+      'This is a one-shot pipeline with no reply channel: never ask clarifying questions, never refuse or explain in prose. Make a sensible interpretation of the request and output the JSON array.',
       '',
       'Current map:',
       JSON.stringify(serializeMapForAi(cmap())),
@@ -4952,8 +5048,10 @@ async function generateMapFromPrompt(promptText){
       ...schemaLines,
       'The root node has parent: null and should be the central topic; every other node has a parent.',
       graphHint,
-      'Generate as many nodes as the topic warrants — at least 12, with no upper limit. Form a clear, well-structured overview.',
-      'No commentary. No markdown fences. Only the JSON array.',
+      ...craftLines,
+      'Generate as many nodes as the topic warrants — no minimum, no maximum. Form a clear, well-structured overview.',
+      'No commentary. No markdown fences. Output exactly one JSON array — never emit a revised second version; get it right the first time.',
+      'This is a one-shot pipeline with no reply channel: never ask clarifying questions, never refuse or explain in prose. Make a sensible interpretation of the request and output the JSON array.',
     ].join('\n');
     userMsg='Generate a mind map about: '+promptText;
   }
@@ -4991,13 +5089,32 @@ async function generateMapFromPrompt(promptText){
     clearInterval(dotTimer);
     if(signal.cancelled){setStatus('Cancelled.');genBtn.disabled=false;cancelBtn.style.display='none';return;}
 
-    // extract JSON array from response — on any failure, surface the raw model output
+    // extract JSON array from response — on any failure, surface the raw model output.
+    // The model occasionally emits a draft array, commentary, then a corrected array;
+    // scan for every balanced top-level array and keep the LAST one that parses.
     const rawFail=(why)=>{showDetail('Raw model response:\n\n'+(text||'(empty)'));const e=new Error(why+' — raw output shown below.');e.detailShown=true;return e;};
-    const match=text.match(/\[[\s\S]*\]/);
-    if(!match)throw rawFail('No JSON array found in response');
-    let nodes;
-    try{nodes=JSON.parse(match[0]);}catch(pe){throw rawFail('JSON parse failed: '+pe.message);}
-    if(!Array.isArray(nodes)||!nodes.length)throw rawFail('Empty or invalid node array');
+    let nodes=null,sawArray=false;
+    for(let i=0;i<text.length;i++){
+      if(text[i]!=='[')continue;
+      let depth=0,inStr=false,esc=false,end=-1;
+      for(let j=i;j<text.length;j++){
+        const c=text[j];
+        if(esc){esc=false;continue;}
+        if(inStr){if(c==='\\')esc=true;else if(c==='"')inStr=false;continue;}
+        if(c==='"')inStr=true;
+        else if(c==='['||c==='{')depth++;
+        else if(c===']'||c==='}'){depth--;if(depth===0){end=j;break;}}
+      }
+      if(end<0)break; // unbalanced — no complete array from here on
+      sawArray=true;
+      try{
+        const cand=JSON.parse(text.slice(i,end+1));
+        if(Array.isArray(cand)&&cand.length)nodes=cand;
+      }catch{}
+      i=end; // continue scanning after this array
+    }
+    if(!sawArray)throw rawFail('No JSON array found in response');
+    if(!nodes)throw rawFail('No parseable node array in response');
 
     if(inmap){
       const r=applyGeneratedToMap(nodes);
@@ -5035,7 +5152,7 @@ function buildMapFromGenerated(topic,rawNodes){
     idMap[rn.id]=nid;
     map.nodes.push({id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
       color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
-      outlined:false,scale:1,palKey:'muted',notes:[],urls:[],primaryUrl:0,
+      outlined:false,scale:1,palKey:'muted',notes:aiNotesToObjects(rn.notes,0),urls:[],primaryUrl:0,
       image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false});
   });
 
@@ -5090,12 +5207,13 @@ function applyGeneratedToMap(rawNodes){
       if(rn.label)ex.label=rn.label;
       if(AI_SHAPES.includes(rn.shape))ex.shape=rn.shape;
       if(rn.color)ex.color=rn.color;
+      if(Array.isArray(rn.notes)&&rn.notes.length){if(!ex.notes)ex.notes=[];ex.notes.push(...aiNotesToObjects(rn.notes,ex.notes.length));}
       updated++;return;
     }
     const nid=map.nextId++;idMap[String(rn.id)]=nid;
     const node={id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
       color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
-      outlined:false,scale:1,palKey:'muted',notes:[],urls:[],primaryUrl:0,
+      outlined:false,scale:1,palKey:'muted',notes:aiNotesToObjects(rn.notes,0),urls:[],primaryUrl:0,
       image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false};
     map.nodes.push(node);created.push({node,rn});
   });
@@ -5143,6 +5261,14 @@ function applyGeneratedToMap(rawNodes){
     }
   }
   pending.forEach(({node},i)=>{node.x=rootN.x+220+i*40;node.y=rootN.y+220;});
+  // separation pass: existing nodes are pinned obstacles, only AI-added nodes shift
+  if(created.length){
+    const targets=new Map(map.nodes.map(n=>[n.id,{x:n.x,y:n.y}]));
+    const createdIds=new Set(created.map(c=>c.node.id));
+    const pin=new Set(map.nodes.filter(n=>!createdIds.has(n.id)).map(n=>n.id));
+    resolveNodeOverlaps(map,targets,pin);
+    created.forEach(({node})=>{const p=targets.get(node.id);if(p){node.x=p.x;node.y=p.y;}});
+  }
   resetAllKf();softSave();render();
   return{added:created.length,updated};
 }
