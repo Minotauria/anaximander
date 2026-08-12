@@ -68,7 +68,7 @@ Post-design calls made during the fold (flag to Peter if they bother him):
 
 - Untangle / tidy up went into the right panel's **Map** group (no home in the approved design).
 - Fullscreen kept a small toolbar button (⛶) — F11-only felt too hidden.
-- **Folders/projects have no UI.** `state.folders` and `map.folderId` are preserved in saves (old bin entries still restore) but maps list flat everywhere.
+- **Folders live on the splash page** (added 2026-08-12): folder cards in the Return grid, drag a map onto a folder to file it, folders nest via drag, breadcrumbs to navigate/un-file, "New project" tile in the Begin row (creates a folder at the current breadcrumb level). `state.folders` (with `parentId`) and `map.folderId` persist; the recycle bin handles folder delete/restore recursively. The drawer still lists maps flat.
 - Single-map JSON (from a card's Export) imports as a new map; full-state JSON still replaces everything.
 
 ## The bank — features discussed but not built

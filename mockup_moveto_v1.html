@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>mockup — move to menu + drag</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:#1a201a;font-family:'Lora',serif;color:#a09e8a;overflow:hidden;}
+.sp-page{position:relative;max-width:880px;margin:0 auto;height:100%;padding:44px 40px 0;display:flex;flex-direction:column;}
+.sp-head{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:46px;padding:10px 0;}
+.sp-wordmark{font-size:34px;font-weight:500;color:#c8c898;letter-spacing:0.06em;}
+.sp-sec{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4a4a3c;font-weight:500;margin-bottom:12px;flex-shrink:0;}
+
+/* begin row */
+.sp-begin{display:flex;gap:8px;margin-bottom:34px;flex-shrink:0;flex-wrap:wrap;}
+.sp-tile{display:flex;align-items:center;gap:9px;padding:8px 15px;background:#1d261d;border:0.5px solid #272f27;border-radius:8px;cursor:pointer;transition:border-color 0.18s,background 0.18s;}
+.sp-tile:hover{border-color:#3a4a38;background:#202a20;}
+.sp-tile-icon{font-size:14px;color:#6a6a58;text-align:center;flex-shrink:0;line-height:1;}
+.sp-tile:hover .sp-tile-icon{color:#a09e8a;}
+.sp-tile-icon.ai{color:#7ec87e;}
+.sp-tile:hover .sp-tile-icon.ai{color:#9ada9a;}
+.sp-tile-name{font-size:12px;color:#c8c898;}
+.sp-tile.dim{opacity:0.45;pointer-events:none;}
+.sp-soon{font-size:9px;color:#4a4a3a;background:#232b23;border-radius:3px;padding:1px 5px;margin-left:5px;letter-spacing:0.05em;vertical-align:1px;}
+
+.sp-scroll{flex:1;overflow-y:auto;min-height:0;}
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:10px;}
+
+/* breadcrumbs */
+#crumbs{display:none;align-items:center;gap:7px;margin-bottom:12px;font-size:12px;flex-shrink:0;}
+#crumbs.vis{display:flex;}
+.crumb{color:#7a7868;cursor:pointer;padding:3px 9px;border-radius:6px;border:0.5px solid transparent;transition:background 0.15s,color 0.15s,border-color 0.15s;}
+.crumb:hover{color:#c8c898;background:#202a20;}
+.crumb.here{color:#c8c898;cursor:default;}
+.crumb.here:hover{background:none;}
+.crumb.dropready{border-color:#7ec87e;color:#c8c898;background:#202a20;}
+.crumb-sep{color:#3a3a30;font-size:11px;}
+
+.sp-card{position:relative;background:#1d261d;border:0.5px solid #272f27;border-radius:10px;padding:15px 15px 12px;cursor:grab;min-height:148px;display:flex;flex-direction:column;transition:border-color 0.18s,background 0.18s,opacity 0.18s;}
+.sp-card:hover{border-color:#3a4a38;background:#202a20;}
+.sp-card.dragging{opacity:0.35;cursor:grabbing;}
+.sp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.sp-card-name{font-size:13px;color:#c8c898;font-weight:500;line-height:1.3;}
+.sp-card-preview{flex:1;display:flex;align-items:center;justify-content:center;padding:4px 0;margin:6px 0 8px;border-radius:7px;}
+.sp-card-preview svg{width:118px;height:54px;overflow:visible;opacity:0.38;}
+.sp-card-meta{font-size:10px;color:#45453a;}
+
+.sp-folder{position:relative;background:#1f271f;border:0.5px solid #2d372b;border-radius:10px;padding:15px 15px 12px;cursor:grab;min-height:148px;display:flex;flex-direction:column;transition:border-color 0.18s,background 0.18s,opacity 0.18s;}
+.sp-folder:hover{border-color:#3a4a38;background:#222d22;}
+.sp-folder.dragging{opacity:0.35;}
+.sp-folder.dropready{border-color:#7ec87e;background:#223022;}
+.sp-folder-top{display:flex;align-items:center;gap:9px;}
+.sp-folder-top .sp-dots{margin-left:auto;}
+.sp-folder-icon{color:#8a9a6a;flex-shrink:0;}
+.sp-folder-name{font-size:13px;color:#c8c898;font-weight:500;line-height:1.3;}
+.sp-folder-peek{flex:1;padding:10px 2px 4px;display:flex;flex-direction:column;gap:4px;overflow:hidden;}
+.sp-folder-peek span{font-size:10.5px;color:#55554a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp-folder-peek span::before{content:'·';margin-right:6px;color:#3a4030;}
+.sp-folder-meta{font-size:10px;color:#45453a;}
+
+/* project cover image */
+.sp-folder-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;z-index:0;}
+.sp-folder-shade{position:absolute;inset:0;border-radius:inherit;z-index:1;background:linear-gradient(180deg,rgba(14,18,14,0.72) 0%,rgba(14,18,14,0.2) 42%,rgba(14,18,14,0.68) 100%);}
+.sp-folder.has-cover .sp-folder-top,.sp-folder.has-cover .sp-folder-meta{position:relative;z-index:2;}
+.sp-folder.has-cover .sp-folder-peek{visibility:hidden;}
+.sp-folder.has-cover .sp-folder-name{color:#e0dcc0;text-shadow:0 1px 3px rgba(0,0,0,0.6);}
+.sp-folder.has-cover .sp-folder-meta{color:#b8b49a;text-shadow:0 1px 2px rgba(0,0,0,0.6);}
+
+.sp-dots{width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:none;background:transparent;color:#4a4a3c;font-size:13px;cursor:pointer;font-family:'Lora',serif;transition:background 0.15s,color 0.15s;flex-shrink:0;}
+.sp-dots:hover{background:#252e25;color:#a09e8a;}
+
+.sp-card-menu{position:absolute;top:34px;right:10px;background:#1a201a;border:0.5px solid #2f382e;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:50;display:none;min-width:108px;padding:4px 0;}
+.sp-card-menu.vis{display:block;}
+.sp-cm-item{padding:6px 13px;font-size:11.5px;color:#8a8a76;cursor:pointer;transition:background 0.1s,color 0.1s;white-space:nowrap;}
+.sp-cm-item:hover{background:#1d261d;color:#c8c898;}
+.sp-cm-item.del:hover{color:#c89898;}
+.sp-cm-item.dim{opacity:0.35;pointer-events:none;}
+.sp-cm-rule{height:0.5px;background:#252e25;margin:4px 0;}
+.sp-cm-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:#4a4a3c;padding:5px 13px 3px;cursor:default;}
+
+/* footer */
+.sp-foot{margin-top:auto;padding:18px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;}
+.sp-hint{font-size:10.5px;color:#3a3a30;letter-spacing:0.03em;}
+.sp-key{display:inline-block;border:0.5px solid #2f382e;border-radius:4px;padding:0 5px;margin-right:4px;font-size:10px;color:#55554a;}
+.sp-ver{font-size:10px;color:#30302a;letter-spacing:0.06em;}
+.sp-bin-link{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:#4a4a3c;letter-spacing:0.03em;cursor:pointer;transition:color 0.15s;}
+.sp-bin-link:hover{color:#a09e8a;}
+</style>
+</head>
+<body>
+<div class="sp-page">
+  <div class="sp-head"><span class="sp-wordmark">Anaximander</span></div>
+  <div class="sp-sec">Begin</div>
+  <div class="sp-begin">
+    <div class="sp-tile" title="a folder to file maps in">
+      <span class="sp-tile-icon"><svg width="15" height="13" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M1.5 3.5a1 1 0 011-1h4l1.6 2h7.4a1 1 0 011 1v7a1 1 0 01-1 1h-13a1 1 0 01-1-1z"/></svg></span>
+      <span class="sp-tile-name">New project</span>
+    </div>
+    <div class="sp-tile" title="an empty canvas">
+      <span class="sp-tile-icon">+</span>
+      <span class="sp-tile-name">Blank map</span>
+    </div>
+    <div class="sp-tile" title="Claude drafts a starter map">
+      <span class="sp-tile-icon ai">&#10022;</span>
+      <span class="sp-tile-name">From prompt</span>
+    </div>
+    <div class="sp-tile dim" title="summarise a .pdf or .doc">
+      <span class="sp-tile-icon">&#8613;</span>
+      <span class="sp-tile-name">From document<span class="sp-soon">soon</span></span>
+    </div>
+  </div>
+  <div class="sp-scroll">
+    <div class="sp-sec">Return</div>
+    <div id="crumbs"></div>
+    <div class="sp-grid" id="grid"></div>
+  </div>
+  <div class="sp-foot">
+    <span class="sp-hint"><span class="sp-key">&#8629;</span>reopen Lit review</span>
+    <span style="display:flex;align-items:center;gap:16px;">
+      <span class="sp-bin-link"><span style="font-size:11px;">&#9109;</span>recycle bin</span>
+      <span class="sp-ver">v11 · mockup — the new bit is &#8943; &rarr; Move to&#8230;</span>
+    </span>
+  </div>
+</div>
+
+<script>
+// mirrors state.folders (+parentId) and map.folderId
+let folders=[
+  {id:'f1',name:'Thesis',parentId:null},
+  {id:'f2',name:'Chapter 2',parentId:'f1'},
+  {id:'f3',name:'Deep notes',parentId:'f2'},
+  {id:'f4',name:'Garden plans',parentId:null},
+];
+let maps=[
+  {id:'m1',name:'First map',folderId:null,nodes:6},
+  {id:'m2',name:'Stoic philosophy',folderId:null,nodes:14},
+  {id:'m3',name:'Lit review',folderId:'f1',nodes:22},
+  {id:'m4',name:'Perennials',folderId:'f4',nodes:11},
+];
+let here=null; // current folder id (null = top level)
+let drag=null; // {type:'map'|'folder', id}
+
+// fake cover image for Garden plans — stands in for an uploaded photo
+(function(){
+  const c=document.createElement('canvas');c.width=320;c.height=200;const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,0,200);g.addColorStop(0,'#8aa8c0');g.addColorStop(0.55,'#c8b088');g.addColorStop(1,'#3a3020');
+  x.fillStyle=g;x.fillRect(0,0,320,200);
+  x.fillStyle='#26362a';x.beginPath();x.moveTo(0,140);x.lineTo(80,95);x.lineTo(160,130);x.lineTo(240,85);x.lineTo(320,120);x.lineTo(320,200);x.lineTo(0,200);x.fill();
+  folders.find(f=>f.id==='f4').cover=c.toDataURL('image/jpeg',0.82);
+})();
+
+const grid=document.getElementById('grid');
+const crumbsEl=document.getElementById('crumbs');
+
+function children(pid){return folders.filter(f=>f.parentId===pid);}
+function folderChain(id){const c=[];while(id){const f=folders.find(f=>f.id===id);if(!f)break;c.unshift(f);id=f.parentId;}return c;}
+function isDescendant(fid,maybeAncestor){let f=folders.find(x=>x.id===fid);while(f){if(f.parentId===maybeAncestor)return true;f=folders.find(x=>x.id===f.parentId);}return false;}
+function countIn(fid){return children(fid).reduce((a,f)=>a+countIn(f.id),maps.filter(m=>m.folderId===fid).length);}
+
+// flat indented folder tree; excludeId hides that folder + its descendants (cycle guard)
+function moveTargets(excludeId){
+  const out=[{id:null,name:'⌂ top level',depth:0}];
+  (function walk(pid,depth){
+    children(pid).slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(f=>{
+      if(excludeId&&(f.id===excludeId||isDescendant(f.id,excludeId)))return;
+      out.push({id:f.id,name:f.name,depth});
+      walk(f.id,depth+1);
+    });
+  })(null,1);
+  return out;
+}
+
+// swap the ⋯ menu's content for the destination list
+function showMoveMenu(menu,excludeId,currentId,onPick){
+  menu.innerHTML='';
+  const lbl=document.createElement('div');lbl.className='sp-cm-label';lbl.textContent='move to';menu.appendChild(lbl);
+  moveTargets(excludeId).forEach(t=>{
+    const it=document.createElement('div');
+    it.className='sp-cm-item'+((t.id||null)===(currentId||null)?' dim':'');
+    it.style.paddingLeft=(13+t.depth*11)+'px';
+    it.textContent=t.name;
+    it.addEventListener('click',ev=>{ev.stopPropagation();menu.classList.remove('vis');onPick(t.id);});
+    menu.appendChild(it);
+  });
+  menu.classList.add('vis');
+}
+
+function fakeThumb(){
+  const el=[];for(let i=0;i<4;i++){el.push(`<ellipse cx="${20+Math.random()*80}" cy="${10+Math.random()*36}" rx="${8+Math.random()*10}" ry="${4+Math.random()*4}" fill="#6a9a6a" opacity="${0.4+Math.random()*0.5}"/>`);}
+  return `<svg viewBox="0 0 120 56">${el.join('')}</svg>`;
+}
+
+function wireMenu(card,menuHTML,onAct){
+  const menu=card.querySelector('.sp-card-menu');
+  card.querySelector('.sp-dots').addEventListener('click',ev=>{
+    ev.stopPropagation();
+    document.querySelectorAll('.sp-card-menu.vis').forEach(el=>{if(el!==menu)el.classList.remove('vis');});
+    menu.innerHTML=menuHTML; // reset in case it was left showing the move list
+    menu.classList.toggle('vis');
+  });
+  menu.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const act=ev.target.dataset.act;if(!act)return;
+    onAct(act,menu);
+  });
+}
+
+function dropInto(targetId){
+  if(!drag)return;
+  if(drag.type==='map')maps.find(m=>m.id===drag.id).folderId=targetId;
+  else{const f=folders.find(f=>f.id===drag.id);if(f.id!==targetId&&!(targetId&&isDescendant(targetId,f.id)))f.parentId=targetId;}
+  drag=null;renderAll();
+}
+
+function renderCrumbs(){
+  const chain=folderChain(here);
+  crumbsEl.classList.toggle('vis',!!here);
+  if(!here){crumbsEl.innerHTML='';return;}
+  let h=`<span class="crumb" data-target="">Return</span>`;
+  chain.forEach((f,i)=>{
+    h+=`<span class="crumb-sep">/</span><span class="crumb${i===chain.length-1?' here':''}" data-target="${f.id}"></span>`;
+  });
+  crumbsEl.innerHTML=h;
+  const names=['Return',...chain.map(f=>f.name)];
+  crumbsEl.querySelectorAll('.crumb').forEach((c,i)=>{
+    c.textContent=names[i];
+    const target=c.dataset.target||null;
+    if(!c.classList.contains('here'))c.addEventListener('click',()=>{here=target;renderAll();});
+    c.addEventListener('dragover',ev=>{if(!drag)return;if(drag.type==='folder'&&target===drag.id)return;ev.preventDefault();c.classList.add('dropready');});
+    c.addEventListener('dragleave',()=>c.classList.remove('dropready'));
+    c.addEventListener('drop',ev=>{ev.preventDefault();c.classList.remove('dropready');dropInto(target);});
+  });
+}
+
+function renderGrid(){
+  grid.innerHTML='';
+  children(here).sort((a,b)=>a.name.localeCompare(b.name)).forEach(f=>{
+    const card=document.createElement('div');card.className='sp-folder';card.draggable=true;
+    const sub=children(f.id),inner=maps.filter(m=>m.folderId===f.id);
+    const peek=[...sub.map(s=>s.name+' /'),...inner.map(m=>m.name)].slice(0,4);
+    const total=countIn(f.id);
+    const menuHTML=`
+      <div class="sp-cm-item" data-act="rename">Rename</div>
+      <div class="sp-cm-item" data-act="icon">Set icon&#8230;</div>
+      <div class="sp-cm-item" data-act="move">Move to&#8230;</div>
+      <div class="sp-cm-rule"></div>
+      <div class="sp-cm-item del" data-act="delete">Delete</div>`;
+    card.innerHTML=`
+      <div class="sp-folder-top">
+        <svg class="sp-folder-icon" width="17" height="15" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M1.5 3.5a1 1 0 011-1h4l1.6 2h7.4a1 1 0 011 1v7a1 1 0 01-1 1h-13a1 1 0 01-1-1z"/></svg>
+        <span class="sp-folder-name"></span>
+        <button class="sp-dots">&#8943;</button>
+      </div>
+      <div class="sp-folder-peek">${peek.map(()=>'<span></span>').join('')}</div>
+      <div class="sp-folder-meta">${total}${total===1?' map':' maps'}</div>
+      <div class="sp-card-menu">${menuHTML}</div>`;
+    card.querySelector('.sp-folder-name').textContent=f.name;
+    card.querySelectorAll('.sp-folder-peek span').forEach((el,i)=>el.textContent=peek[i]);
+    if(f.cover){card.classList.add('has-cover');const cov=document.createElement('img');cov.className='sp-folder-cover';cov.draggable=false;cov.src=f.cover;const sh=document.createElement('div');sh.className='sp-folder-shade';card.prepend(sh);card.prepend(cov);}
+    wireMenu(card,menuHTML,(act,menu)=>{
+      if(act==='move')showMoveMenu(menu,f.id,f.parentId,id=>{f.parentId=id;renderAll();});
+      else menu.classList.remove('vis');
+    });
+    card.addEventListener('click',()=>{if(!drag){here=f.id;renderAll();}});
+    card.addEventListener('dragstart',ev=>{drag={type:'folder',id:f.id};card.classList.add('dragging');ev.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',()=>{drag=null;card.classList.remove('dragging');renderAll();});
+    card.addEventListener('dragover',ev=>{
+      if(!drag)return;
+      if(drag.type==='folder'&&(drag.id===f.id||isDescendant(f.id,drag.id)))return; // no self-drop, no cycles
+      ev.preventDefault();card.classList.add('dropready');
+    });
+    card.addEventListener('dragleave',()=>card.classList.remove('dropready'));
+    card.addEventListener('drop',ev=>{ev.preventDefault();card.classList.remove('dropready');dropInto(f.id);});
+    grid.appendChild(card);
+  });
+  maps.filter(m=>(m.folderId||null)===here).forEach(m=>{
+    const card=document.createElement('div');card.className='sp-card';card.draggable=true;
+    const menuHTML=`
+      <div class="sp-cm-item" data-act="rename">Rename</div>
+      <div class="sp-cm-item" data-act="duplicate">Duplicate</div>
+      <div class="sp-cm-item" data-act="export">Export</div>
+      <div class="sp-cm-item" data-act="move">Move to&#8230;</div>
+      <div class="sp-cm-rule"></div>
+      <div class="sp-cm-item del" data-act="delete">Delete</div>`;
+    card.innerHTML=`
+      <div class="sp-card-top"><span class="sp-card-name"></span><button class="sp-dots">&#8943;</button></div>
+      <div class="sp-card-preview" style="background:#0d1a0d">${fakeThumb()}</div>
+      <div class="sp-card-meta">${m.nodes} nodes · today</div>
+      <div class="sp-card-menu">${menuHTML}</div>`;
+    card.querySelector('.sp-card-name').textContent=m.name;
+    wireMenu(card,menuHTML,(act,menu)=>{
+      if(act==='move')showMoveMenu(menu,null,m.folderId,id=>{m.folderId=id;renderAll();});
+      else menu.classList.remove('vis');
+    });
+    card.addEventListener('dragstart',ev=>{drag={type:'map',id:m.id};card.classList.add('dragging');ev.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',()=>{drag=null;card.classList.remove('dragging');renderAll();});
+    grid.appendChild(card);
+  });
+}
+
+function renderAll(){renderCrumbs();renderGrid();}
+document.body.addEventListener('click',()=>document.querySelectorAll('.sp-card-menu.vis').forEach(el=>el.classList.remove('vis')));
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>mockup — splash folders</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:#1a201a;font-family:'Lora',serif;color:#a09e8a;overflow:hidden;}
+.sp-page{position:relative;max-width:880px;margin:0 auto;height:100%;padding:44px 40px 0;display:flex;flex-direction:column;}
+.sp-head{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:40px;padding:10px 0;}
+.sp-wordmark{font-size:34px;font-weight:500;color:#c8c898;letter-spacing:0.06em;}
+
+/* section header row */
+.sp-sec-row{display:flex;align-items:baseline;gap:14px;margin-bottom:12px;flex-shrink:0;}
+.sp-sec{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#4a4a3c;font-weight:500;}
+.sp-newfolder{font-size:10.5px;color:#55554a;background:none;border:0.5px dashed #303624;border-radius:6px;padding:2px 9px;cursor:pointer;font-family:'Lora',serif;transition:color 0.15s,border-color 0.15s;}
+.sp-newfolder:hover{color:#dac888;border-color:#3a4030;}
+
+/* breadcrumbs */
+#crumbs{display:none;align-items:center;gap:7px;margin-bottom:12px;font-size:12px;flex-shrink:0;}
+#crumbs.vis{display:flex;}
+.crumb{color:#7a7868;cursor:pointer;padding:3px 9px;border-radius:6px;border:0.5px solid transparent;transition:background 0.15s,color 0.15s,border-color 0.15s;}
+.crumb:hover{color:#c8c898;background:#202a20;}
+.crumb.here{color:#c8c898;cursor:default;}
+.crumb.here:hover{background:none;}
+.crumb.dropready{border-color:#7ec87e;color:#c8c898;background:#202a20;}
+.crumb-sep{color:#3a3a30;font-size:11px;}
+
+.sp-scroll{flex:1;overflow-y:auto;min-height:0;padding-bottom:30px;}
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:10px;}
+
+/* map card */
+.sp-card{position:relative;background:#1d261d;border:0.5px solid #272f27;border-radius:10px;padding:15px 15px 12px;cursor:grab;min-height:148px;display:flex;flex-direction:column;transition:border-color 0.18s,background 0.18s,opacity 0.18s;}
+.sp-card:hover{border-color:#3a4a38;background:#202a20;}
+.sp-card.dragging{opacity:0.35;cursor:grabbing;}
+.sp-card-name{font-size:13px;color:#c8c898;font-weight:500;line-height:1.3;}
+.sp-card-preview{flex:1;display:flex;align-items:center;justify-content:center;padding:4px 0;margin:6px 0 8px;border-radius:7px;}
+.sp-card-preview svg{width:118px;height:54px;overflow:visible;opacity:0.38;}
+.sp-card-meta{font-size:10px;color:#45453a;}
+
+/* folder card */
+.sp-folder{position:relative;background:#1f271f;border:0.5px solid #2d372b;border-radius:10px;padding:15px 15px 12px;cursor:grab;min-height:148px;display:flex;flex-direction:column;transition:border-color 0.18s,background 0.18s,opacity 0.18s;}
+.sp-folder:hover{border-color:#3a4a38;background:#222d22;}
+.sp-folder.dragging{opacity:0.35;}
+.sp-folder.dropready,.sp-card.folder-dropready{border-color:#7ec87e;background:#223022;}
+.sp-folder-top{display:flex;align-items:center;gap:9px;}
+.sp-folder-icon{color:#8a9a6a;flex-shrink:0;}
+.sp-folder-name{font-size:13px;color:#c8c898;font-weight:500;line-height:1.3;}
+.sp-folder-peek{flex:1;padding:10px 2px 4px;display:flex;flex-direction:column;gap:4px;overflow:hidden;}
+.sp-folder-peek span{font-size:10.5px;color:#55554a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp-folder-peek span::before{content:'·';margin-right:6px;color:#3a4030;}
+.sp-folder-meta{font-size:10px;color:#45453a;}
+
+#hint{position:fixed;bottom:16px;left:0;right:0;text-align:center;font-size:10.5px;color:#3a3a30;letter-spacing:0.03em;}
+</style>
+</head>
+<body>
+<div class="sp-page">
+  <div class="sp-head"><span class="sp-wordmark">Anaximander</span></div>
+  <div class="sp-sec-row">
+    <span class="sp-sec">Return</span>
+    <button class="sp-newfolder" id="new-folder">+ new folder</button>
+  </div>
+  <div id="crumbs"></div>
+  <div class="sp-scroll"><div class="sp-grid" id="grid"></div></div>
+</div>
+<div id="hint">drag a map onto a folder to file it · drag a folder into a folder to nest · click a folder to open · drag onto a breadcrumb to move up</div>
+
+<script>
+// ── fake data — mirrors state.folders (+parentId) and map.folderId ──
+let folders=[
+  {id:'f1',name:'Thesis',parentId:null},
+  {id:'f2',name:'Chapter 2',parentId:'f1'},
+  {id:'f3',name:'Garden plans',parentId:null},
+];
+let maps=[
+  {id:'m1',name:'First map',folderId:null,bg:'#0d1a0d',nodes:6},
+  {id:'m2',name:'Stoic philosophy',folderId:null,bg:'#1a1420',nodes:14},
+  {id:'m3',name:'Lit review',folderId:'f1',bg:'#0d1a0d',nodes:22},
+  {id:'m4',name:'Methodology',folderId:'f2',bg:'#141a20',nodes:9},
+  {id:'m5',name:'Perennials',folderId:'f3',bg:'#0f1a12',nodes:11},
+  {id:'m6',name:'WWI causes',folderId:null,bg:'#0d1a0d',nodes:17},
+];
+let here=null; // current folder id (null = top level)
+let drag=null; // {type:'map'|'folder', id}
+
+const grid=document.getElementById('grid');
+const crumbsEl=document.getElementById('crumbs');
+
+function folderChain(id){const c=[];while(id){const f=folders.find(f=>f.id===id);if(!f)break;c.unshift(f);id=f.parentId;}return c;}
+function isDescendant(fid,maybeAncestor){let f=folders.find(x=>x.id===fid);while(f){if(f.parentId===maybeAncestor)return true;f=folders.find(x=>x.id===f.parentId);}return false;}
+function folderContents(fid){return{fs:folders.filter(f=>f.parentId===fid),ms:maps.filter(m=>m.folderId===fid)};}
+function countIn(fid){const{fs,ms}=folderContents(fid);return fs.reduce((a,f)=>a+countIn(f.id),ms.length);}
+
+function fakeThumb(){
+  const el=[];for(let i=0;i<4;i++){el.push(`<ellipse cx="${20+Math.random()*80}" cy="${10+Math.random()*36}" rx="${8+Math.random()*10}" ry="${4+Math.random()*4}" fill="#6a9a6a" opacity="${0.4+Math.random()*0.5}"/>`);}
+  return `<svg viewBox="0 0 120 56">${el.join('')}</svg>`;
+}
+
+function renderCrumbs(){
+  const chain=folderChain(here);
+  crumbsEl.classList.toggle('vis',!!here);
+  if(!here){crumbsEl.innerHTML='';return;}
+  let h=`<span class="crumb" data-target="">Return</span>`;
+  chain.forEach((f,i)=>{
+    h+=`<span class="crumb-sep">/</span><span class="crumb${i===chain.length-1?' here':''}" data-target="${f.id}">${f.name}</span>`;
+  });
+  crumbsEl.innerHTML=h;
+  crumbsEl.querySelectorAll('.crumb').forEach(c=>{
+    const target=c.dataset.target||null;
+    if(!c.classList.contains('here'))c.addEventListener('click',()=>{here=target;renderAll();});
+    // crumbs are drop targets — move item up to that level
+    c.addEventListener('dragover',ev=>{if(!drag)return;if(drag.type==='folder'&&target===drag.id)return;ev.preventDefault();c.classList.add('dropready');});
+    c.addEventListener('dragleave',()=>c.classList.remove('dropready'));
+    c.addEventListener('drop',ev=>{
+      ev.preventDefault();c.classList.remove('dropready');if(!drag)return;
+      if(drag.type==='map')maps.find(m=>m.id===drag.id).folderId=target;
+      else{const f=folders.find(f=>f.id===drag.id);if(f.id!==target&&!(target&&isDescendant(target,f.id)))f.parentId=target;}
+      drag=null;renderAll();
+    });
+  });
+}
+
+function renderGrid(){
+  grid.innerHTML='';
+  const{fs,ms}=folderContents(here);
+  fs.forEach(f=>{
+    const card=document.createElement('div');card.className='sp-folder';card.draggable=true;
+    const{fs:sub,ms:inner}=folderContents(f.id);
+    const peek=[...sub.map(s=>s.name+' /'),...inner.map(m=>m.name)].slice(0,4);
+    const total=countIn(f.id);
+    card.innerHTML=`
+      <div class="sp-folder-top">
+        <svg class="sp-folder-icon" width="17" height="15" viewBox="0 0 18 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M1.5 3.5a1 1 0 011-1h4l1.6 2h7.4a1 1 0 011 1v7a1 1 0 01-1 1h-13a1 1 0 01-1-1z"/></svg>
+        <span class="sp-folder-name"></span>
+      </div>
+      <div class="sp-folder-peek">${peek.map(p=>`<span></span>`).join('')}</div>
+      <div class="sp-folder-meta">${total}${total===1?' map':' maps'}</div>`;
+    card.querySelector('.sp-folder-name').textContent=f.name;
+    card.querySelectorAll('.sp-folder-peek span').forEach((el,i)=>el.textContent=peek[i]);
+    card.addEventListener('click',()=>{if(!drag){here=f.id;renderAll();}});
+    card.addEventListener('dragstart',ev=>{drag={type:'folder',id:f.id};card.classList.add('dragging');ev.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',()=>{drag=null;card.classList.remove('dragging');renderAll();});
+    // folder as drop target
+    card.addEventListener('dragover',ev=>{
+      if(!drag)return;
+      if(drag.type==='folder'&&(drag.id===f.id||isDescendant(f.id,drag.id)))return; // no self / no cycle
+      ev.preventDefault();card.classList.add('dropready');
+    });
+    card.addEventListener('dragleave',()=>card.classList.remove('dropready'));
+    card.addEventListener('drop',ev=>{
+      ev.preventDefault();card.classList.remove('dropready');if(!drag)return;
+      if(drag.type==='map')maps.find(m=>m.id===drag.id).folderId=f.id;
+      else folders.find(x=>x.id===drag.id).parentId=f.id;
+      drag=null;renderAll();
+    });
+    grid.appendChild(card);
+  });
+  ms.forEach(m=>{
+    const card=document.createElement('div');card.className='sp-card';card.draggable=true;
+    card.innerHTML=`
+      <div class="sp-card-name"></div>
+      <div class="sp-card-preview" style="background:${m.bg}">${fakeThumb()}</div>
+      <div class="sp-card-meta">${m.nodes} nodes · today</div>`;
+    card.querySelector('.sp-card-name').textContent=m.name;
+    card.addEventListener('dragstart',ev=>{drag={type:'map',id:m.id};card.classList.add('dragging');ev.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragend',()=>{drag=null;card.classList.remove('dragging');renderAll();});
+    grid.appendChild(card);
+  });
+}
+
+function renderAll(){renderCrumbs();renderGrid();}
+
+document.getElementById('new-folder').addEventListener('click',()=>{
+  const name=prompt('Folder name','New project');
+  if(!name)return;
+  folders.push({id:'f'+Date.now(),name,parentId:here});
+  renderAll();
+});
+
+renderAll();
+</script>
+</body>
+</html>
