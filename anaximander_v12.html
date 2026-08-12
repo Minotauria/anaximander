@@ -295,11 +295,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #gen-prompt{width:100%;background:#0d1a0d;border:0.5px solid #303624;color:#dac888;padding:10px 12px;font-size:13px;font-family:'Lora',serif;border-radius:8px;resize:vertical;outline:none;line-height:1.6;margin:10px 0 6px;}
 #gen-prompt:focus{border-color:#3a4030;}
 #gen-status{font-size:12px;color:#7a7858;min-height:18px;margin-bottom:10px;}
+#gen-est{font-size:11px;color:#5a5a48;min-height:15px;margin:0 0 6px;font-family:'IBM Plex Mono',monospace;}
+#gen-detail{display:none;background:#0d1a0d;border:0.5px solid #303624;border-radius:7px;color:#a09e8a;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.5;padding:8px 10px;margin-bottom:10px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-word;}
+#gen-detail.vis{display:block;}
 .ai-h4{font-size:11px;color:#c8c898;text-transform:uppercase;letter-spacing:0.1em;font-weight:500;margin-bottom:14px;}
 .ai-sl{font-size:11px;color:#7a7858;text-transform:uppercase;letter-spacing:0.08em;margin:14px 0 6px;}
 .ai-field{margin-bottom:12px;}
 .ai-field label{display:block;font-size:11px;color:#7a7858;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
-.ai-field input[type=text],.ai-field input[type=password],.ai-field select{width:100%;background:#0d1a0d;border:0.5px solid #303624;border-radius:7px;color:#dac888;padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;}
+.ai-field input[type=text],.ai-field input[type=password],.ai-field input[type=number],.ai-field select{width:100%;background:#0d1a0d;border:0.5px solid #303624;border-radius:7px;color:#dac888;padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;}
 .ai-field input:focus,.ai-field select:focus{border-color:#3a4030;}
 .ai-field select{font-family:'Lora',serif;}
 .ai-tr{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
@@ -451,7 +454,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <div class="rp-group">
           <div class="rp-label">AI</div>
           <div class="rp-item" id="rp-ai-sugg"><span class="rp-icon">&#10022;</span> suggestions</div>
-          <div class="rp-item" id="rp-gen"><span class="rp-icon">&#10022;</span> new from prompt</div>
+          <div class="rp-item" id="rp-gen"><span class="rp-icon">&#10022;</span> generate in map</div>
           <div class="rp-pad-btm"></div>
         </div>
       </div>
@@ -530,6 +533,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
             <option value="haiku">Claude Haiku 4.5 — ~10× cheaper, slightly weaker</option>
           </select>
         </div>
+        <div class="ai-field"><label for="ai-max-tokens">Max tokens (map generation)</label>
+          <input type="number" id="ai-max-tokens" min="256" max="64000" step="256">
+        </div>
         <div class="ai-field"><label for="ai-key-s">Anthropic API key</label>
           <input type="password" id="ai-key-s" placeholder="sk-ant-…">
         </div>
@@ -599,10 +605,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
   <div id="gen-ov">
     <div id="gen-box">
       <button class="ai-close" id="gen-close-btn">✕</button>
-      <div class="ai-h4">✦ generate map from prompt</div>
-      <p style="font-size:13px;color:#7a7858;line-height:1.6;margin-bottom:4px;">Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.</p>
+      <div class="ai-h4" id="gen-title">✦ generate map from prompt</div>
+      <p id="gen-desc" style="font-size:13px;color:#7a7858;line-height:1.6;margin-bottom:4px;">Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.</p>
       <textarea id="gen-prompt" rows="3" placeholder="e.g. the causes of World War I, or Stoic philosophy, or photosynthesis…"></textarea>
+      <div id="gen-est"></div>
       <div id="gen-status"></div>
+      <div id="gen-detail"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button class="ai-btn" id="gen-cancel-btn" style="display:none;">cancel</button>
         <button class="ai-btn pri" id="gen-btn">generate</button>
@@ -1065,6 +1073,7 @@ function normalizeState(){
   if(!state.ai.provider)state.ai.provider='claude';
   if(!state.ai.ollamaUrl)state.ai.ollamaUrl='http://localhost:11434';
   if(!state.ai.ollamaModel)state.ai.ollamaModel='llama3.2';
+  if(!state.ai.maxTokens)state.ai.maxTokens=2048;
   // folders: normalise missing/orphaned references so nothing points at an absent parent
   state.folders.forEach(f=>{if(!f.parentId||!state.folders.find(x=>x.id===f.parentId))f.parentId=null;});
   state.maps.forEach(m=>{if(!m.folderId||!state.folders.find(f=>f.id===m.folderId))m.folderId=null;});
@@ -3359,8 +3368,9 @@ const SHORTCUTS=[
     ['drag node corner','resize node + scale text'],
     ['right-click','context menu'],
   ]},
-  {section:'generate map from prompt',items:[
-    ['AI panel → new from prompt','open the generator (or ✦ From prompt on the home screen)'],
+  {section:'generate from prompt',items:[
+    ['AI panel → generate in map','extend the current map from a prompt'],
+    ['✦ From prompt (home screen)','generate a new map from a prompt'],
     ['enter','submit prompt (or click generate)'],
     ['shift + enter','newline in prompt'],
   ]},
@@ -3833,14 +3843,7 @@ document.getElementById('sp-gear').addEventListener('click',()=>{syncAiUI();docu
 document.getElementById('sp-tile-blank').addEventListener('click',()=>promptM('Map name','New map',v=>{
   sbSnap('before create');const nm=defMap('m'+Date.now(),v);state.maps.push(nm);state.currentMapId=nm.id;T={x:0,y:0,s:1};sbSnap('created: '+v);softSave();renderSB();renderMap();enterCanvas();
 }));
-document.getElementById('sp-tile-prompt').addEventListener('click',()=>{
-  document.getElementById('gen-status').textContent='';
-  document.getElementById('gen-prompt').value='';
-  document.getElementById('gen-btn').disabled=false;
-  document.getElementById('gen-cancel-btn').style.display='none';
-  document.getElementById('gen-ov').classList.add('vis');
-  setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
-});
+document.getElementById('sp-tile-prompt').addEventListener('click',()=>{openGenModal('new');});
 // ── move to… — flat indented folder tree; excludeId hides that folder + descendants (cycle guard) ──
 function spMoveTargets(excludeId){
   const out=[{id:null,name:'⌂ top level',depth:0}];
@@ -4614,6 +4617,8 @@ function syncAiUI(){
   if(enEl)enEl.checked=!!state.ai.enabled;
   if(mdEl)mdEl.value=state.ai.model||'sonnet';
   if(kyEl)kyEl.value=state.ai.apiKey||'';
+  const mtEl=document.getElementById('ai-max-tokens');
+  if(mtEl)mtEl.value=state.ai.maxTokens||2048;
   if(urlEl)urlEl.value=state.ai.ollamaUrl||'http://localhost:11434';
   if(modEl)modEl.value=state.ai.ollamaModel||'llama3.2';
   // sync provider tabs + sections
@@ -4725,12 +4730,66 @@ function hexToRgbStr(hex){if(!hex)return'';const r=parseInt(hex.slice(1,3),16),g
 
 // ── GENERATE MAP FROM PROMPT ─────────────────────────────────────────────────
 let _genAbort=null;
+let _genMode='new'; // 'new' = new map from splash, 'inmap' = extend current map
+
+// $/MTok — update if Anthropic pricing changes
+const GEN_PRICE={sonnet:{inTok:3,outTok:15},haiku:{inTok:1,outTok:5}};
+const GEN_TOK_PER_NODE=50;
+
+function serializeMapForAi(map){
+  const parentOf={};
+  map.edges.forEach(e=>{if(!(e.to in parentOf))parentOf[e.to]=e.from;});
+  return map.nodes.map(n=>({id:String(n.id),label:n.label,shape:n.shape,color:n.color,
+    parent:(n.id in parentOf)?String(parentOf[n.id]):null}));
+}
+
+function updateGenEstimate(){
+  const el=document.getElementById('gen-est');if(!el)return;
+  const mt=(state.ai&&state.ai.maxTokens)||2048;
+  const cap=Math.max(1,Math.floor((mt-60)/GEN_TOK_PER_NODE));
+  const price=GEN_PRICE[state.ai&&state.ai.model==='haiku'?'haiku':'sonnet'];
+  const promptText=document.getElementById('gen-prompt').value;
+  let inTok=350+Math.ceil(promptText.length/4);
+  if(_genMode==='inmap'){const m=cmap();if(m)inTok+=Math.ceil(JSON.stringify(serializeMapForAi(m)).length/4);}
+  const worst=(inTok*price.inTok+mt*price.outTok)/1e6;
+  const cost=worst<0.005?'<$0.01':'~$'+worst.toFixed(2);
+  // if the prompt names a node count, warn when it won't fit
+  const want=promptText.match(/(\d{2,4})\s*nodes?/i);
+  if(want){
+    const n=+want[1],need=n*GEN_TOK_PER_NODE+100;
+    if(need>mt){
+      el.textContent=n+' nodes needs ~'+need.toLocaleString()+' tokens — max is '+mt.toLocaleString()+' (raise in ⚙ settings)';
+      el.style.color='#c8a860';return;
+    }
+  }
+  el.textContent='max tokens '+mt.toLocaleString()+' ≈ up to ~'+cap+' nodes · worst case '+cost;
+  el.style.color='#5a5a48';
+}
+
+function openGenModal(mode){
+  _genMode=mode;
+  document.getElementById('gen-title').textContent=mode==='inmap'?'✦ generate in map':'✦ generate map from prompt';
+  document.getElementById('gen-desc').textContent=mode==='inmap'
+    ?'Describe what to add or change. Claude sees the current map, appends new nodes, and may relabel or restyle existing ones. Positions are kept; ⌘Z undoes the whole generation.'
+    :'Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.';
+  document.getElementById('gen-status').textContent='';
+  const gd=document.getElementById('gen-detail');gd.textContent='';gd.classList.remove('vis');
+  document.getElementById('gen-prompt').value='';
+  document.getElementById('gen-btn').disabled=false;
+  document.getElementById('gen-cancel-btn').style.display='none';
+  updateGenEstimate();
+  document.getElementById('gen-ov').classList.add('vis');
+  setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
+}
 
 async function generateMapFromPrompt(promptText){
   const genStatus=document.getElementById('gen-status');
   const genBtn=document.getElementById('gen-btn');
   const cancelBtn=document.getElementById('gen-cancel-btn');
+  const genDetail=document.getElementById('gen-detail');
   const setStatus=(msg,col)=>{genStatus.textContent=msg;genStatus.style.color=col||'#7a7858';};
+  const showDetail=txt=>{genDetail.textContent=txt;genDetail.classList.add('vis');};
+  genDetail.textContent='';genDetail.classList.remove('vis');
 
   if(!state.ai||!state.ai.apiKey||!state.ai.apiKey.trim()){setStatus('API key required — add one in settings (⚙ on the home screen).','#c89898');return;}
 
@@ -4740,31 +4799,67 @@ async function generateMapFromPrompt(promptText){
 
   const model=state.ai.model==='haiku'?'claude-haiku-4-5-20251001':'claude-sonnet-4-6';
   const pal=PALETTES.muted.join(', ');
-  const systemPrompt=[
-    'You are a mind-map generator.',
-    'Return ONLY a valid JSON array of node objects. Each object has these fields:',
-    '  id     — unique string ("n1","n2",…)',
-    '  label  — concise phrase, max 6 words',
-    '  shape  — one of: longpill, pill, circle, ellipse, diamond, hex, rect, text',
-    '  color  — a hex colour chosen from: '+pal,
-    '  parent — id of parent node, or null for the single root node',
-    '  edge   — edge style to parent: straight, dashed, or dotted',
-    'Generate 12–20 nodes forming a clear, well-structured overview.',
-    'The root node (parent: null) should be the central topic.',
-    'No commentary. No markdown fences. Only the JSON array.',
-  ].join('\n');
+  const schemaLines=[
+    '  id        — unique string',
+    '  label     — concise phrase, max 6 words',
+    '  shape     — one of: longpill, pill, circle, ellipse, diamond, hex, rect, text',
+    '  color     — a hex colour chosen from: '+pal,
+    '  parent    — id of parent node',
+    '  edge      — edge style to parent: straight, dashed, or dotted',
+    '  edgeLabel — optional: short label naming the relationship to the parent',
+    '  links     — optional: cross-connections to other nodes beyond the parent,',
+    '              an array of {to: <node id>, edge: <style>, label: <optional short label>}',
+  ];
+  const graphHint='Mind maps are graphs, not strict trees — where concepts relate across branches, connect them with links, and use edgeLabel or a link label to name relationships worth naming.';
+  const inmap=_genMode==='inmap';
+  let systemPrompt,userMsg;
+  if(inmap){
+    systemPrompt=[
+      'You are extending an existing mind map. The current map is provided as a JSON array at the end of this message.',
+      'Return ONLY a valid JSON array of node objects. Each object has these fields:',
+      ...schemaLines,
+      'The array may contain:',
+      '  — NEW nodes: fresh ids "x1","x2",…; parent must be an existing node id or another new node id.',
+      '  — MODIFIED existing nodes: same id as in the current map, with updated label, shape, or color. Omit parent and edge for these (links may be included to add cross-connections from an existing node).',
+      'Do not include unchanged existing nodes. Never re-parent or delete existing nodes.',
+      graphHint,
+      'No commentary. No markdown fences. Only the JSON array.',
+      '',
+      'Current map:',
+      JSON.stringify(serializeMapForAi(cmap())),
+    ].join('\n');
+    userMsg=promptText;
+  }else{
+    systemPrompt=[
+      'You are a mind-map generator.',
+      'Return ONLY a valid JSON array of node objects. Each object has these fields:',
+      ...schemaLines,
+      'The root node has parent: null and should be the central topic; every other node has a parent.',
+      graphHint,
+      'Generate as many nodes as the topic warrants — at least 12, with no upper limit. Form a clear, well-structured overview.',
+      'No commentary. No markdown fences. Only the JSON array.',
+    ].join('\n');
+    userMsg='Generate a mind map about: '+promptText;
+  }
 
+  let dotTimer=null;
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'x-api-key':state.ai.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','content-type':'application/json'},
-      body:JSON.stringify({model,max_tokens:2048,stream:true,system:systemPrompt,messages:[{role:'user',content:'Generate a mind map about: '+promptText}]})
+      body:JSON.stringify({model,max_tokens:state.ai.maxTokens||2048,stream:true,system:systemPrompt,messages:[{role:'user',content:userMsg}]})
     });
-    if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err?.error?.message||'HTTP '+resp.status);}
+    if(!resp.ok){
+      const bodyText=await resp.text().catch(()=>'');
+      showDetail('HTTP '+resp.status+' '+resp.statusText+'\n\n'+(bodyText||'(empty response body)'));
+      let msg='HTTP '+resp.status;
+      try{msg=JSON.parse(bodyText)?.error?.message||msg;}catch{}
+      const e=new Error(msg);e.detailShown=true;throw e;
+    }
 
     const reader=resp.body.getReader();const decoder=new TextDecoder();
     let buf='',text='',dots=0;
-    const dotTimer=setInterval(()=>{dots=(dots+1)%4;setStatus('Thinking'+'.'.repeat(dots));},400);
+    dotTimer=setInterval(()=>{dots=(dots+1)%4;setStatus('Thinking'+'.'.repeat(dots));},400);
     while(true){
       if(signal.cancelled){reader.cancel();break;}
       const{done,value}=await reader.read();if(done)break;
@@ -4780,19 +4875,28 @@ async function generateMapFromPrompt(promptText){
     clearInterval(dotTimer);
     if(signal.cancelled){setStatus('Cancelled.');genBtn.disabled=false;cancelBtn.style.display='none';return;}
 
-    // extract JSON array from response
+    // extract JSON array from response — on any failure, surface the raw model output
+    const rawFail=(why)=>{showDetail('Raw model response:\n\n'+(text||'(empty)'));const e=new Error(why+' — raw output shown below.');e.detailShown=true;return e;};
     const match=text.match(/\[[\s\S]*\]/);
-    if(!match)throw new Error('No JSON array found in response.');
-    const nodes=JSON.parse(match[0]);
-    if(!Array.isArray(nodes)||!nodes.length)throw new Error('Empty or invalid node array.');
+    if(!match)throw rawFail('No JSON array found in response');
+    let nodes;
+    try{nodes=JSON.parse(match[0]);}catch(pe){throw rawFail('JSON parse failed: '+pe.message);}
+    if(!Array.isArray(nodes)||!nodes.length)throw rawFail('Empty or invalid node array');
 
-    buildMapFromGenerated(promptText,nodes);
-    setStatus('✓ Map created — '+nodes.length+' nodes.','#7ec87e');
+    if(inmap){
+      const r=applyGeneratedToMap(nodes);
+      setStatus('✓ Added '+r.added+' node'+(r.added===1?'':'s')+(r.updated?', updated '+r.updated:'')+'.','#7ec87e');
+    }else{
+      buildMapFromGenerated(promptText,nodes);
+      setStatus('✓ Map created — '+nodes.length+' nodes.','#7ec87e');
+    }
     setTimeout(()=>{document.getElementById('gen-ov').classList.remove('vis');},800);
 
   }catch(err){
     setStatus('Error: '+err.message,'#c89898');
+    if(!err.detailShown)showDetail(err.stack||String(err));
   }finally{
+    if(dotTimer)clearInterval(dotTimer);
     genBtn.disabled=false;cancelBtn.style.display='none';_genAbort=null;
   }
 }
@@ -4823,7 +4927,19 @@ function buildMapFromGenerated(topic,rawNodes){
   rawNodes.forEach(rn=>{
     if(!rn.parent||!idMap[rn.parent])return;
     const e=makeEdge('e'+Date.now()+'_'+rn.id,idMap[rn.parent],idMap[rn.id],AI_EDGES.includes(rn.edge)?rn.edge:'straight');
-    e.thickness=3.5;initKf(e,map);map.edges.push(e);
+    e.thickness=3.5;if(rn.edgeLabel)e.label=String(rn.edgeLabel);initKf(e,map);map.edges.push(e);
+  });
+
+  // cross-links beyond the tree (after parent edges, so layout BFS prefers the tree)
+  rawNodes.forEach(rn=>{
+    (Array.isArray(rn.links)?rn.links:[]).forEach((lk,i)=>{
+      if(!lk)return;
+      const from=idMap[rn.id],to=idMap[lk.to];
+      if(!from||!to||from===to)return;
+      if(map.edges.some(ed=>(ed.from===from&&ed.to===to)||(ed.from===to&&ed.to===from)))return;
+      const e=makeEdge('e'+Date.now()+'_l'+rn.id+'_'+i,from,to,AI_EDGES.includes(lk.edge)?lk.edge:'dotted');
+      e.thickness=3.5;if(lk.label)e.label=String(lk.label);initKf(e,map);map.edges.push(e);
+    });
   });
 
   // add to state and switch to it
@@ -4842,15 +4958,81 @@ function buildMapFromGenerated(topic,rawNodes){
   },30);
 }
 
-;(function wireGenUI(){
-  document.getElementById('rp-gen')?.addEventListener('click',()=>{
-    document.getElementById('gen-status').textContent='';
-    document.getElementById('gen-prompt').value='';
-    document.getElementById('gen-btn').disabled=false;
-    document.getElementById('gen-cancel-btn').style.display='none';
-    document.getElementById('gen-ov').classList.add('vis');
-    setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
+// apply AI-generated nodes to the current map: update existing in place (keep
+// positions/edges), append new ones fanned around their parent. One undo step.
+function applyGeneratedToMap(rawNodes){
+  const map=cmap();if(!map)return{added:0,updated:0};
+  pushCanvasHistLocal('generate in map');
+  const exByStr={};map.nodes.forEach(n=>{exByStr[String(n.id)]=n;});
+  const hasIncoming=new Set(map.edges.map(e=>e.to));
+  const rootN=map.nodes.find(n=>!hasIncoming.has(n.id))||map.nodes[0];
+  const idMap={};const created=[];let updated=0;
+  rawNodes.forEach(rn=>{
+    if(!rn||rn.id==null)return;
+    const ex=exByStr[String(rn.id)];
+    if(ex){
+      if(rn.label)ex.label=rn.label;
+      if(AI_SHAPES.includes(rn.shape))ex.shape=rn.shape;
+      if(rn.color)ex.color=rn.color;
+      updated++;return;
+    }
+    const nid=map.nextId++;idMap[String(rn.id)]=nid;
+    const node={id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
+      color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
+      outlined:false,scale:1,palKey:'muted',notes:[],urls:[],primaryUrl:0,
+      image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false};
+    map.nodes.push(node);created.push({node,rn});
   });
+  // edges: parent is a new node, an existing node, or falls back to the root
+  created.forEach(({node,rn})=>{
+    const pKey=String(rn.parent);
+    const pid=idMap[pKey]??(exByStr[pKey]?exByStr[pKey].id:rootN.id);
+    const e=makeEdge('e'+Date.now()+'_'+node.id,pid,node.id,AI_EDGES.includes(rn.edge)?rn.edge:'straight');
+    e.thickness=3.5;if(rn.edgeLabel)e.label=String(rn.edgeLabel);initKf(e,map);map.edges.push(e);
+  });
+
+  // cross-links: from new or existing nodes, to new or existing nodes (after
+  // parent edges, so the positioning pass below still finds the parent first)
+  const resolveId=k=>{const s=String(k);return idMap[s]??(exByStr[s]?exByStr[s].id:null);};
+  rawNodes.forEach(rn=>{
+    if(!rn||rn.id==null)return;
+    const from=resolveId(rn.id);if(from==null)return;
+    (Array.isArray(rn.links)?rn.links:[]).forEach((lk,i)=>{
+      if(!lk)return;
+      const to=resolveId(lk.to);
+      if(to==null||to===from)return;
+      if(map.edges.some(ed=>(ed.from===from&&ed.to===to)||(ed.from===to&&ed.to===from)))return;
+      const e=makeEdge('e'+Date.now()+'_l'+from+'_'+i,from,to,AI_EDGES.includes(lk.edge)?lk.edge:'dotted');
+      e.thickness=3.5;if(lk.label)e.label=String(lk.label);initKf(e,map);map.edges.push(e);
+    });
+  });
+  // position new nodes: fan around parent, dependency-ordered so new-on-new
+  // chains place after their parents; anything unresolved lands near the root
+  const placed=new Set(map.nodes.map(n=>n.id));created.forEach(c=>placed.delete(c.node.id));
+  const kidCount={};
+  const pending=created.slice();
+  let guard=created.length+1;
+  while(pending.length&&guard-->0){
+    for(let i=pending.length-1;i>=0;i--){
+      const{node}=pending[i];
+      const e=map.edges.find(ed=>ed.to===node.id);
+      const par=e&&map.nodes.find(n=>n.id===e.from);
+      if(par&&!placed.has(par.id))continue;
+      const k=kidCount[par?par.id:'r']=(kidCount[par?par.id:'r']||0)+1;
+      const ang=k*2.399963+(par?par.id*0.7:0);
+      const r=(par?nrx(par):80)+170;
+      node.x=(par?par.x:rootN.x)+Math.cos(ang)*r*1.25;
+      node.y=(par?par.y:rootN.y)+Math.sin(ang)*r;
+      placed.add(node.id);pending.splice(i,1);
+    }
+  }
+  pending.forEach(({node},i)=>{node.x=rootN.x+220+i*40;node.y=rootN.y+220;});
+  resetAllKf();softSave();render();
+  return{added:created.length,updated};
+}
+
+;(function wireGenUI(){
+  document.getElementById('rp-gen')?.addEventListener('click',()=>{openGenModal('inmap');});
   document.getElementById('gen-close-btn')?.addEventListener('click',()=>{
     if(_genAbort)_genAbort.cancelled=true;
     document.getElementById('gen-ov').classList.remove('vis');
@@ -4866,6 +5048,7 @@ function buildMapFromGenerated(topic,rawNodes){
   document.getElementById('gen-cancel-btn')?.addEventListener('click',()=>{
     if(_genAbort)_genAbort.cancelled=true;
   });
+  document.getElementById('gen-prompt')?.addEventListener('input',updateGenEstimate);
   document.getElementById('gen-prompt')?.addEventListener('keydown',ev=>{
     if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();document.getElementById('gen-btn').click();}
     if(ev.key==='Escape'){document.getElementById('gen-ov').classList.remove('vis');}
@@ -4892,6 +5075,7 @@ function buildMapFromGenerated(topic,rawNodes){
   document.getElementById('legend-ov')?.addEventListener('click',e=>{if(e.target===document.getElementById('legend-ov'))document.getElementById('legend-ov').style.display='none';});
   document.getElementById('ai-enabled')?.addEventListener('change',e=>{state.ai.enabled=e.target.checked;softSave();updateWizard();});
   document.getElementById('ai-model')?.addEventListener('change',e=>{state.ai.model=e.target.value;softSave();});
+  document.getElementById('ai-max-tokens')?.addEventListener('change',e=>{const v=parseInt(e.target.value,10);state.ai.maxTokens=(v>0)?v:2048;e.target.value=state.ai.maxTokens;softSave();});
   document.getElementById('ai-key-s')?.addEventListener('input',e=>{state.ai.apiKey=e.target.value;softSave();updateWizard();});
   document.getElementById('wbHave')?.addEventListener('click',()=>{
     document.getElementById('ws1').classList.remove('on');
