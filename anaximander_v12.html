@@ -769,7 +769,8 @@ let panning=false,panS={x:0,y:0};
 let selN=null,selSet=new Set(),focusNodeId=null,focusMode=false,ghosts=[],hoveredGhostIdx=-1,_ghostJustFired=false,ghostsEnabled=true;
 let marquee=null; // {sx,sy,ex,ey} screen coords while shift-drag selecting
 let aiGhosts=[],aiRequest=null,aiDirty=false,aiEditingGhost=null;
-const AI_SHAPES=['longpill','pill','circle','ellipse','diamond','hex','parallelogram','text'];
+// only shapes drawNode actually has a path for — anything else silently renders as an ellipse
+const AI_SHAPES=['longpill','circle','ellipse','diamond','rect','square','text'];
 const AI_EDGES=['straight','dashed','dotted'];
 let nodeAlpha={};
 const spawnAnim=new Map(); // nodeId -> {start, fromX, fromY, dur}
@@ -4551,7 +4552,7 @@ async function* ollamaStream(parent,signal,count){
             if(parsed.label){
               yielded.add(key);
               const _sh=AI_SHAPES.includes(parsed.shape)?parsed.shape:'longpill';
-              yield{label:_sh==='text'?wrapAiText(parsed.label):parsed.label,shape:_sh,color:parsed.color||PALETTES.muted[yielded.size%10],edgeStyle:AI_EDGES.includes(parsed.edge)?parsed.edge:'straight'};
+              yield{label:_sh==='text'?wrapAiText(parsed.label):parsed.label,shape:_sh,color:aiColor(parsed.color)||PALETTES.muted[yielded.size%10],edgeStyle:AI_EDGES.includes(parsed.edge)?parsed.edge:'straight'};
               if(signal.cancelled)return;
             }
           }catch(_){}
@@ -5016,7 +5017,7 @@ async function generateMapFromPrompt(promptText){
   const schemaLines=[
     '  id        — unique string',
     '  label     — concise phrase, up to 12 words, shorter when it can be; specific and meaningful — never empty, never a placeholder like "node"',
-    '  shape     — one of: longpill, pill, circle, ellipse, diamond, hex, rect, text',
+    '  shape     — one of: '+AI_SHAPES.join(', '),
     '  color     — a hex colour chosen from: '+pal,
     '  parent    — id of parent node',
     '  edge      — edge style to parent: straight, dashed, or dotted',
@@ -5028,7 +5029,7 @@ async function generateMapFromPrompt(promptText){
   ];
   const graphHint='Mind maps are graphs, not strict trees — where concepts relate across branches, connect them with links. Include several cross-branch links, each labelled with a verb phrase naming the relationship ("contradicts", "feeds", "predates") — verbs, not nouns.';
   const craftLines=[
-    'Shapes carry meaning — choose deliberately: circle = core concept, rect = fact or definition, diamond = decision or counterpoint, hex = process or action, ellipse = concrete example, text = open question or uncertainty, pill/longpill = general idea.',
+    'Shapes carry meaning — choose deliberately: circle = core concept, rect = fact or definition, diamond = decision or counterpoint, square = process or action, ellipse = concrete example, text = open question or uncertainty, longpill = general idea.',
     'Colour is taxonomy, not decoration: assign one hue per major branch and keep descendants in their branch\'s hue. When extending an existing map, match the hue of the branch being added to.',
     'Vary the register of nodes: mix facts, open questions, provocations, concrete examples, and counterpoints. A map of only facts is flat.',
     'Depth should be asymmetric — go deep (4–5 levels) where the topic is rich, stay shallow where it is thin. Uniform depth everywhere is a failure mode.',
@@ -5156,9 +5157,11 @@ async function generateMapFromPrompt(promptText){
 
 // ── shared AI-schema handling — both generate paths build nodes/edges through
 // these helpers only, so schema changes land in exactly one place ──────────────
+// palette membership is only prompt-enforced; reject anything that isn't a hex colour
+const aiColor=c=>(typeof c==='string'&&/^#[0-9a-fA-F]{6}$/.test(c.trim()))?c.trim():null;
 function aiNodeFromRaw(rn,nid){
   return{id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
-    color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
+    color:aiColor(rn.color)||PALETTES.muted[nid%10],font:"'Lora',serif",
     outlined:false,scale:1,palKey:'muted',notes:aiNotesToObjects(rn.notes,0),urls:[],primaryUrl:0,
     image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false};
 }
@@ -5235,15 +5238,18 @@ function applyGeneratedToMap(rawNodes,selIds){
   // when scoped to a selection, out-of-scope edits are dropped and orphaned
   // parents re-anchor to a selected node instead of the root
   const anchor=selIds?(map.nodes.find(n=>selIds.has(n.id))||rootN):rootN;
-  const idMap={};const created=[];let updated=0;
+  // emptied map: no anchor exists — unresolvable parents become roots and
+  // placement centres on the current viewport instead
+  const anchorPos=anchor?{x:anchor.x,y:anchor.y}:s2w(window.innerWidth/2,window.innerHeight/2);
+  const idMap={};const created=[];const newEdges=[];let updated=0;
   rawNodes.forEach(rn=>{
     if(!rn||rn.id==null)return;
     const ex=exByStr[String(rn.id)];
     if(ex){
       if(selIds&&!selIds.has(ex.id))return;
-      if(rn.label)ex.label=rn.label;
+      if(rn.label){ex.label=rn.label;ex.labelHtml='';} // labelHtml would keep drawing the old text
       if(AI_SHAPES.includes(rn.shape))ex.shape=rn.shape;
-      if(rn.color)ex.color=rn.color;
+      const c=aiColor(rn.color);if(c)ex.color=c;
       if(Array.isArray(rn.notes)&&rn.notes.length){if(!ex.notes)ex.notes=[];ex.notes.push(...aiNotesToObjects(rn.notes,ex.notes.length));}
       updated++;return;
     }
@@ -5255,12 +5261,12 @@ function applyGeneratedToMap(rawNodes,selIds){
   created.forEach(({node,rn})=>{
     const pKey=String(rn.parent);
     const exP=exByStr[pKey];
-    const pid=idMap[pKey]??(exP&&(!selIds||selIds.has(exP.id))?exP.id:anchor.id);
-    addAiParentEdge(map,rn,pid,node.id);
+    const pid=idMap[pKey]??(exP&&(!selIds||selIds.has(exP.id))?exP.id:(anchor?anchor.id:null));
+    if(pid!=null)newEdges.push(addAiParentEdge(map,rn,pid,node.id));
   });
 
   // cross-links: from new or existing nodes, to new or existing nodes
-  addAiLinks(map,rawNodes,k=>{const s=String(k);return idMap[s]??(exByStr[s]?exByStr[s].id:null);});
+  newEdges.push(...addAiLinks(map,rawNodes,k=>{const s=String(k);return idMap[s]??(exByStr[s]?exByStr[s].id:null);}));
   // position new nodes: fan around parent, dependency-ordered so new-on-new
   // chains place after their parents; anything unresolved lands near the root
   const placed=new Set(map.nodes.map(n=>n.id));created.forEach(c=>placed.delete(c.node.id));
@@ -5276,12 +5282,12 @@ function applyGeneratedToMap(rawNodes,selIds){
       const k=kidCount[par?par.id:'r']=(kidCount[par?par.id:'r']||0)+1;
       const ang=k*2.399963+(par?par.id*0.7:0);
       const r=(par?nrx(par):80)+170;
-      node.x=(par?par.x:anchor.x)+Math.cos(ang)*r*1.25;
-      node.y=(par?par.y:anchor.y)+Math.sin(ang)*r;
+      node.x=(par?par.x:anchorPos.x)+Math.cos(ang)*r*1.25;
+      node.y=(par?par.y:anchorPos.y)+Math.sin(ang)*r;
       placed.add(node.id);pending.splice(i,1);
     }
   }
-  pending.forEach(({node},i)=>{node.x=anchor.x+220+i*40;node.y=anchor.y+220;});
+  pending.forEach(({node},i)=>{node.x=anchorPos.x+220+i*40;node.y=anchorPos.y+220;});
   // separation pass: existing nodes are pinned obstacles, only AI-added nodes shift
   if(created.length){
     const targets=new Map(map.nodes.map(n=>[n.id,{x:n.x,y:n.y}]));
@@ -5290,7 +5296,10 @@ function applyGeneratedToMap(rawNodes,selIds){
     resolveNodeOverlaps(map,targets,pin);
     created.forEach(({node})=>{const p=targets.get(node.id);if(p){node.x=p.x;node.y=p.y;}});
   }
-  resetAllKf();softSave();render();
+  // re-init keyframes only for edges this generation added (their endpoints moved
+  // during placement) — a full resetAllKf would flatten user-curved edges map-wide
+  newEdges.forEach(e=>initKf(e,map));
+  softSave();render();
   return{added:created.length,updated};
 }
 
