@@ -249,6 +249,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .bb-sw.on{border-color:rgba(255,255,255,0.55);}
 .bb-shape{cursor:pointer;border-radius:4px;border:0.5px solid transparent;flex-shrink:0;display:block;background:#0d1a0d;}
 .bb-shape:hover{border-color:#3a4030;}
+.bb-gen{cursor:pointer;color:#7a7858;font-size:13px;padding:0 2px;flex-shrink:0;transition:color 0.1s;}
+.bb-gen:hover{color:#dac888;}
 .net-select{background:#1a201a;border:0.5px solid #303624;border-radius:6px;font-size:11px;color:#c8c898;cursor:pointer;padding:3px 5px;font-family:'Lora',serif;flex-shrink:0;}
 .net-select optgroup{font-style:normal;font-weight:500;color:#c8c898;background:#0d1a0d;text-transform:uppercase;letter-spacing:0.05em;font-size:9px;}
 .net-select option{font-style:normal;font-weight:400;color:#a09e8a;background:#1a201a;font-size:11px;padding:2px 6px;}
@@ -487,6 +489,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <div id="bulk-shapes" style="display:flex;align-items:center;gap:3px;"></div>
           <div class="net-sep" style="height:16px;"></div>
           <div id="bulk-edges" style="display:flex;align-items:center;gap:3px;"></div>
+          <div class="net-sep" style="height:16px;"></div>
+          <div class="bb-gen" id="bulk-gen" title="Generate in selection">&#10022;</div>
         </div>
         <div id="node-search" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:6px;background:#1a1a1a;border:0.5px solid #444;border-radius:8px;padding:5px 10px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.5);">
   <span style="color:#555;font-size:13px;">&#128269;</span>
@@ -3554,6 +3558,7 @@ const SHORTCUTS=[
   ]},
   {section:'generate from prompt',items:[
     ['AI panel → generate in map','extend the current map from a prompt'],
+    ['select nodes → ✦ (bulk bar or AI panel)','generate scoped to the selection — only selected nodes modified or grown from'],
     ['✦ From prompt (home screen)','generate a new map from a prompt'],
     ['enter','submit prompt (or click generate)'],
     ['shift + enter','newline in prompt'],
@@ -4916,18 +4921,20 @@ function hexToRgbStr(hex){if(!hex)return'';const r=parseInt(hex.slice(1,3),16),g
 // ── GENERATE MAP FROM PROMPT ─────────────────────────────────────────────────
 let _genAbort=null;
 let _genMode='new'; // 'new' = new map from splash, 'inmap' = extend current map
+let _genSelIds=null; // Set of node ids when generation is scoped to a live multi-selection
 
 // $/MTok — update if Anthropic pricing changes
 const GEN_PRICE={sonnet:{inTok:3,outTok:15},haiku:{inTok:1,outTok:5}};
 const GEN_TOK_PER_NODE=50;
 
-function serializeMapForAi(map){
+function serializeMapForAi(map,selIds){
   const parentOf={};
   map.edges.forEach(e=>{if(!(e.to in parentOf))parentOf[e.to]=e.from;});
   const strip=h=>{const d=document.createElement('div');d.innerHTML=h||'';return d.textContent.trim();};
   return map.nodes.map(n=>{
     const o={id:String(n.id),label:n.label,shape:n.shape,color:n.color,
       parent:(n.id in parentOf)?String(parentOf[n.id]):null};
+    if(selIds&&selIds.has(n.id))o.sel=true;
     const notes=(n.notes||[]).map(nt=>strip(nt.html)).filter(Boolean);
     if(notes.length)o.notes=notes;
     return o;
@@ -4970,9 +4977,14 @@ function updateGenEstimate(){
 
 function openGenModal(mode){
   _genMode=mode;
-  document.getElementById('gen-title').textContent=mode==='inmap'?'✦ generate in map':'✦ generate map from prompt';
+  _genSelIds=(mode==='inmap'&&selSet.size)?new Set(selSet):null;
+  document.getElementById('gen-title').textContent=mode==='inmap'
+    ?(_genSelIds?'✦ generate in selection':'✦ generate in map')
+    :'✦ generate map from prompt';
   document.getElementById('gen-desc').textContent=mode==='inmap'
-    ?'Describe what to add or change. Claude sees the current map, appends new nodes, and may relabel or restyle existing ones. Positions are kept; ⌘Z undoes the whole generation.'
+    ?(_genSelIds
+      ?'Working on your '+_genSelIds.size+' selected node'+(_genSelIds.size===1?'':'s')+'. Claude sees the whole map for context but only modifies or grows from the selection — new nodes may still cross-link outward. Positions are kept; ⌘Z undoes the whole generation.'
+      :'Describe what to add or change. Claude sees the current map, appends new nodes, and may relabel or restyle existing ones. Positions are kept; ⌘Z undoes the whole generation.')
     :'Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.';
   document.getElementById('gen-status').textContent='';
   const gd=document.getElementById('gen-detail');gd.textContent='';gd.classList.remove('vis');
@@ -5022,6 +5034,7 @@ async function generateMapFromPrompt(promptText){
     'Depth should be asymmetric — go deep (4–5 levels) where the topic is rich, stay shallow where it is thin. Uniform depth everywhere is a failure mode.',
   ];
   const inmap=_genMode==='inmap';
+  const selScope=inmap&&_genSelIds&&_genSelIds.size?_genSelIds:null;
   let systemPrompt,userMsg;
   if(inmap){
     systemPrompt=[
@@ -5032,13 +5045,19 @@ async function generateMapFromPrompt(promptText){
       '  — NEW nodes: fresh ids "x1","x2",…; parent must be an existing node id or another new node id.',
       '  — MODIFIED existing nodes: same id as in the current map, with updated label, shape, or color, or added notes (notes append to the node\'s existing notes). Omit parent and edge for these (links may be included to add cross-connections from an existing node).',
       'Do not include unchanged existing nodes. Never re-parent or delete existing nodes.',
+      ...(selScope?[
+        'FOCUS: the user has selected specific nodes, marked "sel": true in the current map JSON. Work only with that selection:',
+        '  — NEW nodes must parent into a selected node or another new node.',
+        '  — Only selected nodes may appear as MODIFIED entries.',
+        '  — Unselected nodes are read-only context: never modify them, though cross-links may point to them.',
+      ]:[]),
       graphHint,
       ...craftLines,
       'No commentary. No markdown fences. Output exactly one JSON array — never emit a revised second version; get it right the first time.',
       'This is a one-shot pipeline with no reply channel: never ask clarifying questions, never refuse or explain in prose. Make a sensible interpretation of the request and output the JSON array.',
       '',
       'Current map:',
-      JSON.stringify(serializeMapForAi(cmap())),
+      JSON.stringify(serializeMapForAi(cmap(),selScope)),
     ].join('\n');
     userMsg=promptText;
   }else{
@@ -5117,7 +5136,7 @@ async function generateMapFromPrompt(promptText){
     if(!nodes)throw rawFail('No parseable node array in response');
 
     if(inmap){
-      const r=applyGeneratedToMap(nodes);
+      const r=applyGeneratedToMap(nodes,selScope);
       setStatus('✓ Added '+r.added+' node'+(r.added===1?'':'s')+(r.updated?', updated '+r.updated:'')+'.','#7ec87e');
     }else{
       buildMapFromGenerated(promptText,nodes);
@@ -5193,17 +5212,21 @@ function buildMapFromGenerated(topic,rawNodes){
 
 // apply AI-generated nodes to the current map: update existing in place (keep
 // positions/edges), append new ones fanned around their parent. One undo step.
-function applyGeneratedToMap(rawNodes){
+function applyGeneratedToMap(rawNodes,selIds){
   const map=cmap();if(!map)return{added:0,updated:0};
   pushCanvasHistLocal('generate in map');
   const exByStr={};map.nodes.forEach(n=>{exByStr[String(n.id)]=n;});
   const hasIncoming=new Set(map.edges.map(e=>e.to));
   const rootN=map.nodes.find(n=>!hasIncoming.has(n.id))||map.nodes[0];
+  // when scoped to a selection, out-of-scope edits are dropped and orphaned
+  // parents re-anchor to a selected node instead of the root
+  const anchor=selIds?(map.nodes.find(n=>selIds.has(n.id))||rootN):rootN;
   const idMap={};const created=[];let updated=0;
   rawNodes.forEach(rn=>{
     if(!rn||rn.id==null)return;
     const ex=exByStr[String(rn.id)];
     if(ex){
+      if(selIds&&!selIds.has(ex.id))return;
       if(rn.label)ex.label=rn.label;
       if(AI_SHAPES.includes(rn.shape))ex.shape=rn.shape;
       if(rn.color)ex.color=rn.color;
@@ -5217,10 +5240,11 @@ function applyGeneratedToMap(rawNodes){
       image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false};
     map.nodes.push(node);created.push({node,rn});
   });
-  // edges: parent is a new node, an existing node, or falls back to the root
+  // edges: parent is a new node, an in-scope existing node, or falls back to the anchor
   created.forEach(({node,rn})=>{
     const pKey=String(rn.parent);
-    const pid=idMap[pKey]??(exByStr[pKey]?exByStr[pKey].id:rootN.id);
+    const exP=exByStr[pKey];
+    const pid=idMap[pKey]??(exP&&(!selIds||selIds.has(exP.id))?exP.id:anchor.id);
     const e=makeEdge('e'+Date.now()+'_'+node.id,pid,node.id,AI_EDGES.includes(rn.edge)?rn.edge:'straight');
     e.thickness=3.5;if(rn.edgeLabel)e.label=String(rn.edgeLabel);initKf(e,map);map.edges.push(e);
   });
@@ -5255,12 +5279,12 @@ function applyGeneratedToMap(rawNodes){
       const k=kidCount[par?par.id:'r']=(kidCount[par?par.id:'r']||0)+1;
       const ang=k*2.399963+(par?par.id*0.7:0);
       const r=(par?nrx(par):80)+170;
-      node.x=(par?par.x:rootN.x)+Math.cos(ang)*r*1.25;
-      node.y=(par?par.y:rootN.y)+Math.sin(ang)*r;
+      node.x=(par?par.x:anchor.x)+Math.cos(ang)*r*1.25;
+      node.y=(par?par.y:anchor.y)+Math.sin(ang)*r;
       placed.add(node.id);pending.splice(i,1);
     }
   }
-  pending.forEach(({node},i)=>{node.x=rootN.x+220+i*40;node.y=rootN.y+220;});
+  pending.forEach(({node},i)=>{node.x=anchor.x+220+i*40;node.y=anchor.y+220;});
   // separation pass: existing nodes are pinned obstacles, only AI-added nodes shift
   if(created.length){
     const targets=new Map(map.nodes.map(n=>[n.id,{x:n.x,y:n.y}]));
@@ -5275,6 +5299,7 @@ function applyGeneratedToMap(rawNodes){
 
 ;(function wireGenUI(){
   document.getElementById('rp-gen')?.addEventListener('click',()=>{openGenModal('inmap');});
+  document.getElementById('bulk-gen')?.addEventListener('click',()=>{openGenModal('inmap');});
   document.getElementById('gen-close-btn')?.addEventListener('click',()=>{
     if(_genAbort)_genAbort.cancelled=true;
     document.getElementById('gen-ov').classList.remove('vis');
