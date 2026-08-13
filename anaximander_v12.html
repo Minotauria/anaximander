@@ -1937,9 +1937,10 @@ function drawEdgeBody(e,hovered,pts0,map){
 // Font/size/colour inherit from the parent-most endpoint unless overridden on the edge
 // (e.labelFont / e.labelSize / e.labelColor). A bg-coloured rect breaks the line where
 // the label sits; drawn after all edges so it clears crossing lines and branches too.
-function drawEdgeLabel(e,map){
+function drawEdgeLabel(e,map,byId){
   const mid=e._lblMid;if(!mid)return;
-  const a=map.nodes.find(n=>n.id===e.from),b=map.nodes.find(n=>n.id===e.to);
+  const a=byId?byId.get(e.from):map.nodes.find(n=>n.id===e.from),
+        b=byId?byId.get(e.to):map.nodes.find(n=>n.id===e.to);
   const src=(a&&b)?(((_lblDepths.get(a.id)??0)<=(_lblDepths.get(b.id)??0))?a:b):(a||b);
   const baseFs=e.labelSize||(src?Math.max(10,Math.round(FONT_SIZE(src)*(src.scale||1)*0.8)):10);
   const fs=Math.round(baseFs*T.s);
@@ -2331,7 +2332,15 @@ function resetAllKf(){
 }
 // node id → hop distance from the root (nodes[0]), undirected BFS over edges.
 // Used by edge labels to pick the parent-most endpoint whose font they inherit.
-let _lblDepths=new Map();
+let _lblDepths=new Map(),_lblDepthsKey='';
+// depths only matter when a label exists, and only change when structure changes —
+// don't pay for the BFS on every frame of a drag/pan
+function syncLabelDepths(map){
+  if(!map.edges.some(e=>e.label))return; // _lblDepths unused without labels
+  const key=map.id+':'+map.nodes.length+':'+map.edges.length;
+  if(key===_lblDepthsKey)return;
+  _lblDepths=computeLabelDepths(map);_lblDepthsKey=key;
+}
 function computeLabelDepths(map){
   const d=new Map();if(!map.nodes.length)return d;
   const adj=new Map();
@@ -2351,7 +2360,7 @@ function render(){
   const map=cmap();if(!map)return;
   ctx.clearRect(0,0,cvs.width,cvs.height);
   const bg=map.bg||'#0d1a0d';if(bg!=='transparent'){ctx.fillStyle=bg;ctx.fillRect(0,0,cvs.width,cvs.height);}
-  _lblDepths=computeLabelDepths(map);
+  syncLabelDepths(map);
   const _hidden=getCollapsedHidden();
   // draw ghosts behind nodes
   ghosts.forEach((g,i)=>drawGhost(g,i));
@@ -2371,13 +2380,15 @@ function render(){
     else drawEdge(e,e===hoveredEdge);
   });
   // label pass — after all edges so the line-break under each label clears crossings
+  let _lblById=null; // built once per frame, only if a label actually draws
   map.edges.forEach(e=>{
     if(!e.label||!e._lblMid)return;
     if(_hidden.has(e.from)||_hidden.has(e.to))return;
+    if(!_lblById)_lblById=new Map(map.nodes.map(n=>[n.id,n]));
     const eid=e.id||`${e.from}-${e.to}`;
     const dim=_focusDim&&!_focusDim.edges.has(eid);
     ctx.save();if(dim)ctx.globalAlpha=0.1;
-    drawEdgeLabel(e,map);
+    drawEdgeLabel(e,map,_lblById);
     ctx.restore();
   });
   map.nodes.forEach(n=>{
@@ -4923,6 +4934,7 @@ function hexToRgbStr(hex){if(!hex)return'';const r=parseInt(hex.slice(1,3),16),g
 let _genAbort=null;
 let _genMode='new'; // 'new' = new map from splash, 'inmap' = extend current map
 let _genSelIds=null; // Set of node ids when generation is scoped to a live multi-selection
+let _genMapTok=0; // token estimate of the serialized map, computed once per modal open
 
 // $/MTok — update if Anthropic pricing changes
 const GEN_PRICE={sonnet:{inTok:3,outTok:15},haiku:{inTok:1,outTok:5}};
@@ -4960,7 +4972,7 @@ function updateGenEstimate(){
   const price=GEN_PRICE[state.ai&&state.ai.model==='haiku'?'haiku':'sonnet'];
   const promptText=document.getElementById('gen-prompt').value;
   let inTok=350+Math.ceil(promptText.length/4);
-  if(_genMode==='inmap'){const m=cmap();if(m)inTok+=Math.ceil(JSON.stringify(serializeMapForAi(m)).length/4);}
+  if(_genMode==='inmap')inTok+=_genMapTok; // serialized once in openGenModal — the map can't change while the modal is open
   const worst=(inTok*price.inTok+mt*price.outTok)/1e6;
   const cost=worst<0.005?'<$0.01':'~$'+worst.toFixed(2);
   // if the prompt names a node count, warn when it won't fit
@@ -4992,6 +5004,8 @@ function openGenModal(mode){
   document.getElementById('gen-prompt').value='';
   document.getElementById('gen-btn').disabled=false;
   document.getElementById('gen-cancel-btn').style.display='none';
+  _genMapTok=0;
+  if(mode==='inmap'){const m=cmap();if(m)_genMapTok=Math.ceil(JSON.stringify(serializeMapForAi(m,_genSelIds)).length/4);}
   updateGenEstimate();
   document.getElementById('gen-ov').classList.add('vis');
   setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
