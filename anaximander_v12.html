@@ -2044,15 +2044,15 @@ function buildGhosts(nodeId){
     const gx=n.x+dir.dx*160,gy=n.y+dir.dy*160;
     const tooClose=map.nodes.some(nd=>!hidden.has(nd.id)&&Math.sqrt((nd.x-gx)**2+(nd.y-gy)**2)<90);
     if(tooClose)continue;
-    const _pool=typeof ghostLabelPool!=='undefined'?ghostLabelPool:GHOST_LABELS;ghosts.push({x:gx,y:gy,label:_pool[(nodeId*3+placed)%_pool.length],parentId:nodeId,idx:placed});
+    const _pool=typeof ghostLabelPool!=='undefined'?ghostLabelPool:GHOST_LABELS;ghosts.push({x:gx,y:gy,label:_pool[(nodeId*3+placed)%_pool.length],parentId:nodeId,idx:placed,_sel:false});
     placed++;
   }
 }
 function drawGhost(g,i){
   const sp=w2s(g.x,g.y);
-  const hov=i===hoveredGhostIdx;
+  const hov=i===hoveredGhostIdx,psel=!!g._sel;
   const pulse=0.55+0.15*Math.sin(Date.now()/700+i*1.3);
-  const alpha=hov?0.95:pulse;
+  const alpha=(psel||hov)?0.95:pulse;
   ctx.save();ctx.translate(sp.x,sp.y);ctx.globalAlpha=alpha;
   ctx.font=`400 ${Math.round(11*T.s)}px 'Nunito',sans-serif`;
   const tw=ctx.measureText(g.label).width;
@@ -2060,12 +2060,13 @@ function drawGhost(g,i){
   ctx.beginPath();
   ctx.moveTo(-grx+r,-gry);ctx.lineTo(grx-r,-gry);ctx.arc(grx-r,0,r,-Math.PI/2,Math.PI/2);
   ctx.lineTo(-grx+r,gry);ctx.arc(-grx+r,0,r,Math.PI/2,Math.PI*1.5);ctx.closePath();
-  if(hov){ctx.fillStyle='rgba(218,200,136,0.12)';ctx.fill();}
-  ctx.strokeStyle=hov?ACCENT:'#7a9a7a';ctx.lineWidth=hov?1.8*T.s:1.2*T.s;
-  ctx.setLineDash(hov?[]:[4*T.s,3*T.s]);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle=hov?ACCENT:'#a8c8a8';ctx.textAlign='center';ctx.textBaseline='middle';
+  if(psel){ctx.fillStyle='rgba(126,200,126,0.15)';ctx.fill();}
+  else if(hov){ctx.fillStyle='rgba(218,200,136,0.12)';ctx.fill();}
+  ctx.strokeStyle=psel?'#7ec87e':(hov?ACCENT:'#7a9a7a');ctx.lineWidth=(psel||hov)?1.8*T.s:1.2*T.s;
+  ctx.setLineDash(psel||hov?[]:[4*T.s,3*T.s]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=psel?'#7ec87e':(hov?ACCENT:'#a8c8a8');ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(g.label,0,0);
-  if(hov){ctx.font=`600 ${Math.round(9*T.s)}px 'Nunito',sans-serif`;ctx.fillStyle=ACCENT;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('+',grx-9*T.s,-gry+1*T.s);}
+  if(psel||hov){ctx.font=`600 ${Math.round(9*T.s)}px 'Nunito',sans-serif`;ctx.fillStyle=psel?'#7ec87e':ACCENT;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(psel?'✓':'+',grx-9*T.s,-gry+1*T.s);}
   ctx.globalAlpha=1;ctx.restore();
   // dashed connector to parent
   const map=cmap();if(!map)return;
@@ -2085,28 +2086,31 @@ function hitGhostScreen(sx,sy){
   }
   return -1;
 }
-function materialiseGhost(idx){
-  const g=ghosts[idx];if(!g)return;
-  const map=cmap();if(!map)return;
-  const parent=map.nodes.find(n=>n.id===g.parentId);
-  if(parent)parent.collapsed=false;
-  pushCanvasHistLocal('materialise ghost');
-  const child={id:map.nextId++,x:g.x,y:g.y,label:g.label,
-    urls:[],primaryUrl:0,color:parent?parent.color:'#b5d89b',
-    shape:parent?parent.shape:(typeof defShape!=='undefined'?defShape:'stadium'),
-    font:parent?parent.font:"'Nunito',sans-serif",
-    outlined:parent?parent.outlined:false,scale:1,
-    palKey:parent?parent.palKey:'pastel',notes:[],image:'',
-    textAlign:parent?parent.textAlign:'center',labelHtml:'',collapsed:false,
-    textColor:parent?parent.textColor||null:null};
-  map.nodes.push(child);
-  const e=makeEdge('e'+Date.now(),g.parentId,child.id,'straight');
-  e.thickness=2;initKf(e,map);map.edges.push(e);
-  if(parent)startSpawnAnim(child.id,parent.x,parent.y);
-  selN=child.id;selSet=new Set([child.id]);softSave();
-  ghosts.splice(idx,1); // remaining ghosts stay up for chained clicks
-  render();
-  setTimeout(()=>startEdit(child),150);
+// materialise picked ghosts around their parent — one history entry, selection
+// ends on the new children (same interaction as materialiseAiGhosts)
+function materialiseGhosts(list){
+  const map=cmap();if(!map||!list.length)return;
+  if(editingNode)commitEdit(); // clears the ghosts array too — `list` keeps the picked refs
+  pushCanvasHistLocal(list.length===1?'materialise ghost':'materialise ghosts');
+  selSet=new Set();
+  for(const g of list){
+    const parent=map.nodes.find(n=>n.id===g.parentId);
+    if(parent)parent.collapsed=false;
+    const child={id:map.nextId++,x:g.x,y:g.y,label:g.label,
+      urls:[],primaryUrl:0,color:parent?parent.color:'#b5d89b',
+      shape:parent?parent.shape:(typeof defShape!=='undefined'?defShape:'stadium'),
+      font:parent?parent.font:"'Nunito',sans-serif",
+      outlined:parent?parent.outlined:false,scale:1,
+      palKey:parent?parent.palKey:'pastel',notes:[],image:'',
+      textAlign:parent?parent.textAlign:'center',labelHtml:'',collapsed:false,
+      textColor:parent?parent.textColor||null:null};
+    map.nodes.push(child);
+    const e=makeEdge('e'+Date.now()+'_'+child.id,g.parentId,child.id,'straight');
+    e.thickness=2;initKf(e,map);map.edges.push(e);
+    if(parent)startSpawnAnim(child.id,parent.x,parent.y);
+    selN=child.id;selSet.add(child.id);
+  }
+  ghosts=[];softSave();render();
 }
 // ── LAYOUT ALGORITHMS ──
 // Two deterministic layouts: radial (untangle) and hierarchical tree (tidy up).
@@ -2564,7 +2568,8 @@ cvs.addEventListener('mousedown',ev=>{
     // clicked outside AI ghosts — do NOT dismiss; user must press Esc or Enter
   }
   // ghost check FIRST — before commitEdit, before anything
-  if(ghostsEnabled&&ghosts.length){const _gi=hitGhostScreen(sx,sy);if(_gi>=0){_ghostJustFired=true;materialiseGhost(_gi);return;}}
+  // click toggles the pick additively (same interaction as AI ghosts) — Enter materialises
+  if(ghostsEnabled&&ghosts.length){const _gi=hitGhostScreen(sx,sy);if(_gi>=0){_ghostJustFired=true;setTimeout(()=>{_ghostJustFired=false;},400);ghosts[_gi]._sel=!ghosts[_gi]._sel;render();return;}}
   if(editingNode&&hitResizeScreen(sx,sy,editingNode)){resizeN=editingNode;resizeS={ox:sx,sc:editingNode.scale||1,fs:editingNode.fontSize||12};return;}
   // + button check BEFORE commitEdit — so freshly-edited child can be used as a drag source
   {const _map=cmap();if(_map){for(const n of _map.nodes){const dir=hitAnyPlus(sx,sy,n);if(dir){if(editingNode)commitEdit();plusDragFrom={node:n,dir,startX:sx,startY:sy};plusDragMoved=false;return;}}}}
@@ -3583,7 +3588,7 @@ const SHORTCUTS=[
     ['double-click note drop','open notes panel'],
     ['double-click link badge','open link'],
     ['drag node corner','resize node + scale text'],
-    ['click ghost node','materialise it — the rest stay up for more clicks'],
+    ['click ghost node','toggle it in the pick — choose several, then enter materialises them'],
     ['right-click','context menu'],
     ['right-click edge → label edge','name the relationship (font, size + colour editable) — enter commits, esc cancels'],
   ]},
@@ -3782,6 +3787,7 @@ document.addEventListener('keydown',e=>{
     if(sov&&sov.style.display==='flex'){sov.style.display='none';return;}
     if(editingNoteId!==null){editingNoteId=null;activeEditor=null;renderNotesList();return;}
     if(document.getElementById('notes-panel').classList.contains('vis')){document.getElementById('notes-panel').classList.remove('vis');activeNotesNode=null;return;}
+    if(ghosts.length&&ghosts.some(g=>g._sel)){ghosts.forEach(g=>g._sel=false);render();return;}
     if(editingNode){commitEdit();return;}
 
     if(connectDrag){connectDrag=null;render();return;}
@@ -3800,6 +3806,12 @@ document.addEventListener('keydown',e=>{
       if(sel.length){e.preventDefault();materialiseAiGhosts(sel);return;}
       // no selection → materialise all
       e.preventDefault();materialiseAiGhosts([...aiGhosts]);return;
+    }
+    // ghost nodes: materialise the picked set — no picks falls through (ghosts appear
+    // passively on edit, so Enter must not spawn placeholders unasked)
+    if(ghostsEnabled&&ghosts.length&&!e.target.matches('input,textarea,select,[contenteditable]')){
+      const gsel=ghosts.filter(g=>g._sel);
+      if(gsel.length){e.preventDefault();materialiseGhosts(gsel);return;}
     }
     if(editingNode){e.preventDefault();commitEdit();return;}
     if(openSub){e.preventDefault();closeAllSubs();return;}
