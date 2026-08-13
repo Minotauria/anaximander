@@ -5035,6 +5035,7 @@ async function generateMapFromPrompt(promptText){
     'Depth should be asymmetric — go deep (4–5 levels) where the topic is rich, stay shallow where it is thin. Uniform depth everywhere is a failure mode.',
   ];
   const inmap=_genMode==='inmap';
+  const genMapId=inmap?cmap()?.id:null; // the map the prompt was built from — discard if it changes mid-flight
   const selScope=inmap&&_genSelIds&&_genSelIds.size?_genSelIds:null;
   let systemPrompt,userMsg;
   if(inmap){
@@ -5093,7 +5094,7 @@ async function generateMapFromPrompt(promptText){
     }
 
     const reader=resp.body.getReader();const decoder=new TextDecoder();
-    let buf='',text='',dots=0;
+    let buf='',text='',dots=0,stopReason=null;
     dotTimer=setInterval(()=>{dots=(dots+1)%4;setStatus('Thinking'+'.'.repeat(dots));},400);
     while(true){
       if(signal.cancelled){reader.cancel();break;}
@@ -5105,6 +5106,7 @@ async function generateMapFromPrompt(promptText){
         const data=line.slice(6).trim();if(data==='[DONE]')continue;
         let ev;try{ev=JSON.parse(data);}catch{continue;}
         if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta')text+=ev.delta.text;
+        else if(ev.type==='message_delta'&&ev.delta?.stop_reason)stopReason=ev.delta.stop_reason;
       }
     }
     clearInterval(dotTimer);
@@ -5134,10 +5136,12 @@ async function generateMapFromPrompt(promptText){
       }catch{}
       i=end; // continue scanning after this array
     }
+    if(!nodes&&stopReason==='max_tokens')throw rawFail('Response was cut off at the max-tokens ceiling ('+((state.ai.maxTokens||2048).toLocaleString())+') — raise it in ⚙ settings and try again');
     if(!sawArray)throw rawFail('No JSON array found in response');
     if(!nodes)throw rawFail('No parseable node array in response');
 
     if(inmap){
+      if(cmap()?.id!==genMapId){setStatus('Map changed mid-generation — result discarded.','#c89898');return;}
       const r=applyGeneratedToMap(nodes,selScope);
       setStatus('✓ Added '+r.added+' node'+(r.added===1?'':'s')+(r.updated?', updated '+r.updated:'')+'.','#7ec87e');
     }else{
@@ -5324,7 +5328,7 @@ function applyGeneratedToMap(rawNodes,selIds){
   document.getElementById('gen-prompt')?.addEventListener('input',updateGenEstimate);
   document.getElementById('gen-prompt')?.addEventListener('keydown',ev=>{
     if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();document.getElementById('gen-btn').click();}
-    if(ev.key==='Escape'){document.getElementById('gen-ov').classList.remove('vis');}
+    if(ev.key==='Escape'){if(_genAbort)_genAbort.cancelled=true;document.getElementById('gen-ov').classList.remove('vis');}
   });
 })();
 
@@ -5348,7 +5352,7 @@ function applyGeneratedToMap(rawNodes,selIds){
   document.getElementById('legend-ov')?.addEventListener('click',e=>{if(e.target===document.getElementById('legend-ov'))document.getElementById('legend-ov').style.display='none';});
   document.getElementById('ai-enabled')?.addEventListener('change',e=>{state.ai.enabled=e.target.checked;softSave();updateWizard();});
   document.getElementById('ai-model')?.addEventListener('change',e=>{state.ai.model=e.target.value;softSave();});
-  document.getElementById('ai-max-tokens')?.addEventListener('change',e=>{const v=parseInt(e.target.value,10);state.ai.maxTokens=(v>0)?v:2048;e.target.value=state.ai.maxTokens;softSave();});
+  document.getElementById('ai-max-tokens')?.addEventListener('change',e=>{const v=parseInt(e.target.value,10);state.ai.maxTokens=isNaN(v)?2048:Math.max(256,Math.min(64000,v));e.target.value=state.ai.maxTokens;softSave();});
   document.getElementById('ai-key-s')?.addEventListener('input',e=>{state.ai.apiKey=e.target.value;softSave();updateWizard();});
   document.getElementById('wbHave')?.addEventListener('click',()=>{
     document.getElementById('ws1').classList.remove('on');
