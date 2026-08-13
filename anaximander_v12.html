@@ -5045,6 +5045,7 @@ async function generateMapFromPrompt(promptText){
       '  — NEW nodes: fresh ids "x1","x2",…; parent must be an existing node id or another new node id.',
       '  — MODIFIED existing nodes: same id as in the current map, with updated label, shape, or color, or added notes (notes append to the node\'s existing notes). Omit parent and edge for these (links may be included to add cross-connections from an existing node).',
       'Do not include unchanged existing nodes. Never re-parent or delete existing nodes.',
+      'Add at most 20 new nodes — fewer is fine. Only exceed this if the user\'s request names a larger count.',
       ...(selScope?[
         'FOCUS: the user has selected specific nodes, marked "sel": true in the current map JSON. Work only with that selection:',
         '  — NEW nodes must parent into a selected node or another new node.',
@@ -5068,7 +5069,7 @@ async function generateMapFromPrompt(promptText){
       'The root node has parent: null and should be the central topic; every other node has a parent.',
       graphHint,
       ...craftLines,
-      'Generate as many nodes as the topic warrants — no minimum, no maximum. Form a clear, well-structured overview.',
+      'Generate at most 20 nodes — fewer is fine when the topic is thin. Only exceed this if the user\'s request names a larger count. Form a clear, well-structured overview.',
       'No commentary. No markdown fences. Output exactly one JSON array — never emit a revised second version; get it right the first time.',
       'This is a one-shot pipeline with no reply channel: never ask clarifying questions, never refuse or explain in prose. Make a sensible interpretation of the request and output the JSON array.',
     ].join('\n');
