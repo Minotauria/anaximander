@@ -5154,12 +5154,39 @@ async function generateMapFromPrompt(promptText){
   }
 }
 
-function buildMapFromGenerated(topic,rawNodes){
-  // build id → rawNode lookup
-  const byId=Object.fromEntries(rawNodes.map(n=>[n.id,n]));
-  // find root
-  const root=rawNodes.find(n=>!n.parent)||rawNodes[0];
+// ── shared AI-schema handling — both generate paths build nodes/edges through
+// these helpers only, so schema changes land in exactly one place ──────────────
+function aiNodeFromRaw(rn,nid){
+  return{id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
+    color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
+    outlined:false,scale:1,palKey:'muted',notes:aiNotesToObjects(rn.notes,0),urls:[],primaryUrl:0,
+    image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false};
+}
+function addAiParentEdge(map,rn,pid,nid){
+  const e=makeEdge('e'+Date.now()+'_'+nid,pid,nid,AI_EDGES.includes(rn.edge)?rn.edge:'straight');
+  e.thickness=3.5;if(rn.edgeLabel)e.label=String(rn.edgeLabel);initKf(e,map);map.edges.push(e);
+  return e;
+}
+// cross-links beyond the tree (call after parent edges, so layout BFS prefers
+// the tree); resolveId maps a raw AI id to a numeric node id or null
+function addAiLinks(map,rawNodes,resolveId){
+  const added=[];
+  rawNodes.forEach(rn=>{
+    if(!rn||rn.id==null)return;
+    const from=resolveId(rn.id);if(from==null)return;
+    (Array.isArray(rn.links)?rn.links:[]).forEach((lk,i)=>{
+      if(!lk)return;
+      const to=resolveId(lk.to);
+      if(to==null||to===from)return;
+      if(map.edges.some(ed=>(ed.from===from&&ed.to===to)||(ed.from===to&&ed.to===from)))return;
+      const e=makeEdge('e'+Date.now()+'_l'+from+'_'+i,from,to,AI_EDGES.includes(lk.edge)?lk.edge:'dotted');
+      e.thickness=3.5;if(lk.label)e.label=String(lk.label);initKf(e,map);map.edges.push(e);added.push(e);
+    });
+  });
+  return added;
+}
 
+function buildMapFromGenerated(topic,rawNodes){
   // create a new map
   const mapId='m'+Date.now();
   const map=defMap(mapId,topic.slice(0,40));
@@ -5170,30 +5197,16 @@ function buildMapFromGenerated(topic,rawNodes){
   rawNodes.forEach(rn=>{
     const nid=map.nextId++;
     idMap[rn.id]=nid;
-    map.nodes.push({id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
-      color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
-      outlined:false,scale:1,palKey:'muted',notes:aiNotesToObjects(rn.notes,0),urls:[],primaryUrl:0,
-      image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false});
+    map.nodes.push(aiNodeFromRaw(rn,nid));
   });
 
   // build edges from parent references
   rawNodes.forEach(rn=>{
     if(!rn.parent||!idMap[rn.parent])return;
-    const e=makeEdge('e'+Date.now()+'_'+rn.id,idMap[rn.parent],idMap[rn.id],AI_EDGES.includes(rn.edge)?rn.edge:'straight');
-    e.thickness=3.5;if(rn.edgeLabel)e.label=String(rn.edgeLabel);initKf(e,map);map.edges.push(e);
+    addAiParentEdge(map,rn,idMap[rn.parent],idMap[rn.id]);
   });
 
-  // cross-links beyond the tree (after parent edges, so layout BFS prefers the tree)
-  rawNodes.forEach(rn=>{
-    (Array.isArray(rn.links)?rn.links:[]).forEach((lk,i)=>{
-      if(!lk)return;
-      const from=idMap[rn.id],to=idMap[lk.to];
-      if(!from||!to||from===to)return;
-      if(map.edges.some(ed=>(ed.from===from&&ed.to===to)||(ed.from===to&&ed.to===from)))return;
-      const e=makeEdge('e'+Date.now()+'_l'+rn.id+'_'+i,from,to,AI_EDGES.includes(lk.edge)?lk.edge:'dotted');
-      e.thickness=3.5;if(lk.label)e.label=String(lk.label);initKf(e,map);map.edges.push(e);
-    });
-  });
+  addAiLinks(map,rawNodes,k=>idMap[k]??null);
 
   // add to state and switch to it
   state.maps.push(map);
@@ -5235,10 +5248,7 @@ function applyGeneratedToMap(rawNodes,selIds){
       updated++;return;
     }
     const nid=map.nextId++;idMap[String(rn.id)]=nid;
-    const node={id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
-      color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
-      outlined:false,scale:1,palKey:'muted',notes:aiNotesToObjects(rn.notes,0),urls:[],primaryUrl:0,
-      image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false};
+    const node=aiNodeFromRaw(rn,nid);
     map.nodes.push(node);created.push({node,rn});
   });
   // edges: parent is a new node, an in-scope existing node, or falls back to the anchor
@@ -5246,25 +5256,11 @@ function applyGeneratedToMap(rawNodes,selIds){
     const pKey=String(rn.parent);
     const exP=exByStr[pKey];
     const pid=idMap[pKey]??(exP&&(!selIds||selIds.has(exP.id))?exP.id:anchor.id);
-    const e=makeEdge('e'+Date.now()+'_'+node.id,pid,node.id,AI_EDGES.includes(rn.edge)?rn.edge:'straight');
-    e.thickness=3.5;if(rn.edgeLabel)e.label=String(rn.edgeLabel);initKf(e,map);map.edges.push(e);
+    addAiParentEdge(map,rn,pid,node.id);
   });
 
-  // cross-links: from new or existing nodes, to new or existing nodes (after
-  // parent edges, so the positioning pass below still finds the parent first)
-  const resolveId=k=>{const s=String(k);return idMap[s]??(exByStr[s]?exByStr[s].id:null);};
-  rawNodes.forEach(rn=>{
-    if(!rn||rn.id==null)return;
-    const from=resolveId(rn.id);if(from==null)return;
-    (Array.isArray(rn.links)?rn.links:[]).forEach((lk,i)=>{
-      if(!lk)return;
-      const to=resolveId(lk.to);
-      if(to==null||to===from)return;
-      if(map.edges.some(ed=>(ed.from===from&&ed.to===to)||(ed.from===to&&ed.to===from)))return;
-      const e=makeEdge('e'+Date.now()+'_l'+from+'_'+i,from,to,AI_EDGES.includes(lk.edge)?lk.edge:'dotted');
-      e.thickness=3.5;if(lk.label)e.label=String(lk.label);initKf(e,map);map.edges.push(e);
-    });
-  });
+  // cross-links: from new or existing nodes, to new or existing nodes
+  addAiLinks(map,rawNodes,k=>{const s=String(k);return idMap[s]??(exByStr[s]?exByStr[s].id:null);});
   // position new nodes: fan around parent, dependency-ordered so new-on-new
   // chains place after their parents; anything unresolved lands near the root
   const placed=new Set(map.nodes.map(n=>n.id));created.forEach(c=>placed.delete(c.node.id));
