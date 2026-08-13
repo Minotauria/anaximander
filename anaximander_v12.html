@@ -1107,7 +1107,7 @@ function normalizeState(){
   state.maps.forEach(map=>{
     if(!map.legend)map.legend={shapes:{},edges:{},colours:{}};
     if(map.legend.textWords==null)map.legend.textWords=40;
-    map.edges.forEach(e=>{if(!e.keyframes||!e.keyframes.length)initKf(e,map);if(e.thickness===undefined||e.thickness===null)e.thickness=3.5;});
+    map.edges.forEach(e=>{if(!e.keyframes||!e.keyframes.length)initKf(e,map);if(e.thickness===undefined||e.thickness===null)e.thickness=3.5;delete e._lblMid;});
     map.nodes.forEach(n=>{if(!n.notes)n.notes=[];});
     // strip stray collapsed flags on childless nodes (set by the old always-live
     // corner click zone) — they made future children spawn hidden
@@ -1921,7 +1921,8 @@ function drawEdgeBody(e,hovered,pts0,map){
   // stash the label anchor (screen coords) — labels draw in their own pass in render()
   // AFTER all edges, so the line-break under the text clears crossing lines too
   const drawPts=pathPts&&pathPts.length?pathPts:pts0;
-  e._lblMid=e.label?drawPts[Math.floor(drawPts.length/2)]:null;
+  const _ek=e.id||`${e.from}-${e.to}`;
+  if(e.label)_lblMids.set(_ek,drawPts[Math.floor(drawPts.length/2)]);else _lblMids.delete(_ek);
   if(hovered&&e.keyframes){
     const ci=Math.floor(e.keyframes.length/2);
     e.keyframes.forEach((kf,i)=>{
@@ -1937,8 +1938,11 @@ function drawEdgeBody(e,hovered,pts0,map){
 // Font/size/colour inherit from the parent-most endpoint unless overridden on the edge
 // (e.labelFont / e.labelSize / e.labelColor). A bg-coloured rect breaks the line where
 // the label sits; drawn after all edges so it clears crossing lines and branches too.
+// screen-space label anchors live here, not on the edge objects — anything on an
+// edge gets swept into JSON.stringify(state) by saves, exports, and undo snapshots
+let _lblMids=new Map();
 function drawEdgeLabel(e,map,byId){
-  const mid=e._lblMid;if(!mid)return;
+  const mid=_lblMids.get(e.id||`${e.from}-${e.to}`);if(!mid)return;
   const a=byId?byId.get(e.from):map.nodes.find(n=>n.id===e.from),
         b=byId?byId.get(e.to):map.nodes.find(n=>n.id===e.to);
   const src=(a&&b)?(((_lblDepths.get(a.id)??0)<=(_lblDepths.get(b.id)??0))?a:b):(a||b);
@@ -2382,7 +2386,7 @@ function render(){
   // label pass — after all edges so the line-break under each label clears crossings
   let _lblById=null; // built once per frame, only if a label actually draws
   map.edges.forEach(e=>{
-    if(!e.label||!e._lblMid)return;
+    if(!e.label||!_lblMids.has(e.id||`${e.from}-${e.to}`))return;
     if(_hidden.has(e.from)||_hidden.has(e.to))return;
     if(!_lblById)_lblById=new Map(map.nodes.map(n=>[n.id,n]));
     const eid=e.id||`${e.from}-${e.to}`;
@@ -2901,10 +2905,25 @@ function showKfCtx(sx,sy,e,kfIdx){
 // ── edge label popover ──
 // Labels inherit font/size from the parent-most endpoint and the standard text colour;
 // e.labelFont / e.labelSize / e.labelColor are stored on the edge only when overridden.
-let elpEdge=null;
+let elpEdge=null,elpSnap=null,elpHistPushed=false;
 const ELP_SW=['#7ec87e','#a8cce8','#f0c8a0','#e8b8c8','#c8b8e8','#ffffff'];
+// one history entry per popover session, pushed before the first actual change
+function elpEnsureHist(){if(!elpHistPushed){pushCanvasHistLocal('label edge');elpHistPushed=true;}}
+// Escape restores the state captured at open — live-apply otherwise makes cancel impossible
+function elpRevert(){
+  if(elpEdge&&elpSnap){
+    elpEdge.label=elpSnap.label;
+    if(elpSnap.labelFont===undefined)delete elpEdge.labelFont;else elpEdge.labelFont=elpSnap.labelFont;
+    if(elpSnap.labelSize===undefined)delete elpEdge.labelSize;else elpEdge.labelSize=elpSnap.labelSize;
+    if(elpSnap.labelColor===undefined)delete elpEdge.labelColor;else elpEdge.labelColor=elpSnap.labelColor;
+    softSave();render();
+  }
+  closeElp();
+}
 function openEdgeLabelPop(e,sx,sy){
   elpEdge=e;
+  elpSnap={label:e.label||'',labelFont:e.labelFont,labelSize:e.labelSize,labelColor:e.labelColor};
+  elpHistPushed=false;
   document.getElementById('elp-text').value=e.label||'';
   const fSel=document.getElementById('elp-font');
   populateFontSelect(fSel,e.labelFont||null);
@@ -2925,29 +2944,29 @@ function elpRenderSw(){
   const row=document.getElementById('elp-sw');row.innerHTML='';
   const cur=elpEdge?elpEdge.labelColor:null;
   const mk=(bgc,on,title,fn)=>{const s=document.createElement('div');s.className='elp-sw'+(on?' on':'');s.style.background=bgc;s.title=title;s.addEventListener('click',fn);row.appendChild(s);return s;};
-  const inh=mk('#a09e8a',!cur,'inherit (standard text)',()=>{if(elpEdge){delete elpEdge.labelColor;elpApply();}});
+  const inh=mk('#a09e8a',!cur,'inherit (standard text)',()=>{if(elpEdge){elpEnsureHist();delete elpEdge.labelColor;elpApply();elpRenderSw();}});
   inh.textContent='↩';inh.style.cssText+=';display:flex;align-items:center;justify-content:center;font-size:9px;color:#141a14;';
-  ELP_SW.forEach(c=>mk(c,cur===c,c,()=>{if(elpEdge){elpEdge.labelColor=c;elpApply();}}));
+  ELP_SW.forEach(c=>mk(c,cur===c,c,()=>{if(elpEdge){elpEnsureHist();elpEdge.labelColor=c;elpApply();elpRenderSw();}}));
   mk(cur&&!ELP_SW.includes(cur)?cur:'linear-gradient(135deg,#c87e7e,#6a9ac8,#7ec87e)',!!(cur&&!ELP_SW.includes(cur)),'custom…',()=>document.getElementById('elp-custom').click());
 }
 function elpApply(){
   if(!elpEdge)return;
+  elpEnsureHist();
   elpEdge.label=document.getElementById('elp-text').value.trim();
   const f=document.getElementById('elp-font').value;
   if(f)elpEdge.labelFont=f;else delete elpEdge.labelFont;
   const s=document.getElementById('elp-size').value;
   if(s)elpEdge.labelSize=parseInt(s,10);else delete elpEdge.labelSize;
-  elpRenderSw();
   softSave();render();
 }
 function closeElp(){document.getElementById('elp').style.display='none';elpEdge=null;}
 document.getElementById('elp-text').addEventListener('input',elpApply);
-document.getElementById('elp-text').addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter'){elpApply();closeElp();}if(ev.key==='Escape')closeElp();});
+document.getElementById('elp-text').addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter'){elpApply();closeElp();}if(ev.key==='Escape')elpRevert();});
 document.getElementById('elp-font').addEventListener('change',elpApply);
 document.getElementById('elp-size').addEventListener('change',elpApply);
-document.getElementById('elp-custom').addEventListener('input',ev=>{if(elpEdge){elpEdge.labelColor=ev.target.value;elpApply();}});
+document.getElementById('elp-custom').addEventListener('input',ev=>{if(elpEdge){elpEnsureHist();elpEdge.labelColor=ev.target.value;elpApply();elpRenderSw();}});
 document.getElementById('elp-ok').addEventListener('click',()=>{elpApply();closeElp();});
-document.getElementById('elp-clear').addEventListener('click',()=>{if(elpEdge){elpEdge.label='';delete elpEdge.labelFont;delete elpEdge.labelSize;delete elpEdge.labelColor;softSave();render();}closeElp();});
+document.getElementById('elp-clear').addEventListener('click',()=>{if(elpEdge){elpEnsureHist();elpEdge.label='';delete elpEdge.labelFont;delete elpEdge.labelSize;delete elpEdge.labelColor;softSave();render();}closeElp();});
 document.addEventListener('mousedown',ev=>{const p=document.getElementById('elp');if(p.style.display==='block'&&!p.contains(ev.target))closeElp();});
 
 function showNotesPanel(n){
@@ -3566,7 +3585,7 @@ const SHORTCUTS=[
     ['drag node corner','resize node + scale text'],
     ['click ghost node','materialise it — the rest stay up for more clicks'],
     ['right-click','context menu'],
-    ['right-click edge → label edge','name the relationship (font, size + colour editable)'],
+    ['right-click edge → label edge','name the relationship (font, size + colour editable) — enter commits, esc cancels'],
   ]},
   {section:'generate from prompt',items:[
     ['AI panel → generate in map','extend the current map from a prompt'],
@@ -5142,11 +5161,12 @@ async function generateMapFromPrompt(promptText){
         else if(c==='['||c==='{')depth++;
         else if(c===']'||c==='}'){depth--;if(depth===0){end=j;break;}}
       }
-      if(end<0)break; // unbalanced — no complete array from here on
+      if(end<0)continue; // this candidate never closes (quote-state mistracking in prose) — try the next '['
       sawArray=true;
       try{
         const cand=JSON.parse(text.slice(i,end+1));
-        if(Array.isArray(cand)&&cand.length)nodes=cand;
+        // node arrays only — a bracketed list in commentary must not replace the real payload
+        if(Array.isArray(cand)&&cand.length&&cand.every(o=>o&&typeof o==='object'&&o.id!=null))nodes=cand;
       }catch{}
       i=end; // continue scanning after this array
     }
