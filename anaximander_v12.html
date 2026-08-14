@@ -4779,7 +4779,9 @@ function buildLegendUI(){
   const sEl=document.getElementById('lgnd-shapes'),eEl=document.getElementById('lgnd-edges');
   if(!sEl||!eEl)return;
   sEl.innerHTML='';
-  for(const sh of AI_SHAPES){
+  // every shape a node can be edited to, plus legacy keys that still hold a meaning
+  const _shapeList=[...SHAPES,...Object.keys(lg.shapes||{}).filter(k=>!SHAPES.includes(k)&&lg.shapes[k])];
+  for(const sh of _shapeList){
     const row=document.createElement('div');row.className='lgr';
     const cv=document.createElement('canvas');cv.className='lgic';cv.width=44;cv.height=26;
     const inp=document.createElement('input');inp.type='text';inp.placeholder='meaning of '+sh;inp.dataset.shape=sh;inp.value=ea(lg.shapes[sh]);
@@ -4812,7 +4814,13 @@ function renderLegendColours(pal){
   const lg=map.legend||{shapes:{},edges:{},colours:{}};
   const cEl=document.getElementById('lgnd-colours');if(!cEl)return;
   cEl.innerHTML='';
-  for(const col of(PALETTES[pal]||[])){
+  // colours actually in this map first (whatever palette they came from — AI maps
+  // use muted while the picker defaults to pastel), then the picked palette's rest
+  const _seen=new Set();const _rows=[];
+  map.nodes.forEach(n=>{if(n.color&&!_seen.has(n.color)){_seen.add(n.color);_rows.push(n.color);}});
+  Object.keys(lg.colours||{}).forEach(c=>{if(lg.colours[c]&&!_seen.has(c)){_seen.add(c);_rows.push(c);}});
+  (PALETTES[pal]||[]).forEach(c=>{if(!_seen.has(c)){_seen.add(c);_rows.push(c);}});
+  for(const col of _rows){
     const row=document.createElement('div');row.className='lgr';
     const sw=document.createElement('div');sw.className='lgsw';sw.style.background=col;
     const inp=document.createElement('input');inp.type='text';inp.placeholder='meaning of this colour';inp.dataset.colour=col;inp.value=ea(lg.colours[col]);
@@ -4824,7 +4832,9 @@ function drawLegendShape(c,shape){
   c.fillStyle='#6a9a6a';c.strokeStyle='#909078';c.lineWidth=1;
   const cx=22,cy=13,w=34,h=18;
   c.beginPath();
-  if(shape==='longpill'||shape==='pill')c.roundRect(cx-w/2,cy-h/2,w,h,h/2);
+  if(shape==='longpill'||shape==='pill'||shape==='stadium')c.roundRect(cx-w/2,cy-h/2,w,h,h/2);
+  else if(shape==='rect')c.roundRect(cx-w/2,cy-h/2,w,h,3);
+  else if(shape==='square'){c.rect(cx-h/2,cy-h/2,h,h);}
   else if(shape==='circle')c.arc(cx,cy,Math.min(w,h)/2,0,Math.PI*2);
   else if(shape==='ellipse')c.ellipse(cx,cy,w/2,h/2,0,0,Math.PI*2);
   else if(shape==='diamond'){c.moveTo(cx,cy-h/2);c.lineTo(cx+w/2,cy);c.lineTo(cx,cy+h/2);c.lineTo(cx-w/2,cy);c.closePath();}
@@ -5215,10 +5225,10 @@ const AI_SHAPE_MEANINGS={circle:'core concept',rect:'fact or definition',diamond
 // shapes from the fixed taxonomy, colours named after their branch-root node
 // (the prompt assigns one hue per branch). Fills blanks only — never overwrites
 // anything the user wrote.
-function fillAiLegend(map,nodes){
+function fillAiLegend(map,nodes,edges){
   if(!map.legend)map.legend={shapes:{},edges:{},colours:{}};
   const lg=map.legend;
-  if(!lg.shapes)lg.shapes={};if(!lg.colours)lg.colours={};
+  if(!lg.shapes)lg.shapes={};if(!lg.colours)lg.colours={};if(!lg.edges)lg.edges={};
   const depths=computeLabelDepths(map);
   for(const n of nodes){
     if(AI_SHAPE_MEANINGS[n.shape]&&!lg.shapes[n.shape])lg.shapes[n.shape]=AI_SHAPE_MEANINGS[n.shape];
@@ -5228,6 +5238,9 @@ function fillAiLegend(map,nodes){
       if(best&&best.label)lg.colours[n.color]=best.label;
     }
   }
+  // only the two conventions the prompt actually fixes — dashed carries no set meaning
+  const EDGE_MEANINGS={straight:'parent–child relation',dotted:'cross-branch link'};
+  (edges||[]).forEach(e=>{const m=EDGE_MEANINGS[e.style];if(m&&!lg.edges[e.style])lg.edges[e.style]=m;});
 }
 // palette membership is only prompt-enforced; reject anything that isn't a hex colour
 const aiColor=c=>(typeof c==='string'&&/^#[0-9a-fA-F]{6}$/.test(c.trim()))?c.trim():null;
@@ -5282,7 +5295,7 @@ function buildMapFromGenerated(topic,rawNodes){
   });
 
   addAiLinks(map,rawNodes,k=>idMap[k]??null);
-  fillAiLegend(map,map.nodes);
+  fillAiLegend(map,map.nodes,map.edges);
 
   // add to state and switch to it
   state.maps.push(map);
@@ -5341,7 +5354,7 @@ function applyGeneratedToMap(rawNodes,selIds){
   // cross-links: from new or existing nodes, to new or existing nodes
   newEdges.push(...addAiLinks(map,rawNodes,k=>{const s=String(k);return idMap[s]??(exByStr[s]?exByStr[s].id:null);}));
   // legend entries for what this generation added or restyled — blanks only
-  fillAiLegend(map,created.map(c=>c.node).concat(touched));
+  fillAiLegend(map,created.map(c=>c.node).concat(touched),newEdges);
   // position new nodes: fan around parent, dependency-ordered so new-on-new
   // chains place after their parents; anything unresolved lands near the root
   const placed=new Set(map.nodes.map(n=>n.id));created.forEach(c=>placed.delete(c.node.id));

@@ -80,6 +80,8 @@ These have been thought about, sometimes deeply. None are committed-to. Treat as
 
 **Export to .mm** — Import (Coggle-flavoured FreeMind) already exists in `parseCoggleMm`. The missing half is export: recursive XML serializer over the BFS tree (~80 lines + menu entry). Labels, hierarchy, colours, font sizes, positions (`X_COGGLE_POSX/POSY`), cross-links (`X_COGGLE_JOINEDTO` connector nodes, which our importer round-trips) and notes (`richcontent TYPE="NOTE"`) all survive; shapes, edge styles/labels, images are inherently lossy in the format. Decision made: emit Coggle-flavoured rather than pure FreeMind. Assessed 2026-08-13, ~half a session of work.
 
+**Generated-map layout improvement** — Radial organise (the default landing layout for generate-from-prompt) reads convoluted on generated maps. Peter picked the isolate-first route (2026-08-14): build a standalone mockup exploring better layouts for AI-generated graphs (tree? improved radial? force-directed pass?), test in isolation, then fold. Not started.
+
 **Node notes on export** — Notes live in a panel and are invisible on canvas, so they vanish from PDF/JPEG/raster exports. How should they survive? Possible shapes: appendix page keyed by node label, footnote markers on nodes, callout boxes near their node. Raised 2026-08-13, no design work done.
 
 **Ollama + GPT providers** — Code skeleton for Ollama is already in v10 but parked. Revisit alongside a GPT/OpenAI option — do both at the same time so the provider tab pattern is complete in one go.
