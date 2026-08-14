@@ -5082,6 +5082,7 @@ async function generateMapFromPrompt(promptText){
   const inmap=_genMode==='inmap';
   const genMapId=inmap?cmap()?.id:null; // the map the prompt was built from — discard if it changes mid-flight
   const selScope=inmap&&_genSelIds&&_genSelIds.size?_genSelIds:null;
+  const legendCtx=inmap?buildAiLegendContext():'';
   let systemPrompt,userMsg;
   if(inmap){
     systemPrompt=[
@@ -5101,6 +5102,7 @@ async function generateMapFromPrompt(promptText){
       ]:[]),
       graphHint,
       ...craftLines,
+      legendCtx?'This map has a legend — follow it over the default shape/colour meanings above:\n'+legendCtx:'',
       'No commentary. No markdown fences. Output exactly one JSON array — never emit a revised second version; get it right the first time.',
       'This is a one-shot pipeline with no reply channel: never ask clarifying questions, never refuse or explain in prose. Make a sensible interpretation of the request and output the JSON array.',
       '',
@@ -5207,6 +5209,26 @@ async function generateMapFromPrompt(promptText){
 
 // ── shared AI-schema handling — both generate paths build nodes/edges through
 // these helpers only, so schema changes land in exactly one place ──────────────
+// the craft-prompt shape taxonomy — keep in sync with the craftLines wording
+const AI_SHAPE_MEANINGS={circle:'core concept',rect:'fact or definition',diamond:'decision or counterpoint',square:'process or action',ellipse:'concrete example',text:'open question or uncertainty',longpill:'general idea'};
+// after a generation, write the conventions the prompt dictated into the map legend:
+// shapes from the fixed taxonomy, colours named after their branch-root node
+// (the prompt assigns one hue per branch). Fills blanks only — never overwrites
+// anything the user wrote.
+function fillAiLegend(map,nodes){
+  if(!map.legend)map.legend={shapes:{},edges:{},colours:{}};
+  const lg=map.legend;
+  if(!lg.shapes)lg.shapes={};if(!lg.colours)lg.colours={};
+  const depths=computeLabelDepths(map);
+  for(const n of nodes){
+    if(AI_SHAPE_MEANINGS[n.shape]&&!lg.shapes[n.shape])lg.shapes[n.shape]=AI_SHAPE_MEANINGS[n.shape];
+    if(n.color&&!lg.colours[n.color]){
+      let best=null;
+      for(const c of map.nodes)if(c.color===n.color&&(best===null||(depths.get(c.id)??1e9)<(depths.get(best.id)??1e9)))best=c;
+      if(best&&best.label)lg.colours[n.color]=best.label;
+    }
+  }
+}
 // palette membership is only prompt-enforced; reject anything that isn't a hex colour
 const aiColor=c=>(typeof c==='string'&&/^#[0-9a-fA-F]{6}$/.test(c.trim()))?c.trim():null;
 function aiNodeFromRaw(rn,nid){
@@ -5260,6 +5282,7 @@ function buildMapFromGenerated(topic,rawNodes){
   });
 
   addAiLinks(map,rawNodes,k=>idMap[k]??null);
+  fillAiLegend(map,map.nodes);
 
   // add to state and switch to it
   state.maps.push(map);
@@ -5291,7 +5314,7 @@ function applyGeneratedToMap(rawNodes,selIds){
   // emptied map: no anchor exists — unresolvable parents become roots and
   // placement centres on the current viewport instead
   const anchorPos=anchor?{x:anchor.x,y:anchor.y}:s2w(window.innerWidth/2,window.innerHeight/2);
-  const idMap={};const created=[];const newEdges=[];let updated=0;
+  const idMap={};const created=[];const newEdges=[];const touched=[];let updated=0;
   rawNodes.forEach(rn=>{
     if(!rn||rn.id==null)return;
     const ex=exByStr[String(rn.id)];
@@ -5301,7 +5324,7 @@ function applyGeneratedToMap(rawNodes,selIds){
       if(AI_SHAPES.includes(rn.shape))ex.shape=rn.shape;
       const c=aiColor(rn.color);if(c)ex.color=c;
       if(Array.isArray(rn.notes)&&rn.notes.length){if(!ex.notes)ex.notes=[];ex.notes.push(...aiNotesToObjects(rn.notes,ex.notes.length));}
-      updated++;return;
+      touched.push(ex);updated++;return;
     }
     const nid=map.nextId++;idMap[String(rn.id)]=nid;
     const node=aiNodeFromRaw(rn,nid);
@@ -5317,6 +5340,8 @@ function applyGeneratedToMap(rawNodes,selIds){
 
   // cross-links: from new or existing nodes, to new or existing nodes
   newEdges.push(...addAiLinks(map,rawNodes,k=>{const s=String(k);return idMap[s]??(exByStr[s]?exByStr[s].id:null);}));
+  // legend entries for what this generation added or restyled — blanks only
+  fillAiLegend(map,created.map(c=>c.node).concat(touched));
   // position new nodes: fan around parent, dependency-ordered so new-on-new
   // chains place after their parents; anything unresolved lands near the root
   const placed=new Set(map.nodes.map(n=>n.id));created.forEach(c=>placed.delete(c.node.id));
