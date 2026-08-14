@@ -291,8 +291,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sm-shape.on,.sm-edge.on{background:#26301e;border-color:#3a4030;color:#dac888;}
 .sm-shape svg,.sm-edge svg{display:block;}
 /* ── AI / Legend modals ──────────────────────────────────── */
-#ai-ov,#legend-ov,#gen-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;}
-#ai-ov.vis,#legend-ov.vis,#gen-ov.vis{display:flex;}
+#ai-ov,#gen-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;}
+#ai-ov.vis,#gen-ov.vis{display:flex;}
+/* legend floats over the canvas — no backdrop, draggable, resizable */
+#legend-ov{position:fixed;inset:0;background:none;pointer-events:none;z-index:120;display:none;align-items:center;justify-content:center;}
+#legend-box{pointer-events:auto;resize:both;overflow:auto;min-width:340px;min-height:260px;}
 #ai-box,#legend-box,#gen-box{background:#1a201a;border-radius:14px;border:0.5px solid #2a3028;padding:22px 26px;width:540px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);font-family:'Lora',serif;color:#a09e8a;position:relative;}
 #gen-prompt{width:100%;background:#0d1a0d;border:0.5px solid #303624;color:#dac888;padding:10px 12px;font-size:13px;font-family:'Lora',serif;border-radius:8px;resize:vertical;outline:none;line-height:1.6;margin:10px 0 6px;}
 #gen-prompt:focus{border-color:#3a4030;}
@@ -626,6 +629,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       <div class="ai-h4" id="gen-title">✦ generate map from prompt</div>
       <p id="gen-desc" style="font-size:13px;color:#7a7858;line-height:1.6;margin-bottom:4px;">Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.</p>
       <textarea id="gen-prompt" rows="3" placeholder="e.g. the causes of World War I, or Stoic philosophy, or photosynthesis…"></textarea>
+      <div id="gen-notes-row" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7a7858;margin:0 0 6px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="gen-notes-chk" style="accent-color:#7ec87e;"> include notes</label>
+        <span id="gen-notes-cap" style="display:none;align-items:center;gap:6px;">
+          <span style="color:#5a5a48;">·</span>
+          <input type="range" id="gen-notes-max" min="50" max="1000" step="50" style="width:110px;accent-color:#7ec87e;">
+          <span id="gen-notes-val" style="color:#a09e8a;white-space:nowrap;">300 words</span>
+          <span style="color:#5a5a48;white-space:nowrap;">max across the map</span>
+        </span>
+      </div>
       <div id="gen-est"></div>
       <div id="gen-status"></div>
       <div id="gen-detail"></div>
@@ -3594,6 +3606,7 @@ const SHORTCUTS=[
   ]},
   {section:'generate from prompt',items:[
     ['AI panel → generate in map','extend the current map from a prompt'],
+    ['drag the ✦ / legend popup','reposition it — the legend also resizes from its bottom-right corner'],
     ['select nodes → ✦ (bulk bar or AI panel)','generate scoped to the selection — only selected nodes modified or grown from'],
     ['✦ From prompt (home screen)','generate a new map from a prompt'],
     ['enter','submit prompt (or click generate)'],
@@ -4799,7 +4812,9 @@ function buildLegendUI(){
   }
   sEl.querySelectorAll('input[data-shape]').forEach(i=>i.addEventListener('input',e=>{const m=cmap();if(m){if(!m.legend)m.legend={shapes:{},edges:{},colours:{}};m.legend.shapes[e.target.dataset.shape]=e.target.value;softSave();}}));
   eEl.innerHTML='';
-  for(const ed of AI_EDGES){
+  // every edge style the app offers, not just the AI trio
+  const _edgeList=[...EDGES,...Object.keys(lg.edges||{}).filter(k=>!EDGES.includes(k)&&lg.edges[k])];
+  for(const ed of _edgeList){
     const row=document.createElement('div');row.className='lgr';
     const cv=document.createElement('canvas');cv.className='lgic';cv.width=44;cv.height=26;
     const inp=document.createElement('input');inp.type='text';inp.placeholder='meaning of '+ed+' edge';inp.dataset.edge=ed;inp.value=ea(lg.edges[ed]);
@@ -4844,10 +4859,15 @@ function drawLegendShape(c,shape){
   c.fill();c.stroke();
 }
 function drawLegendEdge(c,style){
-  c.strokeStyle='#a09e8a';c.lineWidth=1.5;
+  c.strokeStyle='#a09e8a';c.fillStyle='#a09e8a';c.lineWidth=1.5;
   if(style==='dashed')c.setLineDash([5,3]);
   else if(style==='dotted')c.setLineDash([2,3]);
-  c.beginPath();c.moveTo(4,13);c.lineTo(40,13);c.stroke();c.setLineDash([]);
+  const x0=style==='arrow2'?9:4,x1=(style==='arrow'||style==='arrow2')?35:40;
+  c.beginPath();c.moveTo(x0,13);c.lineTo(x1,13);c.stroke();c.setLineDash([]);
+  if(style==='arrow'||style==='arrow2'){
+    c.beginPath();c.moveTo(40,13);c.lineTo(34,10);c.lineTo(34,16);c.closePath();c.fill();
+    if(style==='arrow2'){c.beginPath();c.moveTo(4,13);c.lineTo(10,10);c.lineTo(10,16);c.closePath();c.fill();}
+  }
 }
 function ea(s){return(s??'').replace(/"/g,'&quot;');}
 
@@ -5029,6 +5049,16 @@ function updateGenEstimate(){
   el.style.color='#5a5a48';
 }
 
+// reflect state.ai.genNotes / genNotesMax into the modal's notes row
+function syncGenNotesUI(){
+  const chk=document.getElementById('gen-notes-chk'),cap=document.getElementById('gen-notes-cap'),mx=document.getElementById('gen-notes-max'),val=document.getElementById('gen-notes-val');
+  if(!chk)return;
+  chk.checked=state.ai.genNotes!==false;
+  mx.value=state.ai.genNotesMax||300;
+  val.textContent=(state.ai.genNotesMax||300)+' words';
+  cap.style.display=chk.checked?'flex':'none';
+}
+
 function openGenModal(mode){
   _genMode=mode;
   _genSelIds=(mode==='inmap'&&selSet.size)?new Set(selSet):null;
@@ -5047,6 +5077,7 @@ function openGenModal(mode){
   document.getElementById('gen-cancel-btn').style.display='none';
   _genMapTok=0;
   if(mode==='inmap'){const m=cmap();if(m)_genMapTok=Math.ceil(JSON.stringify(serializeMapForAi(m,_genSelIds)).length/4);}
+  syncGenNotesUI();
   updateGenEstimate();
   document.getElementById('gen-ov').classList.add('vis');
   setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
@@ -5069,6 +5100,11 @@ async function generateMapFromPrompt(promptText){
 
   const model=state.ai.model==='haiku'?'claude-haiku-4-5-20251001':'claude-sonnet-4-6';
   const pal=PALETTES.muted.join(', ');
+  const wantNotes=state.ai.genNotes!==false;
+  const notesMax=state.ai.genNotesMax||300;
+  const notesRule=wantNotes
+    ?'Use notes where prose earns its place, but keep the TOTAL word count of all notes combined, across the whole response, under '+notesMax+' words.'
+    :'Do not include notes on any node.';
   const schemaLines=[
     '  id        — unique string',
     '  label     — concise phrase, up to 12 words, shorter when it can be; specific and meaningful — never empty, never a placeholder like "node"',
@@ -5079,8 +5115,10 @@ async function generateMapFromPrompt(promptText){
     '  edgeLabel — optional: short label naming the relationship to the parent',
     '  links     — optional: cross-connections to other nodes beyond the parent,',
     '              an array of {to: <node id>, edge: <style>, label: <optional short label>}',
+    ...(wantNotes?[
     '  notes     — optional: longer supporting prose, an array of short paragraph strings',
     '              shown in the node\'s notes panel — any text too long for a label goes here',
+    ]:[]),
   ];
   const graphHint='Mind maps are graphs, not strict trees — where concepts relate across branches, connect them with links. Include several cross-branch links, each labelled with a verb phrase naming the relationship ("contradicts", "feeds", "predates") — verbs, not nouns.';
   const craftLines=[
@@ -5104,6 +5142,7 @@ async function generateMapFromPrompt(promptText){
       '  — MODIFIED existing nodes: same id as in the current map, with updated label, shape, or color, or added notes (notes append to the node\'s existing notes). Omit parent and edge for these (links may be included to add cross-connections from an existing node).',
       'Do not include unchanged existing nodes. Never re-parent or delete existing nodes.',
       'Add at most 20 new nodes — fewer is fine. Only exceed this if the user\'s request names a larger count.',
+      notesRule,
       ...(selScope?[
         'FOCUS: the user has selected specific nodes, marked "sel": true in the current map JSON. Work only with that selection:',
         '  — NEW nodes must parent into a selected node or another new node.',
@@ -5129,6 +5168,7 @@ async function generateMapFromPrompt(promptText){
       graphHint,
       ...craftLines,
       'Generate at most 20 nodes — fewer is fine when the topic is thin. Only exceed this if the user\'s request names a larger count. Form a clear, well-structured overview.',
+      notesRule,
       'No commentary. No markdown fences. Output exactly one JSON array — never emit a revised second version; get it right the first time.',
       'This is a one-shot pipeline with no reply channel: never ask clarifying questions, never refuse or explain in prose. Make a sensible interpretation of the request and output the JSON array.',
     ].join('\n');
@@ -5197,6 +5237,7 @@ async function generateMapFromPrompt(promptText){
     if(!nodes&&stopReason==='max_tokens')throw rawFail('Response was cut off at the max-tokens ceiling ('+((state.ai.maxTokens||2048).toLocaleString())+') — raise it in ⚙ settings and try again');
     if(!sawArray)throw rawFail('No JSON array found in response');
     if(!nodes)throw rawFail('No parseable node array in response');
+    if(!wantNotes)nodes.forEach(n=>{if(n&&n.notes)delete n.notes;}); // notes off — drop any the model emitted anyway
 
     if(inmap){
       if(cmap()?.id!==genMapId){setStatus('Map changed mid-generation — result discarded.','#c89898');return;}
@@ -5391,7 +5432,26 @@ function applyGeneratedToMap(rawNodes,selIds){
   return{added:created.length,updated};
 }
 
+// drag a floating dialog box by any spot that isn't a control; the native resize
+// corner (bottom-right ~20px) is left alone
+function makeBoxDraggable(box){
+  if(!box)return;
+  box.addEventListener('mousedown',ev=>{
+    if(ev.target.closest('input,textarea,select,button,canvas,label,[contenteditable]'))return;
+    const r=box.getBoundingClientRect();
+    if(ev.clientX>r.right-20&&ev.clientY>r.bottom-20)return; // resize handle
+    box.style.position='absolute';box.style.left=r.left+'px';box.style.top=r.top+'px';box.style.margin='0';
+    const ox=ev.clientX-r.left,oy=ev.clientY-r.top;
+    const mv=e2=>{box.style.left=Math.max(60-r.width,Math.min(innerWidth-60,e2.clientX-ox))+'px';box.style.top=Math.max(0,Math.min(innerHeight-40,e2.clientY-oy))+'px';};
+    const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);};
+    addEventListener('mousemove',mv);addEventListener('mouseup',up);
+    ev.preventDefault();
+  });
+}
+
 ;(function wireGenUI(){
+  makeBoxDraggable(document.getElementById('gen-box'));
+  makeBoxDraggable(document.getElementById('legend-box'));
   document.getElementById('rp-gen')?.addEventListener('click',()=>{openGenModal('inmap');});
   document.getElementById('bulk-gen')?.addEventListener('click',()=>{openGenModal('inmap');});
   document.getElementById('gen-close-btn')?.addEventListener('click',()=>{
@@ -5410,6 +5470,8 @@ function applyGeneratedToMap(rawNodes,selIds){
     if(_genAbort)_genAbort.cancelled=true;
   });
   document.getElementById('gen-prompt')?.addEventListener('input',updateGenEstimate);
+  document.getElementById('gen-notes-chk')?.addEventListener('change',e=>{state.ai.genNotes=e.target.checked;softSave();syncGenNotesUI();});
+  document.getElementById('gen-notes-max')?.addEventListener('input',e=>{state.ai.genNotesMax=parseInt(e.target.value,10)||300;softSave();syncGenNotesUI();});
   document.getElementById('gen-prompt')?.addEventListener('keydown',ev=>{
     if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();document.getElementById('gen-btn').click();}
     if(ev.key==='Escape'){if(_genAbort)_genAbort.cancelled=true;document.getElementById('gen-ov').classList.remove('vis');}
