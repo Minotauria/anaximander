@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8"/>
-<title>Anaximander v12</title>
+<title>Anaximander v13</title>
 <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400&family=Marcellus&family=IM+Fell+English+SC&family=Almendra+SC:wght@400;700&family=UnifrakturMaguntia&family=Pirata+One&family=Spectral:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Unna:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Open+Sans:wght@400;700&family=Source+Sans+3:wght@400;700&family=Work+Sans:wght@400;700&family=DM+Sans:wght@400;700&family=Manrope:wght@400;700&family=Outfit:wght@400;700&family=Raleway:wght@400;700&family=Caveat:wght@400;700&family=Caveat+Brush&family=Kalam:wght@400;700&family=Shadows+Into+Light&family=Reenie+Beanie&family=Permanent+Marker&family=Special+Elite&family=JetBrains+Mono:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cutive+Mono&family=Bungee&family=Limelight&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -79,6 +79,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sp-cm-item.del{color:#6a5a48;}
 .sp-cm-item.del:hover{color:#a08a6a;}
 .sp-cm-item{white-space:nowrap;}
+/* first-word capitals on menu items (glyph-led labels are capitalised in their strings) */
+.ci::first-letter,.sp-cm-item::first-letter,.sp-cm-label::first-letter{text-transform:uppercase;}
 .sp-cm-item.dim{opacity:0.35;pointer-events:none;}
 .sp-cm-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:#4a4a3c;padding:5px 13px 3px;cursor:default;}
 .sp-foot{margin-top:auto;padding:18px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;}
@@ -103,7 +105,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #app{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.4s;}
 #app.vis{opacity:1;pointer-events:all;}
 /* ── burger + drawer (map navigation) ── */
-#burger{position:fixed;top:14px;left:14px;height:34px;display:flex;align-items:center;gap:9px;padding:0 13px 0 11px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;z-index:200;color:#909078;font-size:12.5px;user-select:none;font-family:'Lora',serif;transition:background 0.15s,border-color 0.15s,color 0.15s;}
+#burger{position:fixed;top:14px;left:14px;height:34px;display:flex;align-items:center;padding:0 11px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;z-index:200;color:#909078;font-size:12.5px;user-select:none;font-family:'Lora',serif;transition:background 0.15s,border-color 0.15s,color 0.15s;}
 #burger:hover{background:#1e271e;border-color:#3a4838;color:#c8c898;}
 #burger.open{border-color:#5a8a5a;color:#c8c898;background:#1e271e;}
 #burger-glyph{font-size:14px;letter-spacing:-1px;color:#6a6a58;}
@@ -113,7 +115,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #drawer.vis{display:block;}
 #dd-mapname{padding:11px 15px 10px;border-bottom:0.5px solid #252e25;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 #dd-mapname:hover{background:#1d261d;}
-.dd-edit{font-size:10px;color:#4a4a3c;opacity:0;transition:opacity 0.15s;flex-shrink:0;pointer-events:none;}
+.dd-edit{font-size:10px;color:#4a4a3c;opacity:0;transition:opacity 0.15s,color 0.15s;flex-shrink:0;cursor:pointer;}
+.dd-edit:hover{color:#c8c898;}
 #dd-mapname:hover .dd-edit,#dd-mapname:focus-within .dd-edit{opacity:1;}
 .dd-section{padding:9px 15px 3px;font-size:9px;text-transform:uppercase;letter-spacing:0.13em;color:#4a4a3c;font-weight:500;}
 .dd-item{padding:7px 15px;font-size:12px;color:#8a8a76;cursor:pointer;display:flex;align-items:center;gap:9px;transition:background 0.1s,color 0.1s;}
@@ -129,22 +132,23 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .dd-pad-btm{height:7px;}
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 /* ── top-right toolbar ── */
-#toolbar{position:absolute;top:14px;right:14px;display:flex;align-items:center;gap:2px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;padding:4px 7px;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
+#toolbar{position:absolute;bottom:14px;left:14px;display:flex;align-items:center;z-index:20;opacity:0;pointer-events:none;transition:opacity 0.4s;}
+#toolbar.show{opacity:1;}
 .tb-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;color:#6a6a5a;font-size:13px;border:none;background:transparent;font-family:'Lora',serif;transition:background 0.1s,color 0.1s;padding:0;}
 .tb-btn:not(:disabled):hover{background:#252e25;color:#a09e8a;}
 .tb-btn:disabled{opacity:0.4;cursor:default;}
 .tb-sep{width:0.5px;height:16px;background:#252e25;margin:0 3px;flex-shrink:0;}
-#map-title-in{font-size:13px;font-weight:500;color:#c8c898;background:none;border:none;outline:none;font-family:'Lora',serif;flex:1;min-width:0;padding:0;}
+#map-title-in{font-size:13px;font-weight:500;color:#c8c898;background:none;border:none;outline:none;font-family:'Lora',serif;flex:1;min-width:0;padding:0;resize:none;overflow:hidden;line-height:1.45;}
 #map-title-in::placeholder{color:#7a7858;}
 #map-title-in:focus{color:#e8d098;}
-#autosave-ind{font-size:11px;color:#45453a;font-family:'Lora',serif;transition:color 0.3s;padding-right:7px;margin-right:3px;border-right:0.5px solid #252e25;}
+#autosave-ind{font-size:11px;color:#5a5a48;font-family:'Lora',serif;transition:color 0.3s;}
 #autosave-ind.saving{color:#9aa07a;}
 .tmi{padding:8px 18px;font-size:13px;cursor:pointer;color:#a09e8a;font-family:'Lora',serif;}
 .tmi:hover{background:#26301e;color:#dac888;}
 /* ── right tool panel ── */
-#rpanel{position:absolute;top:60px;right:14px;width:172px;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.5);z-index:19;animation:dropIn 0.14s ease;font-family:'Lora',serif;}
+#rpanel{position:absolute;top:14px;right:14px;width:172px;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.5);z-index:19;animation:dropIn 0.14s ease;font-family:'Lora',serif;}
 #rpanel.hidden{display:none;}
-#rp-collapse{position:absolute;top:5px;right:6px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:4px;color:#4a4a3c;font-size:11px;cursor:pointer;font-family:'Lora',serif;transition:background 0.1s,color 0.1s;z-index:5;padding:0;}
+#rp-collapse{position:absolute;top:5px;right:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:4px;color:#4a4a3c;font-size:13px;cursor:pointer;font-family:'Lora',serif;transition:background 0.1s,color 0.1s;z-index:5;padding:0;user-select:none;-webkit-user-select:none;}
 #rp-collapse:hover{background:#252e25;color:#a09e8a;}
 .rp-group{border-bottom:0.5px solid #222b22;}
 .rp-group:last-child{border-bottom:none;}
@@ -155,7 +159,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .rp-icon{font-size:11px;width:13px;text-align:center;opacity:0.65;flex-shrink:0;}
 .rp-chevron{font-size:9px;color:#4a4a3c;margin-left:auto;}
 .rp-pad-btm{height:6px;}
-#panel-tab{position:absolute;top:60px;right:14px;width:30px;height:30px;display:none;align-items:center;justify-content:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;color:#6a6a5a;font-size:12px;z-index:19;transition:background 0.15s,border-color 0.15s,color 0.15s;font-family:'Lora',serif;}
+#panel-tab{position:absolute;top:14px;right:14px;width:34px;height:34px;display:none;align-items:center;justify-content:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;color:#6a6a5a;font-size:15px;z-index:19;transition:background 0.15s,border-color 0.15s,color 0.15s;font-family:'Lora',serif;user-select:none;-webkit-user-select:none;}
 #panel-tab.vis{display:flex;}
 #panel-tab:hover{background:#1e271e;border-color:#3a4838;color:#a09e8a;}
 #canvas-wrap{flex:1;position:relative;overflow:hidden;}
@@ -170,7 +174,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #inline-input *::selection{background:rgba(126,200,126,0.4)!important;color:inherit!important;}
 #inline-input::-moz-selection,
 #inline-input *::-moz-selection{background:rgba(126,200,126,0.4)!important;}
-#zoom-ctrl{position:absolute;bottom:18px;right:18px;display:flex;flex-direction:column;gap:3px;background:#1a201a;border:0.5px solid #2a3028;border-radius:14px;padding:6px;z-index:10;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
+#zoom-ctrl{position:absolute;bottom:18px;right:18px;display:flex;flex-direction:column;gap:3px;background:#1a201a;border:0.5px solid #2a3028;border-radius:14px;padding:6px;z-index:10;box-shadow:0 8px 30px rgba(0,0,0,0.5);transform:scale(0.75);transform-origin:bottom right;}
 .zm{width:30px;height:30px;border-radius:8px;border:none;background:none;cursor:pointer;font-size:16px;font-weight:500;color:#dac888;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;}
 .zm:hover{color:#e8d098;background:#26301e;}
 .zm.on{color:#dac888;background:#26301e;}
@@ -249,6 +253,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .bb-sw.on{border-color:rgba(255,255,255,0.55);}
 .bb-shape{cursor:pointer;border-radius:4px;border:0.5px solid transparent;flex-shrink:0;display:block;background:#0d1a0d;}
 .bb-shape:hover{border-color:#3a4030;}
+.bb-gen{cursor:pointer;color:#7a7858;font-size:13px;padding:0 2px;flex-shrink:0;transition:color 0.1s;}
+.bb-gen:hover{color:#dac888;}
 .net-select{background:#1a201a;border:0.5px solid #303624;border-radius:6px;font-size:11px;color:#c8c898;cursor:pointer;padding:3px 5px;font-family:'Lora',serif;flex-shrink:0;}
 .net-select optgroup{font-style:normal;font-weight:500;color:#c8c898;background:#0d1a0d;text-transform:uppercase;letter-spacing:0.05em;font-size:9px;}
 .net-select option{font-style:normal;font-weight:400;color:#a09e8a;background:#1a201a;font-size:11px;padding:2px 6px;}
@@ -289,17 +295,41 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sm-shape.on,.sm-edge.on{background:#26301e;border-color:#3a4030;color:#dac888;}
 .sm-shape svg,.sm-edge svg{display:block;}
 /* ── AI / Legend modals ──────────────────────────────────── */
-#ai-ov,#legend-ov,#gen-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;}
-#ai-ov.vis,#legend-ov.vis,#gen-ov.vis{display:flex;}
+#ai-ov,#gen-ov{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;}
+#ai-ov.vis,#gen-ov.vis{display:flex;}
+/* legend floats over the canvas — no backdrop, draggable, resizable */
+#legend-ov{position:fixed;inset:0;background:none;pointer-events:none;z-index:120;display:none;align-items:center;justify-content:center;}
+#legend-box{pointer-events:auto;resize:both;overflow:auto;min-width:340px;min-height:260px;}
+/* generate-in-map: no dim so the map stays visible while it changes */
+#gen-ov.no-dim{background:none;pointer-events:none;}
+#gen-ov.no-dim #gen-box{pointer-events:auto;}
+#gen-box{resize:both;overflow:auto;min-width:380px;min-height:220px;}
 #ai-box,#legend-box,#gen-box{background:#1a201a;border-radius:14px;border:0.5px solid #2a3028;padding:22px 26px;width:540px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);font-family:'Lora',serif;color:#a09e8a;position:relative;}
 #gen-prompt{width:100%;background:#0d1a0d;border:0.5px solid #303624;color:#dac888;padding:10px 12px;font-size:13px;font-family:'Lora',serif;border-radius:8px;resize:vertical;outline:none;line-height:1.6;margin:10px 0 6px;}
 #gen-prompt:focus{border-color:#3a4030;}
 #gen-status{font-size:12px;color:#7a7858;min-height:18px;margin-bottom:10px;}
+#gen-est{font-size:11px;color:#5a5a48;min-height:15px;margin:0 0 6px;font-family:'IBM Plex Mono',monospace;}
+#gen-detail{display:none;background:#0d1a0d;border:0.5px solid #303624;border-radius:7px;color:#a09e8a;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.5;padding:8px 10px;margin-bottom:10px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-word;}
+#gen-detail.vis{display:block;}
+/* edge-label popover */
+#elp{position:fixed;display:none;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,0.6);font-family:'Lora',serif;padding:10px;width:200px;z-index:60;}
+#elp h4{margin:0 0 8px;font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:0.13em;color:#4a4a3c;}
+#elp-text{width:100%;box-sizing:border-box;font-size:12px;padding:5px 8px;border:0.5px solid #303624;border-radius:6px;background:#0d1a0d;color:#e8d098;font-family:'Lora',serif;outline:none;margin-bottom:8px;}
+.elp-row{display:flex;gap:6px;margin-bottom:8px;}
+#elp select{flex:1;min-width:0;font-size:11px;padding:3px 4px;border:0.5px solid #303624;border-radius:6px;background:#0d1a0d;color:#a09e8a;font-family:'Lora',serif;outline:none;}
+#elp-size{flex:0 0 56px;}
+#elp-sw{display:flex;gap:5px;align-items:center;margin-bottom:9px;flex-wrap:wrap;}
+.elp-sw{width:16px;height:16px;border-radius:4px;cursor:pointer;border:0.5px solid #303624;box-sizing:border-box;}
+.elp-sw.on{border:1.5px solid #dac888;}
+.elp-btns{display:flex;gap:6px;}
+.elp-btns button{flex:1;font-size:11px;padding:5px;border-radius:6px;border:0.5px solid #303624;background:none;cursor:pointer;font-family:'Lora',serif;color:#a09e8a;}
+.elp-btns button:hover{background:#232b23;}
+#elp-ok{color:#dac888;}
 .ai-h4{font-size:11px;color:#c8c898;text-transform:uppercase;letter-spacing:0.1em;font-weight:500;margin-bottom:14px;}
 .ai-sl{font-size:11px;color:#7a7858;text-transform:uppercase;letter-spacing:0.08em;margin:14px 0 6px;}
 .ai-field{margin-bottom:12px;}
 .ai-field label{display:block;font-size:11px;color:#7a7858;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
-.ai-field input[type=text],.ai-field input[type=password],.ai-field select{width:100%;background:#0d1a0d;border:0.5px solid #303624;border-radius:7px;color:#dac888;padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;}
+.ai-field input[type=text],.ai-field input[type=password],.ai-field input[type=number],.ai-field select{width:100%;background:#0d1a0d;border:0.5px solid #303624;border-radius:7px;color:#dac888;padding:6px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;}
 .ai-field input:focus,.ai-field select:focus{border-color:#3a4030;}
 .ai-field select{font-family:'Lora',serif;}
 .ai-tr{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
@@ -372,6 +402,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <span class="sp-tile-icon">&#8613;</span>
           <span class="sp-tile-name">From document<span class="sp-soon">soon</span></span>
         </div>
+        <div class="sp-tile" id="sp-tile-import" title="open a .json or .mm export">
+          <span class="sp-tile-icon">&#8613;</span>
+          <span class="sp-tile-name">Import file</span>
+        </div>
       </div>
       <div class="sp-scroll">
         <div class="sp-sec">Return</div>
@@ -381,77 +415,49 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       <div class="sp-foot">
         <span class="sp-hint" id="sp-hint" style="visibility:hidden;"><span class="sp-key">&#8629;</span>reopen <span id="sp-hint-name"></span></span>
         <span style="display:flex;align-items:center;gap:16px;">
-          <span class="sp-bin-link" id="sp-bin-link"><span style="font-size:11px;">&#9109;</span>recycle bin <span id="sp-bin-count"></span></span>
-          <span class="sp-ver">v12</span>
+          <span class="sp-bin-link" id="sp-bin-link"><span style="font-size:11px;">&#9109;</span>Recycle bin <span id="sp-bin-count"></span></span>
+          <span class="sp-ver">v13</span>
         </span>
         <div id="sp-bin-pop"></div>
       </div>
     </div>
   </div>
   <div id="app">
-    <div id="burger" title="Maps"><span id="burger-glyph">&#9776;</span><span id="burger-name"></span></div>
+    <div id="burger" title="Menu"><span id="burger-glyph">&#9776;</span></div>
     <div id="drawer">
       <div id="dd-mapname">
-        <input id="map-title-in" value="" placeholder="untitled"/>
-        <span class="dd-edit">&#9998;</span>
+        <textarea id="map-title-in" placeholder="untitled" rows="1"></textarea>
+        <span class="dd-edit" title="Rename map">&#9998;</span>
       </div>
-      <div class="dd-item" id="dd-all-maps"><span class="dd-icon">&#8962;</span> home</div>
-      <div class="dd-rule"></div>
-      <div class="dd-section">Maps</div>
-      <div id="dd-maps"></div>
-      <div class="dd-item quiet" id="dd-new-map"><span class="dd-icon">+</span> new map</div>
-      <div class="dd-rule"></div>
-      <div class="dd-item" id="dd-import"><span class="dd-icon">&#8613;</span> import file</div>
-      <div class="dd-item" id="dd-export"><span class="dd-icon">&#8615;</span> export &amp; share <span class="dd-chevron">&#9658;</span></div>
-      <div class="dd-rule"></div>
-      <div id="bin-section">
-        <div id="bin-header" class="dd-item quiet">
-          <span id="bin-chevron" style="font-size:10px;color:#5a6048;transition:transform 0.15s;flex-shrink:0;">›</span>
-          <span class="dd-icon">&#9109;</span><span>recycle bin</span>
-          <span id="bin-badge" style="background:#3a2a2a;color:#c87e7e;font-size:9px;border-radius:8px;padding:1px 5px;margin-left:auto;display:none;"></span>
-        </div>
-        <div id="bin-contents" style="display:none;padding:4px 0 6px;">
-          <div id="bin-list"></div>
-          <div id="empty-bin-confirm" style="display:none;padding:4px 10px 6px;">
-            <div style="font-size:10px;color:#c87e7e;margin-bottom:5px;">permanently delete all items?</div>
-            <div style="display:flex;gap:4px;">
-              <button id="empty-bin-yes" style="flex:1;padding:3px;border-radius:4px;border:0.5px solid #4a2a2a;background:#2a1a1a;color:#c87e7e;cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;">yes, delete all</button>
-              <button id="empty-bin-no" style="flex:1;padding:3px;border-radius:4px;border:0.5px solid #333;background:#2a2a2a;color:#888;cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;">cancel</button>
-            </div>
-          </div>
-          <button id="empty-bin-btn" style="width:calc(100% - 20px);margin:4px 10px 2px;padding:4px;border-radius:5px;border:0.5px solid #3a2a2a;background:none;color:#7a4a4a;font-size:11px;cursor:pointer;font-family:Nunito,sans-serif;display:none;">empty bin permanently</button>
-        </div>
-      </div>
+      <div class="dd-item" id="dd-all-maps"><span class="dd-icon">&#8962;</span> Home</div>
       <div class="dd-pad-btm"></div>
     </div>
     <div id="main">
       <div id="toolbar">
         <span id="autosave-ind">saved</span>
-        <button class="tb-btn" id="cvs-undo" title="Undo (⌘Z)" disabled>&#8630;</button>
-        <button class="tb-btn" id="cvs-redo" title="Redo (⌘⇧Z)" disabled>&#8631;</button>
-        <div class="tb-sep"></div>
-        <button class="tb-btn" id="btn-fullscreen" title="Fullscreen (F11)">&#9635;</button>
-        <div class="tb-sep"></div>
-        <button class="tb-btn" id="btn-shortcuts" title="Keyboard shortcuts">?</button>
       </div>
       <div id="rpanel">
         <button id="rp-collapse" title="Collapse panel">&#187;</button>
         <div class="rp-group">
           <div class="rp-label">Canvas</div>
-          <div class="rp-item" id="rp-bg"><span class="rp-icon">&#9632;</span> background</div>
-          <div class="rp-item" id="rp-legend"><span class="rp-icon">&#9671;</span> legend</div>
+          <div class="rp-item" id="rp-bg"><span class="rp-icon">&#9632;</span> Background</div>
+          <div class="rp-item" id="rp-legend"><span class="rp-icon">&#9671;</span> Legend</div>
         </div>
         <div class="rp-group">
           <div class="rp-label">Map</div>
-          <div class="rp-item" id="rp-history"><span class="rp-icon">&#9201;</span> history</div>
-          <div class="rp-item" id="rp-ghosts"><span class="rp-icon">&#9685;</span> ghost nodes <span class="rp-chevron">&#9658;</span></div>
-          <div class="rp-item" id="rp-untangle"><span class="rp-icon">&#10022;</span> untangle</div>
-          <div class="rp-item" id="rp-tidy"><span class="rp-icon">&#10016;</span> tidy up</div>
+          <div class="rp-item" id="rp-history"><span class="rp-icon">&#9201;</span> History</div>
+          <div class="rp-item" id="rp-ghosts"><span class="rp-icon">&#9685;</span> Ghost nodes <span class="rp-chevron">&#9658;</span></div>
+          <div class="rp-item" id="rp-untangle"><span class="rp-icon">&#10022;</span> Organise radial</div>
+          <div class="rp-item" id="rp-tidy"><span class="rp-icon">&#10016;</span> Organise tree</div>
+          <div class="rp-item" id="rp-export"><span class="rp-icon">&#8615;</span> Export &amp; share <span class="rp-chevron">&#9658;</span></div>
         </div>
         <div class="rp-group">
           <div class="rp-label">AI</div>
-          <div class="rp-item" id="rp-ai-sugg"><span class="rp-icon">&#10022;</span> suggestions</div>
-          <div class="rp-item" id="rp-gen"><span class="rp-icon">&#10022;</span> new from prompt</div>
+          <div class="rp-item" id="rp-ai-sugg"><span class="rp-icon">&#10022;</span> Suggestions</div>
+          <div class="rp-item" id="rp-gen"><span class="rp-icon">&#10022;</span> Generate in map</div>
+        </div>
+        <div class="rp-group">
+          <div class="rp-item" id="rp-shortcuts"><span class="rp-icon">?</span> Shortcuts</div>
           <div class="rp-pad-btm"></div>
         </div>
       </div>
@@ -470,6 +476,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <div id="bulk-shapes" style="display:flex;align-items:center;gap:3px;"></div>
           <div class="net-sep" style="height:16px;"></div>
           <div id="bulk-edges" style="display:flex;align-items:center;gap:3px;"></div>
+          <div class="net-sep" style="height:16px;"></div>
+          <div class="bb-gen" id="bulk-gen" title="Generate in selection">&#10022;</div>
         </div>
         <div id="node-search" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:6px;background:#1a1a1a;border:0.5px solid #444;border-radius:8px;padding:5px 10px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.5);">
   <span style="color:#555;font-size:13px;">&#128269;</span>
@@ -485,6 +493,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <div id="zoom-lbl">100%</div>
           <button class="zm" id="zout">−</button>
           <button class="zm" id="btn-fit" title="fit to page"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2H2v3"/><path d="M11 2h3v3"/><path d="M14 11v3h-3"/><path d="M2 11v3h3"/><rect x="5.5" y="6" width="5" height="4" rx="1.2"/></svg></button>
+          <button class="zm" id="btn-fullscreen" title="Fullscreen (F11)">&#9635;</button>
           <button class="zm" id="btn-mm" style="margin-top:6px;font-size:18px;border-top:0.5px solid #2a3028;border-radius:0 0 8px 8px;padding-top:6px;height:36px;">&#9638;</button>
         </div>
         <canvas id="minimap" width="225" height="150"></canvas>
@@ -529,6 +538,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
             <option value="sonnet">Claude Sonnet 4.6 — best quality, ~$0.006 per Tab</option>
             <option value="haiku">Claude Haiku 4.5 — ~10× cheaper, slightly weaker</option>
           </select>
+        </div>
+        <div class="ai-field"><label for="ai-max-tokens">Max tokens (map generation)</label>
+          <input type="number" id="ai-max-tokens" min="256" max="64000" step="256">
         </div>
         <div class="ai-field"><label for="ai-key-s">Anthropic API key</label>
           <input type="password" id="ai-key-s" placeholder="sk-ant-…">
@@ -599,10 +611,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
   <div id="gen-ov">
     <div id="gen-box">
       <button class="ai-close" id="gen-close-btn">✕</button>
-      <div class="ai-h4">✦ generate map from prompt</div>
-      <p style="font-size:13px;color:#7a7858;line-height:1.6;margin-bottom:4px;">Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.</p>
+      <div class="ai-h4" id="gen-title">✦ generate map from prompt</div>
+      <p id="gen-desc" style="font-size:13px;color:#7a7858;line-height:1.6;margin-bottom:4px;">Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.</p>
       <textarea id="gen-prompt" rows="3" placeholder="e.g. the causes of World War I, or Stoic philosophy, or photosynthesis…"></textarea>
+      <div id="gen-notes-row" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7a7858;margin:0 0 6px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="gen-notes-chk" style="accent-color:#7ec87e;"> include notes</label>
+        <span id="gen-notes-cap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="color:#5a5a48;">·</span>
+          <input type="range" id="gen-notes-max" min="50" max="1000" step="10" style="width:200px;flex-shrink:0;accent-color:#7ec87e;">
+          <input type="number" id="gen-notes-num" min="10" max="5000" step="10" style="width:58px;flex-shrink:0;background:#0d1a0d;border:0.5px solid #303624;color:#dac888;border-radius:6px;padding:2px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;outline:none;">
+          <span style="color:#5a5a48;white-space:nowrap;">words total</span>
+        </span>
+      </div>
+      <div id="gen-est"></div>
       <div id="gen-status"></div>
+      <div id="gen-detail"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button class="ai-btn" id="gen-cancel-btn" style="display:none;">cancel</button>
         <button class="ai-btn pri" id="gen-btn">generate</button>
@@ -610,6 +633,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     </div>
   </div>
   <div id="ai-toast"></div>
+  <div id="elp">
+    <h4>label edge</h4>
+    <input id="elp-text" placeholder="label text…">
+    <div class="elp-row"><select id="elp-font"></select><select id="elp-size"></select></div>
+    <div id="elp-sw"></div>
+    <input type="color" id="elp-custom" style="position:fixed;left:-999px;top:-999px;width:1px;height:1px;opacity:0;">
+    <div class="elp-btns"><button id="elp-ok">apply</button><button id="elp-clear">clear label</button></div>
+  </div>
   <div id="ctx"></div>
   <div id="modal-ov"><div id="modal-box"><h4 id="modal-ttl">name</h4><input id="modal-in"/><div class="mbtns"><button id="modal-cancel">cancel</button><button class="pri" id="modal-ok">ok</button></div></div></div>
   <div id="shortcuts-ov" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:120;display:none;align-items:center;justify-content:center;">
@@ -652,31 +683,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 
 <!-- ⋯ menu submenus -->
 <div class="submenu" id="sub-export">
-  <div class="tmi" id="tmi-export-png">&#8615; png</div>
-  <div class="tmi" id="tmi-export-jpg">&#8615; jpg</div>
-  <div class="tmi" id="tmi-export-json">&#8615; json</div>
-  <div class="tmi" id="tmi-export-md">&#8615; markdown</div>
-  <div class="tmi" id="tmi-import2">&#8613; import json</div>
-  <div class="tmi" id="tmi-import-mm">&#8613; import .mm</div>
-  <div class="tmi" id="tmi-share">&#128279; share via URL</div>
+  <div class="tmi" id="tmi-export-png">&#8615; PNG</div>
+  <div class="tmi" id="tmi-export-jpg">&#8615; JPG</div>
+  <div class="tmi" id="tmi-export-json">&#8615; JSON</div>
+  <div class="tmi" id="tmi-export-md">&#8615; Markdown</div>
+  <div class="tmi" id="tmi-import2">&#8613; Import JSON</div>
+  <div class="tmi" id="tmi-import-mm">&#8613; Import .mm</div>
+  <div class="tmi" id="tmi-share">&#128279; Share via URL</div>
 </div>
 
 <div class="submenu" id="sub-ghost" style="min-width:220px;">
-  <div class="tmi" id="tmi-ghosts">&#9685; ghost nodes: on</div>
+  <div class="tmi" id="tmi-ghosts">&#9685; Ghost nodes: on</div>
   <div class="sm-sep"></div>
   <div class="sm-row">
-    <span class="sm-row-lbl">count</span>
-    <div class="sm-pills" id="ghost-count-pills">
-      <button class="sm-pill" data-count="1">1</button>
-      <button class="sm-pill" data-count="2">2</button>
-      <button class="sm-pill" data-count="3">3</button>
-      <button class="sm-pill" data-count="4">4</button>
-      <button class="sm-pill" data-count="5">5</button>
-    </div>
   </div>
-  <div class="sm-sep"></div>
   <div class="sm-row" style="flex-direction:column;align-items:stretch;gap:4px;">
-    <span class="sm-row-lbl" style="padding:4px 0 0;">labels (up to 10)</span>
+    <span class="sm-row-lbl" style="padding:4px 0 0;">labels — ticked ones appear (up to 10)</span>
     <div id="ghost-labels-list"></div>
     <button class="sm-add" id="ghost-labels-add">+ add label</button>
   </div>
@@ -735,7 +757,8 @@ let panning=false,panS={x:0,y:0};
 let selN=null,selSet=new Set(),focusNodeId=null,focusMode=false,ghosts=[],hoveredGhostIdx=-1,_ghostJustFired=false,ghostsEnabled=true;
 let marquee=null; // {sx,sy,ex,ey} screen coords while shift-drag selecting
 let aiGhosts=[],aiRequest=null,aiDirty=false,aiEditingGhost=null;
-const AI_SHAPES=['longpill','pill','circle','ellipse','diamond','hex','parallelogram','text'];
+// only shapes drawNode actually has a path for — anything else silently renders as an ellipse
+const AI_SHAPES=['longpill','circle','ellipse','diamond','rect','square','text'];
 const AI_EDGES=['straight','dashed','dotted'];
 let nodeAlpha={};
 const spawnAnim=new Map(); // nodeId -> {start, fromX, fromY, dur}
@@ -1065,13 +1088,14 @@ function normalizeState(){
   if(!state.ai.provider)state.ai.provider='claude';
   if(!state.ai.ollamaUrl)state.ai.ollamaUrl='http://localhost:11434';
   if(!state.ai.ollamaModel)state.ai.ollamaModel='llama3.2';
+  if(!state.ai.maxTokens)state.ai.maxTokens=2048;
   // folders: normalise missing/orphaned references so nothing points at an absent parent
   state.folders.forEach(f=>{if(!f.parentId||!state.folders.find(x=>x.id===f.parentId))f.parentId=null;});
   state.maps.forEach(m=>{if(!m.folderId||!state.folders.find(f=>f.id===m.folderId))m.folderId=null;});
   state.maps.forEach(map=>{
     if(!map.legend)map.legend={shapes:{},edges:{},colours:{}};
     if(map.legend.textWords==null)map.legend.textWords=40;
-    map.edges.forEach(e=>{if(!e.keyframes||!e.keyframes.length)initKf(e,map);if(e.thickness===undefined||e.thickness===null)e.thickness=3.5;});
+    map.edges.forEach(e=>{if(!e.keyframes||!e.keyframes.length)initKf(e,map);if(e.thickness===undefined||e.thickness===null)e.thickness=3.5;delete e._lblMid;});
     map.nodes.forEach(n=>{if(!n.notes)n.notes=[];});
     // strip stray collapsed flags on childless nodes (set by the old always-live
     // corner click zone) — they made future children spawn hidden
@@ -1090,8 +1114,10 @@ function normalizeState(){
 }
 function hardSave(){localStorage.setItem('anax_v7',JSON.stringify(state));showSaved();}
 function softSave(){showSaving();clearTimeout(autosaveTimer);autosaveTimer=setTimeout(()=>hardSave(),800);}
-function showSaving(){const el=document.getElementById('autosave-ind');el.textContent='saving…';el.classList.add('saving');}
-function showSaved(){const el=document.getElementById('autosave-ind');el.textContent='saved';el.classList.remove('saving');}
+// the indicator only appears while a save is in flight, lingers 2s on "saved", then fades
+let _savedFade=null;
+function showSaving(){const el=document.getElementById('autosave-ind');el.textContent='saving…';el.classList.add('saving');clearTimeout(_savedFade);document.getElementById('toolbar')?.classList.add('show');}
+function showSaved(){const el=document.getElementById('autosave-ind');el.textContent='saved';el.classList.remove('saving');clearTimeout(_savedFade);_savedFade=setTimeout(()=>document.getElementById('toolbar')?.classList.remove('show'),2000);}
 function cmap(){return state.maps.find(m=>m.id===state.currentMapId);}
 function updateCvsUndoRedo(){
   const map=cmap();
@@ -1130,7 +1156,17 @@ function showUndoWarning(){
 function clearUndoWarning(){const w=document.getElementById('undo-warn');if(w)w.remove();}
 
 function canvasUndo(){
-  const map=cmap();if(!map||!map.history||map.histIdx<=0)return;
+  const map=cmap();if(!map||!map.history||map.histIdx<0)return;
+  // most actions snapshot BEFORE mutating, so the live state is often ahead of the
+  // tip — bank it first, so undo steps back exactly one action and redo can return
+  const tip=map.history[map.histIdx];
+  const liveN=JSON.stringify(map.nodes),liveE=JSON.stringify(map.edges);
+  if(tip&&(JSON.stringify(tip.nodes)!==liveN||JSON.stringify(tip.edges)!==liveE)){
+    map.history=map.history.slice(0,map.histIdx+1);
+    map.history.push({label:'current',ts:Date.now(),nodes:JSON.parse(liveN),edges:JSON.parse(liveE)});
+    if(map.history.length>30)map.history.shift();else map.histIdx++;
+  }
+  if(map.histIdx<=0)return;
   map.histIdx--;
   const h=map.history[map.histIdx];
   map.nodes=JSON.parse(JSON.stringify(h.nodes));
@@ -1882,22 +1918,11 @@ function drawEdgeBody(e,hovered,pts0,map){
     if(pathPts.length>=2)drawCoggleSeg(pathPts,e.style||'straight',col,thick,finSize);
   }
 
-  // edge relationship label at midpoint — only visible on hover
+  // stash the label anchor (screen coords) — labels draw in their own pass in render()
+  // AFTER all edges, so the line-break under the text clears crossing lines too
   const drawPts=pathPts&&pathPts.length?pathPts:pts0;
-  if(e.label&&hovered){
-    const mid=drawPts[Math.floor(drawPts.length/2)];
-    const fs=Math.round(10*T.s);
-    ctx.save();
-    ctx.font=`400 ${fs}px 'Nunito',sans-serif`;
-    const lw=ctx.measureText(e.label).width;
-    const pad=4*T.s,rh=fs+pad*1.5;
-    ctx.fillStyle='rgba(20,20,20,0.82)';
-    ctx.beginPath();ctx.roundRect(mid.x-lw/2-pad,mid.y-rh/2,lw+pad*2,rh,rh/2);ctx.fill();
-    ctx.strokeStyle=col;ctx.lineWidth=0.5;ctx.stroke();
-    ctx.fillStyle='#ddd';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(e.label,mid.x,mid.y);
-    ctx.restore();
-  }
+  const _ek=e.id||`${e.from}-${e.to}`;
+  if(e.label)_lblMids.set(_ek,drawPts[Math.floor(drawPts.length/2)]);else _lblMids.delete(_ek);
   if(hovered&&e.keyframes){
     const ci=Math.floor(e.keyframes.length/2);
     e.keyframes.forEach((kf,i)=>{
@@ -1907,6 +1932,34 @@ function drawEdgeBody(e,hovered,pts0,map){
       ctx.strokeStyle='#111';ctx.lineWidth=0.8;ctx.stroke();
     });
   }
+}
+
+// edge relationship label — always visible, plain text amidst the line (no pill).
+// Font/size/colour inherit from the parent-most endpoint unless overridden on the edge
+// (e.labelFont / e.labelSize / e.labelColor). A bg-coloured rect breaks the line where
+// the label sits; drawn after all edges so it clears crossing lines and branches too.
+// screen-space label anchors live here, not on the edge objects — anything on an
+// edge gets swept into JSON.stringify(state) by saves, exports, and undo snapshots
+let _lblMids=new Map();
+function drawEdgeLabel(e,map,byId){
+  const mid=_lblMids.get(e.id||`${e.from}-${e.to}`);if(!mid)return;
+  const a=byId?byId.get(e.from):map.nodes.find(n=>n.id===e.from),
+        b=byId?byId.get(e.to):map.nodes.find(n=>n.id===e.to);
+  const src=(a&&b)?(((_lblDepths.get(a.id)??0)<=(_lblDepths.get(b.id)??0))?a:b):(a||b);
+  const baseFs=e.labelSize||(src?Math.max(10,Math.round(FONT_SIZE(src)*(src.scale||1)*0.8)):10);
+  const fs=Math.round(baseFs*T.s);
+  ctx.save();
+  ctx.font=`400 ${fs}px ${e.labelFont||(src&&src.font)||"'Nunito',sans-serif"}`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const lbg=map.bg||'#0d1a0d';
+  if(lbg!=='transparent'){
+    const lw=ctx.measureText(e.label).width,padX=8*T.s,padY=3*T.s;
+    ctx.fillStyle=lbg;
+    ctx.fillRect(mid.x-lw/2-padX,mid.y-fs/2-padY-1,lw+padX*2,fs+padY*2+2);
+  }
+  ctx.fillStyle=e.labelColor||'#a09e8a';
+  ctx.fillText(e.label,mid.x,mid.y);
+  ctx.restore();
 }
 
 function drawPlusButtons(n){
@@ -1983,23 +2036,25 @@ function buildGhosts(nodeId){
   const map=cmap();if(!map){ghosts=[];return;}
   const n=map.nodes.find(nd=>nd.id===nodeId);if(!n){ghosts=[];return;}
   const hidden=getCollapsedHidden();
-  const DIRS=[{dx:2.2,dy:-1.1},{dx:2.2,dy:0},{dx:2.2,dy:1.1},{dx:0,dy:-2},{dx:0,dy:2},{dx:-2.2,dy:-1.1},{dx:-2.2,dy:1.1}];
+  // 12 candidate positions so all 10 tickable labels can find a slot even when a few collide
+  const DIRS=[{dx:2.2,dy:-1.1},{dx:2.2,dy:0},{dx:2.2,dy:1.1},{dx:0,dy:-2},{dx:0,dy:2},{dx:-2.2,dy:-1.1},{dx:-2.2,dy:1.1},{dx:1.1,dy:-2},{dx:-1.1,dy:-2},{dx:1.1,dy:2},{dx:-1.1,dy:2},{dx:-2.2,dy:0}];
   ghosts=[];let placed=0;
-  const _maxGhosts=typeof ghostCount!=='undefined'?ghostCount:3;
+  // the ticked labels are the ghosts — their number is the count
+  const _act=(typeof ghostLabelPool!=='undefined'?ghostLabelPool:GHOST_LABELS.map(t=>({t,on:true}))).filter(g=>g.on&&g.t&&g.t.trim());
   for(const dir of DIRS){
-    if(placed>=_maxGhosts)break;
+    if(placed>=_act.length)break;
     const gx=n.x+dir.dx*160,gy=n.y+dir.dy*160;
     const tooClose=map.nodes.some(nd=>!hidden.has(nd.id)&&Math.sqrt((nd.x-gx)**2+(nd.y-gy)**2)<90);
     if(tooClose)continue;
-    const _pool=typeof ghostLabelPool!=='undefined'?ghostLabelPool:GHOST_LABELS;ghosts.push({x:gx,y:gy,label:_pool[(nodeId*3+placed)%_pool.length],parentId:nodeId,idx:placed});
+    ghosts.push({x:gx,y:gy,label:_act[placed].t,parentId:nodeId,idx:placed,_sel:false});
     placed++;
   }
 }
 function drawGhost(g,i){
   const sp=w2s(g.x,g.y);
-  const hov=i===hoveredGhostIdx;
+  const hov=i===hoveredGhostIdx,psel=!!g._sel;
   const pulse=0.55+0.15*Math.sin(Date.now()/700+i*1.3);
-  const alpha=hov?0.95:pulse;
+  const alpha=(psel||hov)?0.95:pulse;
   ctx.save();ctx.translate(sp.x,sp.y);ctx.globalAlpha=alpha;
   ctx.font=`400 ${Math.round(11*T.s)}px 'Nunito',sans-serif`;
   const tw=ctx.measureText(g.label).width;
@@ -2007,12 +2062,13 @@ function drawGhost(g,i){
   ctx.beginPath();
   ctx.moveTo(-grx+r,-gry);ctx.lineTo(grx-r,-gry);ctx.arc(grx-r,0,r,-Math.PI/2,Math.PI/2);
   ctx.lineTo(-grx+r,gry);ctx.arc(-grx+r,0,r,Math.PI/2,Math.PI*1.5);ctx.closePath();
-  if(hov){ctx.fillStyle='rgba(218,200,136,0.12)';ctx.fill();}
-  ctx.strokeStyle=hov?ACCENT:'#7a9a7a';ctx.lineWidth=hov?1.8*T.s:1.2*T.s;
-  ctx.setLineDash(hov?[]:[4*T.s,3*T.s]);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle=hov?ACCENT:'#a8c8a8';ctx.textAlign='center';ctx.textBaseline='middle';
+  if(psel){ctx.fillStyle='rgba(126,200,126,0.15)';ctx.fill();}
+  else if(hov){ctx.fillStyle='rgba(218,200,136,0.12)';ctx.fill();}
+  ctx.strokeStyle=psel?'#7ec87e':(hov?ACCENT:'#7a9a7a');ctx.lineWidth=(psel||hov)?1.8*T.s:1.2*T.s;
+  ctx.setLineDash(psel||hov?[]:[4*T.s,3*T.s]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=psel?'#7ec87e':(hov?ACCENT:'#a8c8a8');ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(g.label,0,0);
-  if(hov){ctx.font=`600 ${Math.round(9*T.s)}px 'Nunito',sans-serif`;ctx.fillStyle=ACCENT;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('+',grx-9*T.s,-gry+1*T.s);}
+  if(psel||hov){ctx.font=`600 ${Math.round(9*T.s)}px 'Nunito',sans-serif`;ctx.fillStyle=psel?'#7ec87e':ACCENT;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(psel?'✓':'+',grx-9*T.s,-gry+1*T.s);}
   ctx.globalAlpha=1;ctx.restore();
   // dashed connector to parent
   const map=cmap();if(!map)return;
@@ -2032,28 +2088,31 @@ function hitGhostScreen(sx,sy){
   }
   return -1;
 }
-function materialiseGhost(idx){
-  const g=ghosts[idx];if(!g)return;
-  const map=cmap();if(!map)return;
-  const parent=map.nodes.find(n=>n.id===g.parentId);
-  if(parent)parent.collapsed=false;
-  pushCanvasHistLocal('materialise ghost');
-  const child={id:map.nextId++,x:g.x,y:g.y,label:g.label,
-    urls:[],primaryUrl:0,color:parent?parent.color:'#b5d89b',
-    shape:parent?parent.shape:(typeof defShape!=='undefined'?defShape:'stadium'),
-    font:parent?parent.font:"'Nunito',sans-serif",
-    outlined:parent?parent.outlined:false,scale:1,
-    palKey:parent?parent.palKey:'pastel',notes:[],image:'',
-    textAlign:parent?parent.textAlign:'center',labelHtml:'',collapsed:false,
-    textColor:parent?parent.textColor||null:null};
-  map.nodes.push(child);
-  const e=makeEdge('e'+Date.now(),g.parentId,child.id,'straight');
-  e.thickness=2;initKf(e,map);map.edges.push(e);
-  if(parent)startSpawnAnim(child.id,parent.x,parent.y);
-  selN=child.id;selSet=new Set([child.id]);softSave();
-  ghosts=[];
-  render();
-  setTimeout(()=>startEdit(child),150);
+// materialise picked ghosts around their parent — one history entry, selection
+// ends on the new children (same interaction as materialiseAiGhosts)
+function materialiseGhosts(list){
+  const map=cmap();if(!map||!list.length)return;
+  if(editingNode)commitEdit(); // clears the ghosts array too — `list` keeps the picked refs
+  pushCanvasHistLocal(list.length===1?'materialise ghost':'materialise ghosts');
+  selSet=new Set();
+  for(const g of list){
+    const parent=map.nodes.find(n=>n.id===g.parentId);
+    if(parent)parent.collapsed=false;
+    const child={id:map.nextId++,x:g.x,y:g.y,label:g.label,
+      urls:[],primaryUrl:0,color:parent?parent.color:'#b5d89b',
+      shape:parent?parent.shape:(typeof defShape!=='undefined'?defShape:'stadium'),
+      font:parent?parent.font:"'Nunito',sans-serif",
+      outlined:parent?parent.outlined:false,scale:1,
+      palKey:parent?parent.palKey:'pastel',notes:[],image:'',
+      textAlign:parent?parent.textAlign:'center',labelHtml:'',collapsed:false,
+      textColor:parent?parent.textColor||null:null};
+    map.nodes.push(child);
+    const e=makeEdge('e'+Date.now()+'_'+child.id,g.parentId,child.id,'straight');
+    e.thickness=2;initKf(e,map);map.edges.push(e);
+    if(parent)startSpawnAnim(child.id,parent.x,parent.y);
+    selN=child.id;selSet.add(child.id);
+  }
+  ghosts=[];softSave();render();
 }
 // ── LAYOUT ALGORITHMS ──
 // Two deterministic layouts: radial (untangle) and hierarchical tree (tidy up).
@@ -2103,7 +2162,6 @@ function computeRadialTargets(map){
   function place(id,depth,angleStart,angleEnd){
     const kids=children[id]||[];
     if(!kids.length)return;
-    const ringRadius=root && depth===1?260:260+(depth-1)*220;
     const totalLeaves=leafCount[id];
     let cursor=angleStart;
     for(const kid of kids){
@@ -2112,7 +2170,7 @@ function computeRadialTargets(map){
       const px=targets.get(id).x;
       const py=targets.get(id).y;
       // place at angle from PARENT, at fixed ring radius from parent
-      const r=depth===1?260:200;
+      const r=depth===1?340:280;
       targets.set(kid,{x:px+Math.cos(angle)*r,y:py+Math.sin(angle)*r});
       place(kid,depth+1,cursor,cursor+slice);
       cursor+=slice;
@@ -2121,44 +2179,117 @@ function computeRadialTargets(map){
   place(root.id,1,0,Math.PI*2);
   // any orphan nodes (not reached by BFS) stay where they are
   for(const n of map.nodes)if(!targets.has(n.id))targets.set(n.id,{x:n.x,y:n.y});
+  resolveNodeOverlaps(map,targets,new Set([root.id]));
   return targets;
 }
 
-// HIERARCHICAL TREE — Reingold–Tilford style, left-to-right.
-// Each level pushes its children right by LGAP. Subtree height is computed
-// bottom-up so siblings stack without overlap.
+// True half-extents of a node's drawn footprint. Circles and squares render at
+// max(nrx,nry) in BOTH axes (see drawNode), so their vertical extent is far larger
+// than nry suggests — layout code must use this, not raw nrx/nry.
+function nodeHalfExtents(n){
+  const rx=nrx(n),ry=nry(n);
+  if(n.shape==='circle'||n.shape==='square'){const r=Math.max(rx,ry);return{rx:r,ry:r};}
+  return{rx,ry};
+}
+
+// Iteratively push overlapping nodes apart, mutating the positions in `targets`
+// (a Map of id → {x,y}). Uses real half-extents plus padding, treating each node
+// as an ellipse. Ids in `pinned` never move. Pairs joined by a labelled
+// edge get extra separation so the mid-edge text isn't jammed against the borders.
+function resolveNodeOverlaps(map,targets,pinned){
+  pinned=pinned||new Set();
+  const ns=map.nodes.filter(n=>targets.has(n.id));
+  if(ns.length<2)return targets;
+  const rx=new Map(),ry=new Map();
+  ns.forEach(n=>{const h=nodeHalfExtents(n);rx.set(n.id,h.rx);ry.set(n.id,h.ry);});
+  const PAD=80;
+  const lblNeed=new Map(); // 'lo|hi' id pair → extra world units for the edge label
+  map.edges.forEach(e=>{
+    if(!e.label||!targets.has(e.from)||!targets.has(e.to))return;
+    const src=map.nodes.find(n=>n.id===e.from);
+    const fs=e.labelSize||(src?Math.max(10,Math.round(FONT_SIZE(src)*(src.scale||1)*0.8)):10);
+    ctx.font=`400 ${Math.round(fs*T.s)}px ${e.labelFont||(src&&src.font)||"'Nunito',sans-serif"}`;
+    const w=ctx.measureText(e.label).width/T.s;
+    const key=Math.min(e.from,e.to)+'|'+Math.max(e.from,e.to);
+    lblNeed.set(key,Math.max(lblNeed.get(key)||0,w+28));
+  });
+  // ellipse radius along a unit direction (ct,st)
+  const rAt=(id,ct,st)=>1/Math.sqrt((ct/rx.get(id))**2+(st/ry.get(id))**2);
+  for(let it=0;it<80;it++){
+    let worst=0;
+    for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++){
+      const A=ns[i],B=ns[j];
+      const aPin=pinned.has(A.id),bPin=pinned.has(B.id);
+      if(aPin&&bPin)continue;
+      const pa=targets.get(A.id),pb=targets.get(B.id);
+      let dx=pb.x-pa.x,dy=pb.y-pa.y,d=Math.hypot(dx,dy);
+      if(d<1){dx=Math.cos(i*2.399963+j);dy=Math.sin(i*2.399963+j);d=1;} // coincident: deterministic nudge direction
+      const ct=dx/d,st=dy/d;
+      const key=Math.min(A.id,B.id)+'|'+Math.max(A.id,B.id);
+      const req=rAt(A.id,ct,st)+rAt(B.id,ct,st)+PAD+(lblNeed.get(key)||0);
+      if(d>=req)continue;
+      worst=Math.max(worst,req-d);
+      const push=(req-d)*0.55; // damped for stability across iterations
+      if(aPin){pb.x+=ct*push;pb.y+=st*push;}
+      else if(bPin){pa.x-=ct*push;pa.y-=st*push;}
+      else{pa.x-=ct*push/2;pa.y-=st*push/2;pb.x+=ct*push/2;pb.y+=st*push/2;}
+    }
+    if(worst<0.5)break;
+  }
+  return targets;
+}
+
+// HIERARCHICAL TREE — Reingold–Tilford style, left-to-right, size-aware.
+// Subtree heights come from real node heights (nry) so tall/multi-line nodes
+// get room; each level's column x comes from the widest node at that depth.
 function computeTreeTargets(map){
   if(!map.nodes.length)return new Map();
   const root=map.nodes[0];
   const{children}=buildLayoutTree(map,root.id);
-  const LGAP=240, NGAP=70; // horizontal level gap, vertical between siblings
-  // height of each subtree in "node-gap units"
+  const byId=new Map(map.nodes.map(n=>[n.id,n]));
+  const VGAP=44, HGAP=160; // vertical breathing room, gap between level columns
+  // height of each subtree in world units, bottom-up
   const subtreeH={};
   function measure(id){
     const kids=children[id]||[];
-    if(!kids.length){subtreeH[id]=1;return 1;}
+    const own=nodeHalfExtents(byId.get(id)).ry*2+VGAP;
+    if(!kids.length){subtreeH[id]=own;return own;}
     let s=0;for(const k of kids)s+=measure(k);
-    subtreeH[id]=Math.max(1,s);return subtreeH[id];
+    subtreeH[id]=Math.max(own,s);return subtreeH[id];
   }
   measure(root.id);
-  const targets=new Map();
-  // root anchored at its current position; everything else relative to it
-  const rootX=root.x, rootY=root.y;
-  targets.set(root.id,{x:rootX,y:rootY});
-  function place(id,depth,centreY){
-    const kids=children[id]||[];
-    if(!kids.length)return;
-    const totalH=subtreeH[id]*NGAP;
-    let cursorY=centreY-totalH/2;
-    for(const kid of kids){
-      const kidH=subtreeH[kid]*NGAP;
-      const kidCentreY=cursorY+kidH/2;
-      targets.set(kid,{x:rootX+depth*LGAP,y:kidCentreY});
-      place(kid,depth+1,kidCentreY);
-      cursorY+=kidH;
+  // widest node at each depth sets that column's width
+  const depthOf={[root.id]:0};
+  const maxHalfW={0:nodeHalfExtents(root).rx};
+  {
+    const q=[root.id];
+    while(q.length){
+      const id=q.shift();
+      for(const k of children[id]||[]){
+        depthOf[k]=depthOf[id]+1;
+        maxHalfW[depthOf[k]]=Math.max(maxHalfW[depthOf[k]]||0,nodeHalfExtents(byId.get(k)).rx);
+        q.push(k);
+      }
     }
   }
-  place(root.id,1,rootY);
+  const colX={0:root.x};
+  for(let d=1;maxHalfW[d]!==undefined;d++)colX[d]=colX[d-1]+maxHalfW[d-1]+maxHalfW[d]+HGAP;
+  const targets=new Map();
+  // root anchored at its current position; everything else relative to it
+  targets.set(root.id,{x:root.x,y:root.y});
+  function place(id,centreY){
+    const kids=children[id]||[];
+    if(!kids.length)return;
+    const kidsTotal=kids.reduce((s,k)=>s+subtreeH[k],0);
+    let cursorY=centreY-kidsTotal/2;
+    for(const kid of kids){
+      const kidCentreY=cursorY+subtreeH[kid]/2;
+      targets.set(kid,{x:colX[depthOf[kid]],y:kidCentreY});
+      place(kid,kidCentreY);
+      cursorY+=subtreeH[kid];
+    }
+  }
+  place(root.id,root.y);
   for(const n of map.nodes)if(!targets.has(n.id))targets.set(n.id,{x:n.x,y:n.y});
   return targets;
 }
@@ -2192,12 +2323,12 @@ function stepLayoutAnim(){
 
 function runRadialLayout(){
   const map=cmap();if(!map||!map.nodes.length)return;
-  pushCanvasHistLocal('untangle');
+  pushCanvasHistLocal('organise radial');
   animateLayout(computeRadialTargets(map));
 }
 function runTreeLayout(){
   const map=cmap();if(!map||!map.nodes.length)return;
-  pushCanvasHistLocal('tidy up');
+  pushCanvasHistLocal('organise tree');
   animateLayout(computeTreeTargets(map));
 }
 
@@ -2209,10 +2340,37 @@ function resetAllKf(){
     if(a&&b)e.keyframes=[{x:(a.x+b.x)/2,y:(a.y+b.y)/2}];
   });
 }
+// node id → hop distance from the root (nodes[0]), undirected BFS over edges.
+// Used by edge labels to pick the parent-most endpoint whose font they inherit.
+let _lblDepths=new Map(),_lblDepthsKey='';
+// depths only matter when a label exists, and only change when structure changes —
+// don't pay for the BFS on every frame of a drag/pan
+function syncLabelDepths(map){
+  if(!map.edges.some(e=>e.label))return; // _lblDepths unused without labels
+  const key=map.id+':'+map.nodes.length+':'+map.edges.length;
+  if(key===_lblDepthsKey)return;
+  _lblDepths=computeLabelDepths(map);_lblDepthsKey=key;
+}
+function computeLabelDepths(map){
+  const d=new Map();if(!map.nodes.length)return d;
+  const adj=new Map();
+  map.edges.forEach(e=>{
+    if(!adj.has(e.from))adj.set(e.from,[]);
+    if(!adj.has(e.to))adj.set(e.to,[]);
+    adj.get(e.from).push(e.to);adj.get(e.to).push(e.from);
+  });
+  const q=[map.nodes[0].id];d.set(map.nodes[0].id,0);
+  while(q.length){
+    const id=q.shift();
+    (adj.get(id)||[]).forEach(nb=>{if(!d.has(nb)){d.set(nb,d.get(id)+1);q.push(nb);}});
+  }
+  return d;
+}
 function render(){
   const map=cmap();if(!map)return;
   ctx.clearRect(0,0,cvs.width,cvs.height);
   const bg=map.bg||'#0d1a0d';if(bg!=='transparent'){ctx.fillStyle=bg;ctx.fillRect(0,0,cvs.width,cvs.height);}
+  syncLabelDepths(map);
   const _hidden=getCollapsedHidden();
   // draw ghosts behind nodes
   ghosts.forEach((g,i)=>drawGhost(g,i));
@@ -2230,6 +2388,18 @@ function render(){
     const eid=e.id||`${e.from}-${e.to}`;
     if(_focusDim&&!_focusDim.edges.has(eid)){ctx.save();ctx.globalAlpha=0.1;drawEdge(e,false);ctx.restore();}
     else drawEdge(e,e===hoveredEdge);
+  });
+  // label pass — after all edges so the line-break under each label clears crossings
+  let _lblById=null; // built once per frame, only if a label actually draws
+  map.edges.forEach(e=>{
+    if(!e.label||!_lblMids.has(e.id||`${e.from}-${e.to}`))return;
+    if(_hidden.has(e.from)||_hidden.has(e.to))return;
+    if(!_lblById)_lblById=new Map(map.nodes.map(n=>[n.id,n]));
+    const eid=e.id||`${e.from}-${e.to}`;
+    const dim=_focusDim&&!_focusDim.edges.has(eid);
+    ctx.save();if(dim)ctx.globalAlpha=0.1;
+    drawEdgeLabel(e,map,_lblById);
+    ctx.restore();
   });
   map.nodes.forEach(n=>{
     if(_hidden.has(n.id))return;
@@ -2284,8 +2454,8 @@ function animate(){
       dirty=true;
     } else {
       const pb2=document.getElementById('untangle-progress');if(pb2)pb2.style.display='none';
-      const rl=document.getElementById('rp-untangle');if(rl){rl.querySelector('.rp-icon').nextSibling.textContent=' untangle';rl.classList.remove('on');}
-      const rt=document.getElementById('rp-tidy');if(rt){rt.querySelector('.rp-icon').nextSibling.textContent=' tidy up';rt.classList.remove('on');}
+      const rl=document.getElementById('rp-untangle');if(rl){rl.querySelector('.rp-icon').nextSibling.textContent=' organise radial';rl.classList.remove('on');}
+      const rt=document.getElementById('rp-tidy');if(rt){rt.querySelector('.rp-icon').nextSibling.textContent=' organise tree';rt.classList.remove('on');}
       dirty=true;
     }
   }
@@ -2394,18 +2564,14 @@ cvs.addEventListener('mousedown',ev=>{
   if(aiGhosts.length){
     const _ag=hitAiGhostScreen(sx,sy);
     if(_ag){
-      if(ev.metaKey||ev.ctrlKey){_ag._sel=!_ag._sel;aiDirty=true;return;}
-      else{
-        // single click selects/deselects; if already selected, materialise it
-        if(_ag._sel){materialiseAiGhosts([_ag]);}
-        else{aiGhosts.forEach(g=>g._sel=false);_ag._sel=true;aiDirty=true;}
-        return;
-      }
+      // click toggles selection additively (⌘ optional) — build a set, Enter materialises
+      _ag._sel=!_ag._sel;aiDirty=true;return;
     }
     // clicked outside AI ghosts — do NOT dismiss; user must press Esc or Enter
   }
   // ghost check FIRST — before commitEdit, before anything
-  if(ghostsEnabled&&ghosts.length){const _gi=hitGhostScreen(sx,sy);if(_gi>=0){_ghostJustFired=true;materialiseGhost(_gi);return;}}
+  // click toggles the pick additively (same interaction as AI ghosts) — Enter materialises
+  if(ghostsEnabled&&ghosts.length){const _gi=hitGhostScreen(sx,sy);if(_gi>=0){_ghostJustFired=true;setTimeout(()=>{_ghostJustFired=false;},400);ghosts[_gi]._sel=!ghosts[_gi]._sel;render();return;}}
   if(editingNode&&hitResizeScreen(sx,sy,editingNode)){resizeN=editingNode;resizeS={ox:sx,sc:editingNode.scale||1,fs:editingNode.fontSize||12};return;}
   // + button check BEFORE commitEdit — so freshly-edited child can be used as a drag source
   {const _map=cmap();if(_map){for(const n of _map.nodes){const dir=hitAnyPlus(sx,sy,n);if(dir){if(editingNode)commitEdit();plusDragFrom={node:n,dir,startX:sx,startY:sy};plusDragMoved=false;return;}}}}
@@ -2624,7 +2790,7 @@ function showEdgeCtx(sx,sy,e){
   const menu=document.getElementById('ctx');menu.innerHTML='';
   const wr=document.getElementById('canvas-wrap').getBoundingClientRect();
   const sl=document.createElement('div');sl.className='ci-label';sl.textContent='style';menu.appendChild(sl);
-  ['straight','dashed','dotted','arrow','arrow2'].forEach(s=>{const i=document.createElement('div');i.className='ci';i.textContent=(s==='straight'?'—— ':s==='dashed'?'- - ':s==='dotted'?'··· ':s==='arrow'?'→  ':'↔  ')+s;if(e.style===s)i.style.color=ACCENT;i.addEventListener('click',()=>{e.style=s;menu.style.display='none';softSave();render();});menu.appendChild(i);});
+  ['straight','dashed','dotted','arrow','arrow2'].forEach(s=>{const i=document.createElement('div');i.className='ci';i.textContent=(s==='straight'?'—— ':s==='dashed'?'- - ':s==='dotted'?'··· ':s==='arrow'?'→  ':'↔  ')+s.charAt(0).toUpperCase()+s.slice(1);if(e.style===s)i.style.color=ACCENT;i.addEventListener('click',()=>{e.style=s;menu.style.display='none';softSave();render();});menu.appendChild(i);});
   const sep1=document.createElement('div');sep1.className='ci-sep';menu.appendChild(sep1);
   const tl=document.createElement('div');tl.className='ci-label';tl.textContent='thickness';menu.appendChild(tl);
   [{l:'thin',v:1},{l:'medium',v:2},{l:'thick',v:3.5},{l:'heavy',v:5.5}].forEach(({l,v})=>{const i=document.createElement('div');i.className='ci';i.textContent=l;if(e.thickness===v)i.style.color=ACCENT;i.addEventListener('click',()=>{e.thickness=v;menu.style.display='none';softSave();render();});menu.appendChild(i);});
@@ -2643,8 +2809,8 @@ function showEdgeCtx(sx,sy,e){
   const sep3=document.createElement('div');sep3.className='ci-sep';menu.appendChild(sep3);
   const ri=document.createElement('div');ri.className='ci';ri.textContent='reset curve';ri.addEventListener('click',()=>{const map=cmap();const a=map.nodes.find(n=>n.id===e.from),b=map.nodes.find(n=>n.id===e.to);if(a&&b){e.keyframes=[{x:a.x+(b.x-a.x)*0.5,y:a.y+(b.y-a.y)*0.5}];}menu.style.display='none';softSave();render();});menu.appendChild(ri);
   const sep4a=document.createElement('div');sep4a.className='ci-sep';menu.appendChild(sep4a);
-  const li=document.createElement('div');li.className='ci';li.textContent='edit label';
-  li.addEventListener('click',()=>{menu.style.display='none';const lbl=prompt('Edge label (empty to clear):',e.label||'');if(lbl!==null){e.label=lbl.trim();softSave();render();}});menu.appendChild(li);
+  const li=document.createElement('div');li.className='ci';li.textContent='label edge';
+  li.addEventListener('click',()=>{menu.style.display='none';openEdgeLabelPop(e,sx,sy);});menu.appendChild(li);
   const sep4=document.createElement('div');sep4.className='ci-sep';menu.appendChild(sep4);
   const di=document.createElement('div');di.className='ci red';di.textContent='delete edge';di.addEventListener('click',()=>{pushCanvasHistLocal('delete edge');const map=cmap();map.edges=map.edges.filter(ed=>ed.id!==e.id);hoveredEdge=null;menu.style.display='none';softSave();render();});menu.appendChild(di);
   menu.style.left=(sx-wr.left)+'px';menu.style.top=(sy-wr.top)+'px';menu.style.display='block';
@@ -2699,7 +2865,7 @@ function showKfCtx(sx,sy,e,kfIdx){
   const wr=document.getElementById('canvas-wrap').getBoundingClientRect();
   const isCentre=kfIdx===Math.floor(e.keyframes.length/2);
   // branch-from-keyframe and delete — available on every keyframe
-  const br=document.createElement('div');br.className='ci';br.textContent='+ branch from here';
+  const br=document.createElement('div');br.className='ci';br.textContent='+ Branch from here';
   br.addEventListener('click',()=>{menu.style.display='none';spawnBranchFromKf(e,kfIdx);});menu.appendChild(br);
   const dl=document.createElement('div');dl.className='ci red';dl.textContent='\u2715 delete keyframe';
   dl.addEventListener('click',()=>{
@@ -2717,7 +2883,7 @@ function showKfCtx(sx,sy,e,kfIdx){
     const lbl=document.createElement('div');lbl.className='ci-label';lbl.textContent='edge';menu.appendChild(lbl);
     // style row
     const sl=document.createElement('div');sl.className='ci-label';sl.textContent='style';sl.style.fontSize='10px';menu.appendChild(sl);
-    ['straight','dashed','dotted','arrow','arrow2'].forEach(s=>{const i=document.createElement('div');i.className='ci';i.textContent=(s==='straight'?'—— ':s==='dashed'?'- - ':s==='dotted'?'··· ':s==='arrow'?'→  ':'↔  ')+s;if(e.style===s)i.style.color=ACCENT;i.addEventListener('click',()=>{e.style=s;menu.style.display='none';softSave();render();});menu.appendChild(i);});
+    ['straight','dashed','dotted','arrow','arrow2'].forEach(s=>{const i=document.createElement('div');i.className='ci';i.textContent=(s==='straight'?'—— ':s==='dashed'?'- - ':s==='dotted'?'··· ':s==='arrow'?'→  ':'↔  ')+s.charAt(0).toUpperCase()+s.slice(1);if(e.style===s)i.style.color=ACCENT;i.addEventListener('click',()=>{e.style=s;menu.style.display='none';softSave();render();});menu.appendChild(i);});
     const sep2=document.createElement('div');sep2.className='ci-sep';menu.appendChild(sep2);
     // thickness slider
     const tl=document.createElement('div');tl.className='ci-label';tl.textContent='thickness';menu.appendChild(tl);
@@ -2735,13 +2901,80 @@ function showKfCtx(sx,sy,e,kfIdx){
     const sep3=document.createElement('div');sep3.className='ci-sep';menu.appendChild(sep3);
     const ri=document.createElement('div');ri.className='ci';ri.textContent='reset curve';ri.addEventListener('click',()=>{const map=cmap();const a=map.nodes.find(n=>n.id===e.from),b=map.nodes.find(n=>n.id===e.to);if(a&&b){e.keyframes=[{x:a.x+(b.x-a.x)*0.5,y:a.y+(b.y-a.y)*0.5}];}menu.style.display='none';softSave();render();});menu.appendChild(ri);
     const sep4a=document.createElement('div');sep4a.className='ci-sep';menu.appendChild(sep4a);
-    const li=document.createElement('div');li.className='ci';li.textContent='edit label';
-    li.addEventListener('click',()=>{menu.style.display='none';const lbl=prompt('Edge label (empty to clear):',e.label||'');if(lbl!==null){e.label=lbl.trim();softSave();render();}});menu.appendChild(li);
+    const li=document.createElement('div');li.className='ci';li.textContent='label edge';
+    li.addEventListener('click',()=>{menu.style.display='none';openEdgeLabelPop(e,sx,sy);});menu.appendChild(li);
     const sep4=document.createElement('div');sep4.className='ci-sep';menu.appendChild(sep4);
     const di=document.createElement('div');di.className='ci red';di.textContent='delete edge';di.addEventListener('click',()=>{pushCanvasHistLocal('delete edge');const map=cmap();map.edges=map.edges.filter(ed=>ed.id!==e.id);hoveredEdge=null;menu.style.display='none';softSave();render();});menu.appendChild(di);
   }
   menu.style.left=(sx-wr.left)+'px';menu.style.top=(sy-wr.top)+'px';menu.style.display='block';
 }
+
+// ── edge label popover ──
+// Labels inherit font/size from the parent-most endpoint and the standard text colour;
+// e.labelFont / e.labelSize / e.labelColor are stored on the edge only when overridden.
+let elpEdge=null,elpSnap=null,elpHistPushed=false;
+const ELP_SW=['#7ec87e','#a8cce8','#f0c8a0','#e8b8c8','#c8b8e8','#ffffff'];
+// one history entry per popover session, pushed before the first actual change
+function elpEnsureHist(){if(!elpHistPushed){pushCanvasHistLocal('label edge');elpHistPushed=true;}}
+// Escape restores the state captured at open — live-apply otherwise makes cancel impossible
+function elpRevert(){
+  if(elpEdge&&elpSnap){
+    elpEdge.label=elpSnap.label;
+    if(elpSnap.labelFont===undefined)delete elpEdge.labelFont;else elpEdge.labelFont=elpSnap.labelFont;
+    if(elpSnap.labelSize===undefined)delete elpEdge.labelSize;else elpEdge.labelSize=elpSnap.labelSize;
+    if(elpSnap.labelColor===undefined)delete elpEdge.labelColor;else elpEdge.labelColor=elpSnap.labelColor;
+    softSave();render();
+  }
+  closeElp();
+}
+function openEdgeLabelPop(e,sx,sy){
+  elpEdge=e;
+  elpSnap={label:e.label||'',labelFont:e.labelFont,labelSize:e.labelSize,labelColor:e.labelColor};
+  elpHistPushed=false;
+  document.getElementById('elp-text').value=e.label||'';
+  const fSel=document.getElementById('elp-font');
+  populateFontSelect(fSel,e.labelFont||null);
+  const inh=document.createElement('option');inh.value='';inh.textContent='inherit (parent node)';
+  fSel.insertBefore(inh,fSel.firstChild);
+  if(!e.labelFont)inh.selected=true;
+  const sSel=document.getElementById('elp-size');sSel.innerHTML='';
+  const so=document.createElement('option');so.value='';so.textContent='auto';sSel.appendChild(so);
+  [8,9,10,11,12,13,14,16,18,20,24].forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;if(e.labelSize===s)o.selected=true;sSel.appendChild(o);});
+  elpRenderSw();
+  const pop=document.getElementById('elp');
+  pop.style.left=Math.min(innerWidth-220,Math.max(8,sx-100))+'px';
+  pop.style.top=Math.min(innerHeight-210,Math.max(8,sy+10))+'px';
+  pop.style.display='block';
+  const tIn=document.getElementById('elp-text');tIn.focus();tIn.select();
+}
+function elpRenderSw(){
+  const row=document.getElementById('elp-sw');row.innerHTML='';
+  const cur=elpEdge?elpEdge.labelColor:null;
+  const mk=(bgc,on,title,fn)=>{const s=document.createElement('div');s.className='elp-sw'+(on?' on':'');s.style.background=bgc;s.title=title;s.addEventListener('click',fn);row.appendChild(s);return s;};
+  const inh=mk('#a09e8a',!cur,'inherit (standard text)',()=>{if(elpEdge){elpEnsureHist();delete elpEdge.labelColor;elpApply();elpRenderSw();}});
+  inh.textContent='↩';inh.style.cssText+=';display:flex;align-items:center;justify-content:center;font-size:9px;color:#141a14;';
+  ELP_SW.forEach(c=>mk(c,cur===c,c,()=>{if(elpEdge){elpEnsureHist();elpEdge.labelColor=c;elpApply();elpRenderSw();}}));
+  mk(cur&&!ELP_SW.includes(cur)?cur:'linear-gradient(135deg,#c87e7e,#6a9ac8,#7ec87e)',!!(cur&&!ELP_SW.includes(cur)),'custom…',()=>document.getElementById('elp-custom').click());
+}
+function elpApply(){
+  if(!elpEdge)return;
+  elpEnsureHist();
+  elpEdge.label=document.getElementById('elp-text').value.trim();
+  const f=document.getElementById('elp-font').value;
+  if(f)elpEdge.labelFont=f;else delete elpEdge.labelFont;
+  const s=document.getElementById('elp-size').value;
+  if(s)elpEdge.labelSize=parseInt(s,10);else delete elpEdge.labelSize;
+  softSave();render();
+}
+function closeElp(){document.getElementById('elp').style.display='none';elpEdge=null;}
+document.getElementById('elp-text').addEventListener('input',elpApply);
+document.getElementById('elp-text').addEventListener('keydown',ev=>{ev.stopPropagation();if(ev.key==='Enter'){elpApply();closeElp();}if(ev.key==='Escape')elpRevert();});
+document.getElementById('elp-font').addEventListener('change',elpApply);
+document.getElementById('elp-size').addEventListener('change',elpApply);
+document.getElementById('elp-custom').addEventListener('input',ev=>{if(elpEdge){elpEnsureHist();elpEdge.labelColor=ev.target.value;elpApply();elpRenderSw();}});
+document.getElementById('elp-ok').addEventListener('click',()=>{elpApply();closeElp();});
+document.getElementById('elp-clear').addEventListener('click',()=>{if(elpEdge){elpEnsureHist();elpEdge.label='';delete elpEdge.labelFont;delete elpEdge.labelSize;delete elpEdge.labelColor;softSave();render();}closeElp();});
+document.addEventListener('mousedown',ev=>{const p=document.getElementById('elp');if(p.style.display==='block'&&!p.contains(ev.target))closeElp();});
 
 function showNotesPanel(n){
   activeNotesNode=n;editingNoteId=null;activeEditor=null;
@@ -2873,9 +3106,9 @@ burgerEl.addEventListener('click',e=>{
   e.stopPropagation();
   const open=drawerEl.classList.toggle('vis');
   burgerEl.classList.toggle('open',open);
-  if(open)renderSB();else closeAllSubs();
+  if(open){renderSB();fitMapTitle();}else closeAllSubs();
 });
-drawerEl.addEventListener('click',e=>{e.stopPropagation();if(!e.target.closest('#dd-export'))closeAllSubs();});
+drawerEl.addEventListener('click',e=>{e.stopPropagation();closeAllSubs();});
 document.addEventListener('click',()=>closeDrawer());
 // folders surface on the splash grid (drag-drop filing, nesting, breadcrumbs);
 // the drawer still lists maps flat
@@ -2933,22 +3166,7 @@ function showSbCtx(x,y,items){
   menu.style.left=x+'px';menu.style.top=y+'px';menu.style.display='block';
 }
 function renderSB(){
-  const list=document.getElementById('dd-maps');if(!list)return;
-  list.innerHTML='';
-  state.maps.forEach(m=>{
-    const row=document.createElement('div');
-    row.className='dd-item'+(m.id===state.currentMapId?' active':'');
-    const mark=document.createElement('span');
-    if(m.id===state.currentMapId){mark.className='dd-check';mark.innerHTML='&#10003;';}
-    else mark.className='dd-gap';
-    const lbl=document.createElement('span');lbl.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';lbl.textContent=m.name;
-    row.appendChild(mark);row.appendChild(lbl);
-    row.addEventListener('click',()=>{
-      if(m.id!==state.currentMapId){state.currentMapId=m.id;T={x:0,y:0,s:1};renderMap();renderSB();}
-      closeDrawer();
-    });
-    list.appendChild(row);
-  });
+  // the drawer no longer lists maps \u2014 the splash owns navigation
   const bn=document.getElementById('burger-name');
   if(bn){const cur=cmap();bn.textContent=cur?cur.name:'\u2014';}
 }
@@ -2977,23 +3195,26 @@ function renderMap(){
   render();updateCvsUndoRedo();
 }
 document.getElementById('map-title-in').addEventListener('change',e=>{const m=cmap();if(m){m.name=e.target.value;softSave();renderSB();}});
-document.getElementById('dd-new-map').addEventListener('click',()=>{closeDrawer();promptM('Map name','New map',v=>{sbSnap('before create');const nm=defMap('m'+Date.now(),v);state.maps.push(nm);state.currentMapId=nm.id;T={x:0,y:0,s:1};sbSnap('created: '+v);softSave();renderSB();renderMap();});});
 document.getElementById('dd-all-maps').addEventListener('click',()=>{closeDrawer();showSplash();});
-document.getElementById('dd-import').addEventListener('click',()=>{closeDrawer();document.getElementById('file-imp-any').click();});
-// export & share submenu opens to the right of the drawer
-document.getElementById('dd-export').addEventListener('click',ev=>{
+// export & share submenu opens to the left of the tool panel
+document.getElementById('rp-export').addEventListener('click',ev=>{
   ev.stopPropagation();
   const sub=document.getElementById('sub-export');
   const isOpen=sub.classList.contains('vis');
   closeAllSubs();
   if(!isOpen){
     const tr=ev.currentTarget.getBoundingClientRect();
-    sub.style.left=(tr.right+8)+'px';
-    sub.style.right='auto';
     sub.style.top=tr.top+'px';
+    sub.style.right=(window.innerWidth-tr.left+8)+'px';
+    sub.style.left='auto';
     sub.classList.add('vis');openSub=sub;
   }
 });
+// pencil focuses the rename field; the field grows downward for long titles
+document.querySelector('#dd-mapname .dd-edit').addEventListener('click',()=>{const i=document.getElementById('map-title-in');i.focus();i.select();});
+function fitMapTitle(){const i=document.getElementById('map-title-in');if(!i)return;i.style.height='auto';i.style.height=i.scrollHeight+'px';}
+document.getElementById('map-title-in').addEventListener('input',fitMapTitle);
+document.getElementById('map-title-in').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.target.blur();}});
 // bin header toggle
 const binHdr=document.getElementById('bin-header');if(binHdr)binHdr.addEventListener('click',()=>{sbBinOpen=!sbBinOpen;renderBin();});
 // empty bin buttons
@@ -3201,13 +3422,13 @@ function parseCoggleMm(xmlText,baseName){
 const rpUntangle=document.getElementById('rp-untangle'),rpTidy=document.getElementById('rp-tidy');
 rpUntangle.addEventListener('click',()=>{
   if(layoutAnim)return;
-  rpUntangle.querySelector('.rp-icon').nextSibling.textContent=' untangling\u2026';rpUntangle.classList.add('on');
+  rpUntangle.querySelector('.rp-icon').nextSibling.textContent=' organising\u2026';rpUntangle.classList.add('on');
   const pb=document.getElementById('untangle-progress');if(pb){pb.style.display='block';document.getElementById('untangle-bar').style.width='0%';}
   runRadialLayout();
 });
 rpTidy.addEventListener('click',()=>{
   if(layoutAnim)return;
-  rpTidy.querySelector('.rp-icon').nextSibling.textContent=' tidying\u2026';rpTidy.classList.add('on');
+  rpTidy.querySelector('.rp-icon').nextSibling.textContent=' organising\u2026';rpTidy.classList.add('on');
   const pb=document.getElementById('untangle-progress');if(pb){pb.style.display='block';document.getElementById('untangle-bar').style.width='0%';}
   runTreeLayout();
 });
@@ -3216,7 +3437,7 @@ rpTidy.addEventListener('click',()=>{
 document.getElementById('tmi-ghosts').addEventListener('click',()=>{
   ghostsEnabled=!ghostsEnabled;
   ghosts=[];
-  document.getElementById('tmi-ghosts').textContent=ghostsEnabled?'⧅ ghost nodes: on':'⧅ ghost nodes: off';
+  document.getElementById('tmi-ghosts').textContent=ghostsEnabled?'⧅ Ghost nodes: on':'⧅ Ghost nodes: off';
   render();
 });
 // tmi-fullscreen moved to canvas button
@@ -3241,7 +3462,7 @@ document.addEventListener('click',()=>closeAllSubs());
 // stop clicks inside submenus from bubbling to the document-level close handler
 document.querySelectorAll('.submenu').forEach(s=>s.addEventListener('click',ev=>ev.stopPropagation()));
 // choosing an export/import/share item closes the submenu and the drawer
-document.getElementById('sub-export').addEventListener('click',ev=>{if(ev.target.classList.contains('tmi')){closeAllSubs();closeDrawer();}});
+document.getElementById('sub-export').addEventListener('click',ev=>{if(ev.target.classList.contains('tmi'))closeAllSubs();});
 
 // fullscreen button on canvas
 const _btnFs=document.getElementById('btn-fullscreen');if(_btnFs)_btnFs.addEventListener('click',toggleFullscreen);
@@ -3254,37 +3475,32 @@ document.getElementById('rp-collapse').addEventListener('click',()=>{applyRpColl
 panelTabEl.addEventListener('click',()=>{applyRpCollapsed(false);try{localStorage.setItem(_RP_KEY,'0');}catch(e){}});
 
 // ── Ghost node settings ──
-let ghostCount=3;
-let ghostLabelPool=['explore further','related idea','counterpoint','implication','question','alternative','example','context','expand this','consequence'];
-
-function renderGhostCountPills(){
-  document.querySelectorAll('#ghost-count-pills .sm-pill').forEach(b=>{
-    b.classList.toggle('on',parseInt(b.dataset.count)===ghostCount);
-  });
-}
-document.querySelectorAll('#ghost-count-pills .sm-pill').forEach(b=>{
-  b.addEventListener('click',ev=>{ev.stopPropagation();ghostCount=parseInt(b.dataset.count);renderGhostCountPills();});
-});
-renderGhostCountPills();
+// each pool entry is {t: label text, on: whether it spawns} \u2014 the ticked set IS the
+// ghost count (up to 10); first three ticked by default to match the old count of 3
+let ghostLabelPool=['explore further','related idea','counterpoint','implication','question','alternative','example','context','expand this','consequence'].map((t,i)=>({t,on:i<3}));
 
 function renderGhostLabelsList(){
   const list=document.getElementById('ghost-labels-list');list.innerHTML='';
-  ghostLabelPool.forEach((lbl,i)=>{
+  ghostLabelPool.forEach((g,i)=>{
     const row=document.createElement('div');row.className='sm-lblrow';
-    const inp=document.createElement('input');inp.type='text';inp.value=lbl;
-    inp.addEventListener('input',()=>{ghostLabelPool[i]=inp.value;});
+    const chk=document.createElement('input');chk.type='checkbox';chk.checked=!!g.on;chk.title='offer this ghost';
+    chk.style.cssText='accent-color:#7ec87e;flex-shrink:0;margin:0 2px 0 0;cursor:pointer;';
+    chk.addEventListener('click',ev=>ev.stopPropagation());
+    chk.addEventListener('change',()=>{g.on=chk.checked;});
+    const inp=document.createElement('input');inp.type='text';inp.value=g.t;
+    inp.addEventListener('input',()=>{g.t=inp.value;});
     inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();closeAllSubs();}ev.stopPropagation();});
     inp.addEventListener('click',ev=>ev.stopPropagation());
     const del=document.createElement('button');del.textContent='\u2715';del.title='remove';
     del.addEventListener('click',ev=>{ev.stopPropagation();ghostLabelPool.splice(i,1);renderGhostLabelsList();});
-    row.appendChild(inp);row.appendChild(del);list.appendChild(row);
+    row.appendChild(chk);row.appendChild(inp);row.appendChild(del);list.appendChild(row);
   });
   const addBtn=document.getElementById('ghost-labels-add');
   addBtn.style.display=ghostLabelPool.length>=10?'none':'';
 }
 document.getElementById('ghost-labels-add').addEventListener('click',ev=>{
   ev.stopPropagation();
-  if(ghostLabelPool.length<10){ghostLabelPool.push('new prompt');renderGhostLabelsList();}
+  if(ghostLabelPool.length<10){ghostLabelPool.push({t:'new prompt',on:true});renderGhostLabelsList();}
 });
 document.getElementById('ghost-done').addEventListener('click',ev=>{ev.stopPropagation();closeAllSubs();});
 renderGhostLabelsList();
@@ -3357,10 +3573,15 @@ const SHORTCUTS=[
     ['double-click note drop','open notes panel'],
     ['double-click link badge','open link'],
     ['drag node corner','resize node + scale text'],
+    ['click ghost node','toggle it in the pick — choose several, then enter materialises them'],
     ['right-click','context menu'],
+    ['right-click edge → label edge','name the relationship (font, size + colour editable) — enter commits, esc cancels'],
   ]},
-  {section:'generate map from prompt',items:[
-    ['AI panel → new from prompt','open the generator (or ✦ From prompt on the home screen)'],
+  {section:'generate from prompt',items:[
+    ['AI panel → generate in map','extend the current map from a prompt'],
+    ['drag the ✦ / legend popup','reposition it — the legend also resizes from its bottom-right corner'],
+    ['select nodes → ✦ (bulk bar or AI panel)','generate scoped to the selection — only selected nodes modified or grown from'],
+    ['✦ From prompt (home screen)','generate a new map from a prompt'],
     ['enter','submit prompt (or click generate)'],
     ['shift + enter','newline in prompt'],
   ]},
@@ -3368,8 +3589,7 @@ const SHORTCUTS=[
     ['tab','suggest child nodes for selected node (AI must be enabled)'],
     ['enter','accept selected suggestions (or all if none selected)'],
     ['esc','cancel request → dismiss suggestions (press twice if needed)'],
-    ['click suggestion','select it'],
-    ['⌘ / ctrl + click suggestion','toggle individual suggestion'],
+    ['click suggestion','toggle it in the selection — pick several, then enter'],
     ['double-click suggestion','edit label before accepting'],
   ]},
   {section:'bulk edit (2+ nodes selected)',items:[
@@ -3378,13 +3598,16 @@ const SHORTCUTS=[
     ['click edge style','set edge style on all edges touching selected nodes'],
   ]},
   {section:'map drawer',items:[
-    ['≡ button (top left)','open the drawer — switch, create, import, export'],
-    ['map name field','rename the current map'],
-    ['⌂ all maps','back to the home screen'],
+    ['≡ button (top left)','open the drawer — rename the map or return home'],
+    ['map name field (or ✎)','rename the current map — enter commits'],
+    ['⌂ home','back to the home screen'],
   ]},
   {section:'tool panel',items:[
-    ['»','collapse the right panel to a thin tab'],
+    ['»','collapse the right panel to a thin tab (top right)'],
     ['«','expand it again'],
+    ['&#10022; organise radial','arrange the map in rings around the root'],
+    ['&#10016; organise tree','arrange the map as a left-to-right tree'],
+    ['↧ Export & share','PNG / JPG / JSON / Markdown export, imports, share via URL'],
   ]},
 ];
 function renderShortcuts(){
@@ -3398,7 +3621,7 @@ function renderShortcuts(){
     </div>
   `).join('');
 }
-document.getElementById('btn-shortcuts').addEventListener('click',()=>{
+document.getElementById('rp-shortcuts').addEventListener('click',()=>{
   renderShortcuts();
   document.getElementById('shortcuts-ov').style.display='flex';
 });
@@ -3448,7 +3671,12 @@ document.getElementById('bg-pop').addEventListener('mouseleave',()=>{const m=cma
 _bgMarkActive();
 document.getElementById('bg-custom').addEventListener('input',e=>{const m=cmap();if(!m)return;m.bg=e.target.value;_bgMarkActive();softSave();render();});
 
-function renderHist(){const map=cmap(),list=document.getElementById('hist-list');list.innerHTML='';if(!map.history||!map.history.length){list.innerHTML='<div style="font-size:10px;color:#2a2a2a;padding:2px 0;">no history yet</div>';return;}map.history.forEach(h=>{const row=document.createElement('div');row.className='hr';const t=new Date(h.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});row.innerHTML=`<span class="hn">${h.label} <span style="color:#2a2a2a;">${t}</span></span><button>↩</button>`;row.querySelector('button').addEventListener('click',()=>{const m=cmap();m.nodes=JSON.parse(JSON.stringify(h.nodes));m.edges=JSON.parse(JSON.stringify(h.edges));softSave();render();document.getElementById('hist-pop').classList.remove('vis');});list.appendChild(row);});}
+function renderHist(){const map=cmap(),list=document.getElementById('hist-list');list.innerHTML='';if(!map.history||!map.history.length){list.innerHTML='<div style="font-size:10px;color:#2a2a2a;padding:2px 0;">no history yet</div>';return;}map.history.forEach(h=>{const row=document.createElement('div');row.className='hr';const t=new Date(h.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});row.innerHTML=`<span class="hn">${h.label} <span style="color:#2a2a2a;">${t}</span></span><button>↩</button>`;row.querySelector('button').addEventListener('click',()=>{
+    // restore = a NEW state at the tip of the timeline, not a silent overwrite —
+    // keeps histIdx in sync so undo returns to the pre-restore state
+    const m=cmap();m.nodes=JSON.parse(JSON.stringify(h.nodes));m.edges=JSON.parse(JSON.stringify(h.edges));
+    pushCanvasHistLocal('restored: '+h.label);
+    softSave();render();document.getElementById('hist-pop').classList.remove('vis');});list.appendChild(row);});}
 
 const _btnSearch=document.getElementById('btn-search');if(_btnSearch)_btnSearch.addEventListener('click',()=>openSearch());
 document.getElementById('zin').addEventListener('click',()=>{const c={x:cvs.width/2,y:cvs.height/2},ns=Math.min(6,T.s*1.2);T.x=c.x-(c.x-T.x)*(ns/T.s);T.y=c.y-(c.y-T.y)*(ns/T.s);T.s=ns;if(editingNode)positionInput(editingNode);render();});
@@ -3551,6 +3779,7 @@ document.addEventListener('keydown',e=>{
     if(sov&&sov.style.display==='flex'){sov.style.display='none';return;}
     if(editingNoteId!==null){editingNoteId=null;activeEditor=null;renderNotesList();return;}
     if(document.getElementById('notes-panel').classList.contains('vis')){document.getElementById('notes-panel').classList.remove('vis');activeNotesNode=null;return;}
+    if(ghosts.length&&ghosts.some(g=>g._sel)){ghosts.forEach(g=>g._sel=false);render();return;}
     if(editingNode){commitEdit();return;}
 
     if(connectDrag){connectDrag=null;render();return;}
@@ -3569,6 +3798,12 @@ document.addEventListener('keydown',e=>{
       if(sel.length){e.preventDefault();materialiseAiGhosts(sel);return;}
       // no selection → materialise all
       e.preventDefault();materialiseAiGhosts([...aiGhosts]);return;
+    }
+    // ghost nodes: materialise the picked set — no picks falls through (ghosts appear
+    // passively on edit, so Enter must not spawn placeholders unasked)
+    if(ghostsEnabled&&ghosts.length&&!e.target.matches('input,textarea,select,[contenteditable]')){
+      const gsel=ghosts.filter(g=>g._sel);
+      if(gsel.length){e.preventDefault();materialiseGhosts(gsel);return;}
     }
     if(editingNode){e.preventDefault();commitEdit();return;}
     if(openSub){e.preventDefault();closeAllSubs();return;}
@@ -3603,7 +3838,13 @@ function enterCanvas(){
     setTimeout(resize,600);
   });
 }
-function showSplash(){renderSplash();document.getElementById('splash').classList.remove('gone');document.getElementById('app').classList.remove('vis');}
+function showSplash(){
+  // canvas popups don't belong on the splash — cancel any running generation and close both
+  if(_genAbort)_genAbort.cancelled=true;
+  document.getElementById('gen-ov').classList.remove('vis');
+  document.getElementById('legend-ov').style.display='none';
+  renderSplash();document.getElementById('splash').classList.remove('gone');document.getElementById('app').classList.remove('vis');
+}
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
 function genMotif(seed,w,h,s){
   const r=mulberry32(seed),cx=w/2,cy=h/2,pal=PALETTES.muted;
@@ -3833,14 +4074,8 @@ document.getElementById('sp-gear').addEventListener('click',()=>{syncAiUI();docu
 document.getElementById('sp-tile-blank').addEventListener('click',()=>promptM('Map name','New map',v=>{
   sbSnap('before create');const nm=defMap('m'+Date.now(),v);state.maps.push(nm);state.currentMapId=nm.id;T={x:0,y:0,s:1};sbSnap('created: '+v);softSave();renderSB();renderMap();enterCanvas();
 }));
-document.getElementById('sp-tile-prompt').addEventListener('click',()=>{
-  document.getElementById('gen-status').textContent='';
-  document.getElementById('gen-prompt').value='';
-  document.getElementById('gen-btn').disabled=false;
-  document.getElementById('gen-cancel-btn').style.display='none';
-  document.getElementById('gen-ov').classList.add('vis');
-  setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
-});
+document.getElementById('sp-tile-prompt').addEventListener('click',()=>{openGenModal('new');});
+document.getElementById('sp-tile-import').addEventListener('click',()=>{document.getElementById('file-imp-any').click();});
 // ── move to… — flat indented folder tree; excludeId hides that folder + descendants (cycle guard) ──
 function spMoveTargets(excludeId){
   const out=[{id:null,name:'⌂ top level',depth:0}];
@@ -4358,7 +4593,7 @@ async function* ollamaStream(parent,signal,count){
             if(parsed.label){
               yielded.add(key);
               const _sh=AI_SHAPES.includes(parsed.shape)?parsed.shape:'longpill';
-              yield{label:_sh==='text'?wrapAiText(parsed.label):parsed.label,shape:_sh,color:parsed.color||PALETTES.muted[yielded.size%10],edgeStyle:AI_EDGES.includes(parsed.edge)?parsed.edge:'straight'};
+              yield{label:_sh==='text'?wrapAiText(parsed.label):parsed.label,shape:_sh,color:aiColor(parsed.color)||PALETTES.muted[yielded.size%10],edgeStyle:AI_EDGES.includes(parsed.edge)?parsed.edge:'straight'};
               if(signal.cancelled)return;
             }
           }catch(_){}
@@ -4543,7 +4778,9 @@ function buildLegendUI(){
   const sEl=document.getElementById('lgnd-shapes'),eEl=document.getElementById('lgnd-edges');
   if(!sEl||!eEl)return;
   sEl.innerHTML='';
-  for(const sh of AI_SHAPES){
+  // every shape a node can be edited to, plus legacy keys that still hold a meaning
+  const _shapeList=[...SHAPES,...Object.keys(lg.shapes||{}).filter(k=>!SHAPES.includes(k)&&lg.shapes[k])];
+  for(const sh of _shapeList){
     const row=document.createElement('div');row.className='lgr';
     const cv=document.createElement('canvas');cv.className='lgic';cv.width=44;cv.height=26;
     const inp=document.createElement('input');inp.type='text';inp.placeholder='meaning of '+sh;inp.dataset.shape=sh;inp.value=ea(lg.shapes[sh]);
@@ -4561,7 +4798,9 @@ function buildLegendUI(){
   }
   sEl.querySelectorAll('input[data-shape]').forEach(i=>i.addEventListener('input',e=>{const m=cmap();if(m){if(!m.legend)m.legend={shapes:{},edges:{},colours:{}};m.legend.shapes[e.target.dataset.shape]=e.target.value;softSave();}}));
   eEl.innerHTML='';
-  for(const ed of AI_EDGES){
+  // every edge style the app offers, not just the AI trio
+  const _edgeList=[...EDGES,...Object.keys(lg.edges||{}).filter(k=>!EDGES.includes(k)&&lg.edges[k])];
+  for(const ed of _edgeList){
     const row=document.createElement('div');row.className='lgr';
     const cv=document.createElement('canvas');cv.className='lgic';cv.width=44;cv.height=26;
     const inp=document.createElement('input');inp.type='text';inp.placeholder='meaning of '+ed+' edge';inp.dataset.edge=ed;inp.value=ea(lg.edges[ed]);
@@ -4576,7 +4815,13 @@ function renderLegendColours(pal){
   const lg=map.legend||{shapes:{},edges:{},colours:{}};
   const cEl=document.getElementById('lgnd-colours');if(!cEl)return;
   cEl.innerHTML='';
-  for(const col of(PALETTES[pal]||[])){
+  // colours actually in this map first (whatever palette they came from — AI maps
+  // use muted while the picker defaults to pastel), then the picked palette's rest
+  const _seen=new Set();const _rows=[];
+  map.nodes.forEach(n=>{if(n.color&&!_seen.has(n.color)){_seen.add(n.color);_rows.push(n.color);}});
+  Object.keys(lg.colours||{}).forEach(c=>{if(lg.colours[c]&&!_seen.has(c)){_seen.add(c);_rows.push(c);}});
+  (PALETTES[pal]||[]).forEach(c=>{if(!_seen.has(c)){_seen.add(c);_rows.push(c);}});
+  for(const col of _rows){
     const row=document.createElement('div');row.className='lgr';
     const sw=document.createElement('div');sw.className='lgsw';sw.style.background=col;
     const inp=document.createElement('input');inp.type='text';inp.placeholder='meaning of this colour';inp.dataset.colour=col;inp.value=ea(lg.colours[col]);
@@ -4588,7 +4833,9 @@ function drawLegendShape(c,shape){
   c.fillStyle='#6a9a6a';c.strokeStyle='#909078';c.lineWidth=1;
   const cx=22,cy=13,w=34,h=18;
   c.beginPath();
-  if(shape==='longpill'||shape==='pill')c.roundRect(cx-w/2,cy-h/2,w,h,h/2);
+  if(shape==='longpill'||shape==='pill'||shape==='stadium')c.roundRect(cx-w/2,cy-h/2,w,h,h/2);
+  else if(shape==='rect')c.roundRect(cx-w/2,cy-h/2,w,h,3);
+  else if(shape==='square'){c.rect(cx-h/2,cy-h/2,h,h);}
   else if(shape==='circle')c.arc(cx,cy,Math.min(w,h)/2,0,Math.PI*2);
   else if(shape==='ellipse')c.ellipse(cx,cy,w/2,h/2,0,0,Math.PI*2);
   else if(shape==='diamond'){c.moveTo(cx,cy-h/2);c.lineTo(cx+w/2,cy);c.lineTo(cx,cy+h/2);c.lineTo(cx-w/2,cy);c.closePath();}
@@ -4598,10 +4845,15 @@ function drawLegendShape(c,shape){
   c.fill();c.stroke();
 }
 function drawLegendEdge(c,style){
-  c.strokeStyle='#a09e8a';c.lineWidth=1.5;
+  c.strokeStyle='#a09e8a';c.fillStyle='#a09e8a';c.lineWidth=1.5;
   if(style==='dashed')c.setLineDash([5,3]);
   else if(style==='dotted')c.setLineDash([2,3]);
-  c.beginPath();c.moveTo(4,13);c.lineTo(40,13);c.stroke();c.setLineDash([]);
+  const x0=style==='arrow2'?9:4,x1=(style==='arrow'||style==='arrow2')?35:40;
+  c.beginPath();c.moveTo(x0,13);c.lineTo(x1,13);c.stroke();c.setLineDash([]);
+  if(style==='arrow'||style==='arrow2'){
+    c.beginPath();c.moveTo(40,13);c.lineTo(34,10);c.lineTo(34,16);c.closePath();c.fill();
+    if(style==='arrow2'){c.beginPath();c.moveTo(4,13);c.lineTo(10,10);c.lineTo(10,16);c.closePath();c.fill();}
+  }
 }
 function ea(s){return(s??'').replace(/"/g,'&quot;');}
 
@@ -4614,6 +4866,8 @@ function syncAiUI(){
   if(enEl)enEl.checked=!!state.ai.enabled;
   if(mdEl)mdEl.value=state.ai.model||'sonnet';
   if(kyEl)kyEl.value=state.ai.apiKey||'';
+  const mtEl=document.getElementById('ai-max-tokens');
+  if(mtEl)mtEl.value=state.ai.maxTokens||2048;
   if(urlEl)urlEl.value=state.ai.ollamaUrl||'http://localhost:11434';
   if(modEl)modEl.value=state.ai.ollamaModel||'llama3.2';
   // sync provider tabs + sections
@@ -4725,12 +4979,106 @@ function hexToRgbStr(hex){if(!hex)return'';const r=parseInt(hex.slice(1,3),16),g
 
 // ── GENERATE MAP FROM PROMPT ─────────────────────────────────────────────────
 let _genAbort=null;
+let _genMode='new'; // 'new' = new map from splash, 'inmap' = extend current map
+let _genSelIds=null; // Set of node ids when generation is scoped to a live multi-selection
+let _genMapTok=0; // token estimate of the serialized map, computed once per modal open
+
+// $/MTok — update if Anthropic pricing changes
+const GEN_PRICE={sonnet:{inTok:3,outTok:15},haiku:{inTok:1,outTok:5}};
+const GEN_TOK_PER_NODE=50;
+
+function serializeMapForAi(map,selIds){
+  const parentOf={};
+  map.edges.forEach(e=>{if(!(e.to in parentOf))parentOf[e.to]=e.from;});
+  const strip=h=>{const d=document.createElement('div');d.innerHTML=h||'';return d.textContent.trim();};
+  return map.nodes.map(n=>{
+    const o={id:String(n.id),label:n.label,shape:n.shape,color:n.color,
+      parent:(n.id in parentOf)?String(parentOf[n.id]):null};
+    if(selIds&&selIds.has(n.id))o.sel=true;
+    const notes=(n.notes||[]).map(nt=>strip(nt.html)).filter(Boolean);
+    if(notes.length)o.notes=notes;
+    return o;
+  });
+}
+
+// convert AI-emitted note strings into real note objects (escaped, dated, pastel)
+function aiNotesToObjects(arr,existingCount){
+  if(!Array.isArray(arr))return[];
+  const now=new Date().toLocaleDateString([],{month:'short',day:'numeric'})+' '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  return arr.filter(s=>typeof s==='string'&&s.trim()).map((s,i)=>{
+    const base=PASTEL_NOTE_COLS[((existingCount||0)+i)%PASTEL_NOTE_COLS.length];
+    const esc=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    return{id:nextNoteId++,html:esc,date:now,color:base,baseColor:base,font:"'Nunito',sans-serif",size:13};
+  });
+}
+
+function updateGenEstimate(){
+  const el=document.getElementById('gen-est');if(!el)return;
+  const mt=(state.ai&&state.ai.maxTokens)||2048;
+  const cap=Math.max(1,Math.floor((mt-60)/GEN_TOK_PER_NODE));
+  const price=GEN_PRICE[state.ai&&state.ai.model==='haiku'?'haiku':'sonnet'];
+  const promptText=document.getElementById('gen-prompt').value;
+  let inTok=350+Math.ceil(promptText.length/4);
+  if(_genMode==='inmap')inTok+=_genMapTok; // serialized once in openGenModal — the map can't change while the modal is open
+  const worst=(inTok*price.inTok+mt*price.outTok)/1e6;
+  const cost=worst<0.005?'<$0.01':'~$'+worst.toFixed(2);
+  // if the prompt names a node count, warn when it won't fit
+  const want=promptText.match(/(\d{2,4})\s*nodes?/i);
+  if(want){
+    const n=+want[1],need=n*GEN_TOK_PER_NODE+100;
+    if(need>mt){
+      el.textContent=n+' nodes needs ~'+need.toLocaleString()+' tokens — max is '+mt.toLocaleString()+' (raise in ⚙ settings)';
+      el.style.color='#c8a860';return;
+    }
+  }
+  el.textContent='max tokens '+mt.toLocaleString()+' ≈ up to ~'+cap+' nodes · worst case '+cost;
+  el.style.color='#5a5a48';
+}
+
+// reflect state.ai.genNotes / genNotesMax into the modal's notes row
+function syncGenNotesUI(){
+  const chk=document.getElementById('gen-notes-chk'),cap=document.getElementById('gen-notes-cap'),mx=document.getElementById('gen-notes-max'),num=document.getElementById('gen-notes-num');
+  if(!chk)return;
+  const v=state.ai.genNotesMax||300;
+  chk.checked=state.ai.genNotes!==false;
+  mx.value=Math.min(1000,v); // typed values above the slider's range peg the slider
+  if(num)num.value=v;
+  cap.style.display=chk.checked?'flex':'none';
+}
+
+function openGenModal(mode){
+  _genMode=mode;
+  _genSelIds=(mode==='inmap'&&selSet.size)?new Set(selSet):null;
+  document.getElementById('gen-ov').classList.toggle('no-dim',mode==='inmap');
+  document.getElementById('gen-title').textContent=mode==='inmap'
+    ?(_genSelIds?'✦ generate in selection':'✦ generate in map')
+    :'✦ generate map from prompt';
+  document.getElementById('gen-desc').textContent=mode==='inmap'
+    ?(_genSelIds
+      ?'Working on your '+_genSelIds.size+' selected node'+(_genSelIds.size===1?'':'s')+'. Claude sees the whole map for context but only modifies or grows from the selection — new nodes may still cross-link outward. Positions are kept; ⌘Z undoes the whole generation.'
+      :'Describe what to add or change. Claude sees the current map, appends new nodes, and may relabel or restyle existing ones. Positions are kept; ⌘Z undoes the whole generation.')
+    :'Describe a topic, question, book, or idea. A starter map will be generated and added as a new map.';
+  document.getElementById('gen-status').textContent='';
+  const gd=document.getElementById('gen-detail');gd.textContent='';gd.classList.remove('vis');
+  document.getElementById('gen-prompt').value='';
+  document.getElementById('gen-btn').disabled=false;
+  document.getElementById('gen-cancel-btn').style.display='none';
+  _genMapTok=0;
+  if(mode==='inmap'){const m=cmap();if(m)_genMapTok=Math.ceil(JSON.stringify(serializeMapForAi(m,_genSelIds)).length/4);}
+  syncGenNotesUI();
+  updateGenEstimate();
+  document.getElementById('gen-ov').classList.add('vis');
+  setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
+}
 
 async function generateMapFromPrompt(promptText){
   const genStatus=document.getElementById('gen-status');
   const genBtn=document.getElementById('gen-btn');
   const cancelBtn=document.getElementById('gen-cancel-btn');
+  const genDetail=document.getElementById('gen-detail');
   const setStatus=(msg,col)=>{genStatus.textContent=msg;genStatus.style.color=col||'#7a7858';};
+  const showDetail=txt=>{genDetail.textContent=txt;genDetail.classList.add('vis');};
+  genDetail.textContent='';genDetail.classList.remove('vis');
 
   if(!state.ai||!state.ai.apiKey||!state.ai.apiKey.trim()){setStatus('API key required — add one in settings (⚙ on the home screen).','#c89898');return;}
 
@@ -4740,31 +5088,99 @@ async function generateMapFromPrompt(promptText){
 
   const model=state.ai.model==='haiku'?'claude-haiku-4-5-20251001':'claude-sonnet-4-6';
   const pal=PALETTES.muted.join(', ');
-  const systemPrompt=[
-    'You are a mind-map generator.',
-    'Return ONLY a valid JSON array of node objects. Each object has these fields:',
-    '  id     — unique string ("n1","n2",…)',
-    '  label  — concise phrase, max 6 words',
-    '  shape  — one of: longpill, pill, circle, ellipse, diamond, hex, rect, text',
-    '  color  — a hex colour chosen from: '+pal,
-    '  parent — id of parent node, or null for the single root node',
-    '  edge   — edge style to parent: straight, dashed, or dotted',
-    'Generate 12–20 nodes forming a clear, well-structured overview.',
-    'The root node (parent: null) should be the central topic.',
-    'No commentary. No markdown fences. Only the JSON array.',
-  ].join('\n');
+  const wantNotes=state.ai.genNotes!==false;
+  const notesMax=state.ai.genNotesMax||300;
+  const notesRule=wantNotes
+    ?'Use notes where prose earns its place, but keep the TOTAL word count of all notes combined, across the whole response, under '+notesMax+' words.'
+    :'Do not include notes on any node.';
+  const schemaLines=[
+    '  id        — unique string',
+    '  label     — concise phrase, up to 12 words, shorter when it can be; specific and meaningful — never empty, never a placeholder like "node"',
+    '  shape     — one of: '+AI_SHAPES.join(', '),
+    '  color     — a hex colour chosen from: '+pal,
+    '  parent    — id of parent node',
+    '  edge      — edge style to parent: straight, dashed, or dotted',
+    '  edgeLabel — optional: short label naming the relationship to the parent',
+    '  links     — optional: cross-connections to other nodes beyond the parent,',
+    '              an array of {to: <node id>, edge: <style>, label: <optional short label>}',
+    ...(wantNotes?[
+    '  notes     — optional: longer supporting prose, an array of short paragraph strings',
+    '              shown in the node\'s notes panel — any text too long for a label goes here',
+    ]:[]),
+  ];
+  const graphHint='Mind maps are graphs, not strict trees — where concepts relate across branches, connect them with links. Include several cross-branch links, each labelled with a verb phrase naming the relationship ("contradicts", "feeds", "predates") — verbs, not nouns.';
+  const craftLines=[
+    'Shapes carry meaning — choose deliberately: circle = core concept, rect = fact or definition, diamond = decision or counterpoint, square = process or action, ellipse = concrete example, text = open question or uncertainty, longpill = general idea.',
+    'Colour is taxonomy, not decoration: assign one hue per major branch and keep descendants in their branch\'s hue. When extending an existing map, match the hue of the branch being added to.',
+    'Vary the register of nodes: mix facts, open questions, provocations, concrete examples, and counterpoints. A map of only facts is flat.',
+    'Depth should be asymmetric — go deep (4–5 levels) where the topic is rich, stay shallow where it is thin. Uniform depth everywhere is a failure mode.',
+  ];
+  const inmap=_genMode==='inmap';
+  const genMapId=inmap?cmap()?.id:null; // the map the prompt was built from — discard if it changes mid-flight
+  const selScope=inmap&&_genSelIds&&_genSelIds.size?_genSelIds:null;
+  const legendCtx=inmap?buildAiLegendContext():'';
+  let systemPrompt,userMsg;
+  if(inmap){
+    systemPrompt=[
+      'You are extending an existing mind map. The current map is provided as a JSON array at the end of this message.',
+      'Return ONLY a valid JSON array of node objects. Each object has these fields:',
+      ...schemaLines,
+      'The array may contain:',
+      '  — NEW nodes: fresh ids "x1","x2",…; parent must be an existing node id or another new node id.',
+      '  — MODIFIED existing nodes: same id as in the current map, with updated label, shape, or color, or added notes (notes append to the node\'s existing notes). Omit parent and edge for these (links may be included to add cross-connections from an existing node).',
+      'Do not include unchanged existing nodes. Never re-parent or delete existing nodes.',
+      'Add at most 20 new nodes — fewer is fine. Only exceed this if the user\'s request names a larger count.',
+      notesRule,
+      ...(selScope?[
+        'FOCUS: the user has selected specific nodes, marked "sel": true in the current map JSON. Work only with that selection:',
+        '  — NEW nodes must parent into a selected node or another new node.',
+        '  — Only selected nodes may appear as MODIFIED entries.',
+        '  — Unselected nodes are read-only context: never modify them, though cross-links may point to them.',
+      ]:[]),
+      graphHint,
+      ...craftLines,
+      legendCtx?'This map has a legend — follow it over the default shape/colour meanings above:\n'+legendCtx:'',
+      'No commentary. No markdown fences. Output exactly one JSON array — never emit a revised second version; get it right the first time.',
+      'This is a one-shot pipeline with no reply channel: never ask clarifying questions, never refuse or explain in prose. Make a sensible interpretation of the request and output the JSON array.',
+      '',
+      'Current map:',
+      JSON.stringify(serializeMapForAi(cmap(),selScope)),
+    ].join('\n');
+    userMsg=promptText;
+  }else{
+    systemPrompt=[
+      'You are a mind-map generator.',
+      'Return ONLY a valid JSON array of node objects. Each object has these fields:',
+      ...schemaLines,
+      'The root node has parent: null and should be the central topic; every other node has a parent.',
+      graphHint,
+      ...craftLines,
+      'Generate at most 20 nodes — fewer is fine when the topic is thin. Only exceed this if the user\'s request names a larger count. Form a clear, well-structured overview.',
+      notesRule,
+      'No commentary. No markdown fences. Output exactly one JSON array — never emit a revised second version; get it right the first time.',
+      'This is a one-shot pipeline with no reply channel: never ask clarifying questions, never refuse or explain in prose. Make a sensible interpretation of the request and output the JSON array.',
+    ].join('\n');
+    userMsg='Generate a mind map about: '+promptText;
+  }
 
+  let dotTimer=null;
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'x-api-key':state.ai.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true','content-type':'application/json'},
-      body:JSON.stringify({model,max_tokens:2048,stream:true,system:systemPrompt,messages:[{role:'user',content:'Generate a mind map about: '+promptText}]})
+      body:JSON.stringify({model,max_tokens:state.ai.maxTokens||2048,stream:true,system:systemPrompt,messages:[{role:'user',content:userMsg}]})
     });
-    if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err?.error?.message||'HTTP '+resp.status);}
+    if(!resp.ok){
+      const bodyText=await resp.text().catch(()=>'');
+      showDetail('HTTP '+resp.status+' '+resp.statusText+'\n\n'+(bodyText||'(empty response body)'));
+      let msg='HTTP '+resp.status;
+      try{msg=JSON.parse(bodyText)?.error?.message||msg;}catch{}
+      const e=new Error(msg);e.detailShown=true;throw e;
+    }
 
     const reader=resp.body.getReader();const decoder=new TextDecoder();
-    let buf='',text='',dots=0;
-    const dotTimer=setInterval(()=>{dots=(dots+1)%4;setStatus('Thinking'+'.'.repeat(dots));},400);
+    let buf='',text='',dots=0,stopReason=null;
+    dotTimer=setInterval(()=>{dots=(dots+1)%4;setStatus('Thinking'+'.'.repeat(dots));},400);
     while(true){
       if(signal.cancelled){reader.cancel();break;}
       const{done,value}=await reader.read();if(done)break;
@@ -4775,34 +5191,119 @@ async function generateMapFromPrompt(promptText){
         const data=line.slice(6).trim();if(data==='[DONE]')continue;
         let ev;try{ev=JSON.parse(data);}catch{continue;}
         if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta')text+=ev.delta.text;
+        else if(ev.type==='message_delta'&&ev.delta?.stop_reason)stopReason=ev.delta.stop_reason;
       }
     }
     clearInterval(dotTimer);
     if(signal.cancelled){setStatus('Cancelled.');genBtn.disabled=false;cancelBtn.style.display='none';return;}
 
-    // extract JSON array from response
-    const match=text.match(/\[[\s\S]*\]/);
-    if(!match)throw new Error('No JSON array found in response.');
-    const nodes=JSON.parse(match[0]);
-    if(!Array.isArray(nodes)||!nodes.length)throw new Error('Empty or invalid node array.');
+    // extract JSON array from response — on any failure, surface the raw model output.
+    // The model occasionally emits a draft array, commentary, then a corrected array;
+    // scan for every balanced top-level array and keep the LAST one that parses.
+    const rawFail=(why)=>{showDetail('Raw model response:\n\n'+(text||'(empty)'));const e=new Error(why+' — raw output shown below.');e.detailShown=true;return e;};
+    let nodes=null,sawArray=false;
+    for(let i=0;i<text.length;i++){
+      if(text[i]!=='[')continue;
+      let depth=0,inStr=false,esc=false,end=-1;
+      for(let j=i;j<text.length;j++){
+        const c=text[j];
+        if(esc){esc=false;continue;}
+        if(inStr){if(c==='\\')esc=true;else if(c==='"')inStr=false;continue;}
+        if(c==='"')inStr=true;
+        else if(c==='['||c==='{')depth++;
+        else if(c===']'||c==='}'){depth--;if(depth===0){end=j;break;}}
+      }
+      if(end<0)continue; // this candidate never closes (quote-state mistracking in prose) — try the next '['
+      sawArray=true;
+      try{
+        const cand=JSON.parse(text.slice(i,end+1));
+        // node arrays only — a bracketed list in commentary must not replace the real payload
+        if(Array.isArray(cand)&&cand.length&&cand.every(o=>o&&typeof o==='object'&&o.id!=null))nodes=cand;
+      }catch{}
+      i=end; // continue scanning after this array
+    }
+    if(!nodes&&stopReason==='max_tokens')throw rawFail('Response was cut off at the max-tokens ceiling ('+((state.ai.maxTokens||2048).toLocaleString())+') — raise it in ⚙ settings and try again');
+    if(!sawArray)throw rawFail('No JSON array found in response');
+    if(!nodes)throw rawFail('No parseable node array in response');
+    if(!wantNotes)nodes.forEach(n=>{if(n&&n.notes)delete n.notes;}); // notes off — drop any the model emitted anyway
 
-    buildMapFromGenerated(promptText,nodes);
-    setStatus('✓ Map created — '+nodes.length+' nodes.','#7ec87e');
+    if(inmap){
+      if(cmap()?.id!==genMapId){setStatus('Map changed mid-generation — result discarded.','#c89898');return;}
+      const r=applyGeneratedToMap(nodes,selScope);
+      setStatus('✓ Added '+r.added+' node'+(r.added===1?'':'s')+(r.updated?', updated '+r.updated:'')+'.','#7ec87e');
+    }else{
+      buildMapFromGenerated(promptText,nodes);
+      setStatus('✓ Map created — '+nodes.length+' nodes.','#7ec87e');
+    }
     setTimeout(()=>{document.getElementById('gen-ov').classList.remove('vis');},800);
 
   }catch(err){
     setStatus('Error: '+err.message,'#c89898');
+    if(!err.detailShown)showDetail(err.stack||String(err));
   }finally{
+    if(dotTimer)clearInterval(dotTimer);
     genBtn.disabled=false;cancelBtn.style.display='none';_genAbort=null;
   }
 }
 
-function buildMapFromGenerated(topic,rawNodes){
-  // build id → rawNode lookup
-  const byId=Object.fromEntries(rawNodes.map(n=>[n.id,n]));
-  // find root
-  const root=rawNodes.find(n=>!n.parent)||rawNodes[0];
+// ── shared AI-schema handling — both generate paths build nodes/edges through
+// these helpers only, so schema changes land in exactly one place ──────────────
+// the craft-prompt shape taxonomy — keep in sync with the craftLines wording
+const AI_SHAPE_MEANINGS={circle:'core concept',rect:'fact or definition',diamond:'decision or counterpoint',square:'process or action',ellipse:'concrete example',text:'open question or uncertainty',longpill:'general idea'};
+// after a generation, write the conventions the prompt dictated into the map legend:
+// shapes from the fixed taxonomy, colours named after their branch-root node
+// (the prompt assigns one hue per branch). Fills blanks only — never overwrites
+// anything the user wrote.
+function fillAiLegend(map,nodes,edges){
+  if(!map.legend)map.legend={shapes:{},edges:{},colours:{}};
+  const lg=map.legend;
+  if(!lg.shapes)lg.shapes={};if(!lg.colours)lg.colours={};if(!lg.edges)lg.edges={};
+  const depths=computeLabelDepths(map);
+  for(const n of nodes){
+    if(AI_SHAPE_MEANINGS[n.shape]&&!lg.shapes[n.shape])lg.shapes[n.shape]=AI_SHAPE_MEANINGS[n.shape];
+    if(n.color&&!lg.colours[n.color]){
+      let best=null;
+      for(const c of map.nodes)if(c.color===n.color&&(best===null||(depths.get(c.id)??1e9)<(depths.get(best.id)??1e9)))best=c;
+      if(best&&best.label)lg.colours[n.color]=best.label;
+    }
+  }
+  // only the two conventions the prompt actually fixes — dashed carries no set meaning
+  const EDGE_MEANINGS={straight:'parent–child relation',dotted:'cross-branch link'};
+  (edges||[]).forEach(e=>{const m=EDGE_MEANINGS[e.style];if(m&&!lg.edges[e.style])lg.edges[e.style]=m;});
+}
+// palette membership is only prompt-enforced; reject anything that isn't a hex colour
+const aiColor=c=>(typeof c==='string'&&/^#[0-9a-fA-F]{6}$/.test(c.trim()))?c.trim():null;
+function aiNodeFromRaw(rn,nid){
+  return{id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
+    color:aiColor(rn.color)||PALETTES.muted[nid%10],font:"'Lora',serif",
+    outlined:false,scale:1,palKey:'muted',notes:aiNotesToObjects(rn.notes,0),urls:[],primaryUrl:0,
+    image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false};
+}
+function addAiParentEdge(map,rn,pid,nid){
+  const e=makeEdge('e'+Date.now()+'_'+nid,pid,nid,AI_EDGES.includes(rn.edge)?rn.edge:'straight');
+  e.thickness=3.5;if(rn.edgeLabel)e.label=String(rn.edgeLabel);initKf(e,map);map.edges.push(e);
+  return e;
+}
+// cross-links beyond the tree (call after parent edges, so layout BFS prefers
+// the tree); resolveId maps a raw AI id to a numeric node id or null
+function addAiLinks(map,rawNodes,resolveId){
+  const added=[];
+  rawNodes.forEach(rn=>{
+    if(!rn||rn.id==null)return;
+    const from=resolveId(rn.id);if(from==null)return;
+    (Array.isArray(rn.links)?rn.links:[]).forEach((lk,i)=>{
+      if(!lk)return;
+      const to=resolveId(lk.to);
+      if(to==null||to===from)return;
+      if(map.edges.some(ed=>(ed.from===from&&ed.to===to)||(ed.from===to&&ed.to===from)))return;
+      const e=makeEdge('e'+Date.now()+'_l'+from+'_'+i,from,to,AI_EDGES.includes(lk.edge)?lk.edge:'dotted');
+      e.thickness=3.5;if(lk.label)e.label=String(lk.label);initKf(e,map);map.edges.push(e);added.push(e);
+    });
+  });
+  return added;
+}
 
+function buildMapFromGenerated(topic,rawNodes){
   // create a new map
   const mapId='m'+Date.now();
   const map=defMap(mapId,topic.slice(0,40));
@@ -4813,18 +5314,17 @@ function buildMapFromGenerated(topic,rawNodes){
   rawNodes.forEach(rn=>{
     const nid=map.nextId++;
     idMap[rn.id]=nid;
-    map.nodes.push({id:nid,x:0,y:0,label:rn.label||'node',shape:AI_SHAPES.includes(rn.shape)?rn.shape:'longpill',
-      color:rn.color||PALETTES.muted[nid%10],font:"'Lora',serif",
-      outlined:false,scale:1,palKey:'muted',notes:[],urls:[],primaryUrl:0,
-      image:'',textAlign:'center',labelHtml:'',collapsed:false,vx:0,vy:0,transparent:false});
+    map.nodes.push(aiNodeFromRaw(rn,nid));
   });
 
   // build edges from parent references
   rawNodes.forEach(rn=>{
     if(!rn.parent||!idMap[rn.parent])return;
-    const e=makeEdge('e'+Date.now()+'_'+rn.id,idMap[rn.parent],idMap[rn.id],AI_EDGES.includes(rn.edge)?rn.edge:'straight');
-    e.thickness=3.5;initKf(e,map);map.edges.push(e);
+    addAiParentEdge(map,rn,idMap[rn.parent],idMap[rn.id]);
   });
+
+  addAiLinks(map,rawNodes,k=>idMap[k]??null);
+  fillAiLegend(map,map.nodes,map.edges);
 
   // add to state and switch to it
   state.maps.push(map);
@@ -4838,19 +5338,115 @@ function buildMapFromGenerated(topic,rawNodes){
   setTimeout(()=>{
     const targets=computeRadialTargets(map);
     targets.forEach((pos,id)=>{const n=map.nodes.find(x=>x.id===id);if(n){n.x=pos.x;n.y=pos.y;}});
-    resetAllKf();softSave();render();
+    resetAllKf();
+    // renderMap seeded history[0] while every node was still at (0,0) — re-seed it
+    // with the laid-out positions so undo-to-start doesn't collapse the map
+    map.history=[{label:'initial',ts:Date.now(),nodes:JSON.parse(JSON.stringify(map.nodes)),edges:JSON.parse(JSON.stringify(map.edges))}];
+    map.histIdx=0;updateCvsUndoRedo();
+    softSave();render();
   },30);
 }
 
-;(function wireGenUI(){
-  document.getElementById('rp-gen')?.addEventListener('click',()=>{
-    document.getElementById('gen-status').textContent='';
-    document.getElementById('gen-prompt').value='';
-    document.getElementById('gen-btn').disabled=false;
-    document.getElementById('gen-cancel-btn').style.display='none';
-    document.getElementById('gen-ov').classList.add('vis');
-    setTimeout(()=>document.getElementById('gen-prompt').focus(),80);
+// apply AI-generated nodes to the current map: update existing in place (keep
+// positions/edges), append new ones fanned around their parent. One undo step.
+function applyGeneratedToMap(rawNodes,selIds){
+  const map=cmap();if(!map)return{added:0,updated:0};
+  pushCanvasHistLocal('generate in map');
+  const exByStr={};map.nodes.forEach(n=>{exByStr[String(n.id)]=n;});
+  const hasIncoming=new Set(map.edges.map(e=>e.to));
+  const rootN=map.nodes.find(n=>!hasIncoming.has(n.id))||map.nodes[0];
+  // when scoped to a selection, out-of-scope edits are dropped and orphaned
+  // parents re-anchor to a selected node instead of the root
+  const anchor=selIds?(map.nodes.find(n=>selIds.has(n.id))||rootN):rootN;
+  // emptied map: no anchor exists — unresolvable parents become roots and
+  // placement centres on the current viewport instead
+  const anchorPos=anchor?{x:anchor.x,y:anchor.y}:s2w(window.innerWidth/2,window.innerHeight/2);
+  const idMap={};const created=[];const newEdges=[];const touched=[];let updated=0;
+  rawNodes.forEach(rn=>{
+    if(!rn||rn.id==null)return;
+    const ex=exByStr[String(rn.id)];
+    if(ex){
+      if(selIds&&!selIds.has(ex.id))return;
+      if(rn.label){ex.label=rn.label;ex.labelHtml='';} // labelHtml would keep drawing the old text
+      if(AI_SHAPES.includes(rn.shape))ex.shape=rn.shape;
+      const c=aiColor(rn.color);if(c)ex.color=c;
+      if(Array.isArray(rn.notes)&&rn.notes.length){if(!ex.notes)ex.notes=[];ex.notes.push(...aiNotesToObjects(rn.notes,ex.notes.length));}
+      touched.push(ex);updated++;return;
+    }
+    const nid=map.nextId++;idMap[String(rn.id)]=nid;
+    const node=aiNodeFromRaw(rn,nid);
+    map.nodes.push(node);created.push({node,rn});
   });
+  // edges: parent is a new node, an in-scope existing node, or falls back to the anchor
+  created.forEach(({node,rn})=>{
+    const pKey=String(rn.parent);
+    const exP=exByStr[pKey];
+    const pid=idMap[pKey]??(exP&&(!selIds||selIds.has(exP.id))?exP.id:(anchor?anchor.id:null));
+    if(pid!=null)newEdges.push(addAiParentEdge(map,rn,pid,node.id));
+  });
+
+  // cross-links: from new or existing nodes, to new or existing nodes
+  newEdges.push(...addAiLinks(map,rawNodes,k=>{const s=String(k);return idMap[s]??(exByStr[s]?exByStr[s].id:null);}));
+  // legend entries for what this generation added or restyled — blanks only
+  fillAiLegend(map,created.map(c=>c.node).concat(touched),newEdges);
+  // position new nodes: fan around parent, dependency-ordered so new-on-new
+  // chains place after their parents; anything unresolved lands near the root
+  const placed=new Set(map.nodes.map(n=>n.id));created.forEach(c=>placed.delete(c.node.id));
+  const kidCount={};
+  const pending=created.slice();
+  let guard=created.length+1;
+  while(pending.length&&guard-->0){
+    for(let i=pending.length-1;i>=0;i--){
+      const{node}=pending[i];
+      const e=map.edges.find(ed=>ed.to===node.id);
+      const par=e&&map.nodes.find(n=>n.id===e.from);
+      if(par&&!placed.has(par.id))continue;
+      const k=kidCount[par?par.id:'r']=(kidCount[par?par.id:'r']||0)+1;
+      const ang=k*2.399963+(par?par.id*0.7:0);
+      const r=(par?nrx(par):80)+170;
+      node.x=(par?par.x:anchorPos.x)+Math.cos(ang)*r*1.25;
+      node.y=(par?par.y:anchorPos.y)+Math.sin(ang)*r;
+      placed.add(node.id);pending.splice(i,1);
+    }
+  }
+  pending.forEach(({node},i)=>{node.x=anchorPos.x+220+i*40;node.y=anchorPos.y+220;});
+  // separation pass: existing nodes are pinned obstacles, only AI-added nodes shift
+  if(created.length){
+    const targets=new Map(map.nodes.map(n=>[n.id,{x:n.x,y:n.y}]));
+    const createdIds=new Set(created.map(c=>c.node.id));
+    const pin=new Set(map.nodes.filter(n=>!createdIds.has(n.id)).map(n=>n.id));
+    resolveNodeOverlaps(map,targets,pin);
+    created.forEach(({node})=>{const p=targets.get(node.id);if(p){node.x=p.x;node.y=p.y;}});
+  }
+  // re-init keyframes only for edges this generation added (their endpoints moved
+  // during placement) — a full resetAllKf would flatten user-curved edges map-wide
+  newEdges.forEach(e=>initKf(e,map));
+  softSave();render();
+  return{added:created.length,updated};
+}
+
+// drag a floating dialog box by any spot that isn't a control; the native resize
+// corner (bottom-right ~20px) is left alone
+function makeBoxDraggable(box){
+  if(!box)return;
+  box.addEventListener('mousedown',ev=>{
+    if(ev.target.closest('input,textarea,select,button,canvas,label,[contenteditable]'))return;
+    const r=box.getBoundingClientRect();
+    if(ev.clientX>r.right-20&&ev.clientY>r.bottom-20)return; // resize handle
+    box.style.position='absolute';box.style.left=r.left+'px';box.style.top=r.top+'px';box.style.margin='0';
+    const ox=ev.clientX-r.left,oy=ev.clientY-r.top;
+    const mv=e2=>{box.style.left=Math.max(60-r.width,Math.min(innerWidth-60,e2.clientX-ox))+'px';box.style.top=Math.max(0,Math.min(innerHeight-40,e2.clientY-oy))+'px';};
+    const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);};
+    addEventListener('mousemove',mv);addEventListener('mouseup',up);
+    ev.preventDefault();
+  });
+}
+
+;(function wireGenUI(){
+  makeBoxDraggable(document.getElementById('gen-box'));
+  makeBoxDraggable(document.getElementById('legend-box'));
+  document.getElementById('rp-gen')?.addEventListener('click',()=>{openGenModal('inmap');});
+  document.getElementById('bulk-gen')?.addEventListener('click',()=>{openGenModal('inmap');});
   document.getElementById('gen-close-btn')?.addEventListener('click',()=>{
     if(_genAbort)_genAbort.cancelled=true;
     document.getElementById('gen-ov').classList.remove('vis');
@@ -4866,9 +5462,13 @@ function buildMapFromGenerated(topic,rawNodes){
   document.getElementById('gen-cancel-btn')?.addEventListener('click',()=>{
     if(_genAbort)_genAbort.cancelled=true;
   });
+  document.getElementById('gen-prompt')?.addEventListener('input',updateGenEstimate);
+  document.getElementById('gen-notes-chk')?.addEventListener('change',e=>{state.ai.genNotes=e.target.checked;softSave();syncGenNotesUI();});
+  document.getElementById('gen-notes-max')?.addEventListener('input',e=>{state.ai.genNotesMax=parseInt(e.target.value,10)||300;softSave();syncGenNotesUI();});
+  document.getElementById('gen-notes-num')?.addEventListener('change',e=>{const v=parseInt(e.target.value,10);state.ai.genNotesMax=isNaN(v)?300:Math.max(10,Math.min(5000,v));softSave();syncGenNotesUI();});
   document.getElementById('gen-prompt')?.addEventListener('keydown',ev=>{
     if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();document.getElementById('gen-btn').click();}
-    if(ev.key==='Escape'){document.getElementById('gen-ov').classList.remove('vis');}
+    if(ev.key==='Escape'){if(_genAbort)_genAbort.cancelled=true;document.getElementById('gen-ov').classList.remove('vis');}
   });
 })();
 
@@ -4892,6 +5492,7 @@ function buildMapFromGenerated(topic,rawNodes){
   document.getElementById('legend-ov')?.addEventListener('click',e=>{if(e.target===document.getElementById('legend-ov'))document.getElementById('legend-ov').style.display='none';});
   document.getElementById('ai-enabled')?.addEventListener('change',e=>{state.ai.enabled=e.target.checked;softSave();updateWizard();});
   document.getElementById('ai-model')?.addEventListener('change',e=>{state.ai.model=e.target.value;softSave();});
+  document.getElementById('ai-max-tokens')?.addEventListener('change',e=>{const v=parseInt(e.target.value,10);state.ai.maxTokens=isNaN(v)?2048:Math.max(256,Math.min(64000,v));e.target.value=state.ai.maxTokens;softSave();});
   document.getElementById('ai-key-s')?.addEventListener('input',e=>{state.ai.apiKey=e.target.value;softSave();updateWizard();});
   document.getElementById('wbHave')?.addEventListener('click',()=>{
     document.getElementById('ws1').classList.remove('on');
@@ -4935,9 +5536,6 @@ renderSplash();
 if(_sharedLoaded){renderMap();enterCanvas();}
 // net pop click isolation
 ['net-tc-pop','net-fill-pop','net-url-pop'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',ev=>ev.stopPropagation());});
-// canvas undo/redo button wiring
-document.getElementById('cvs-undo').addEventListener('click',canvasUndo);
-document.getElementById('cvs-redo').addEventListener('click',canvasRedo);
 // map-list snapshot history (kept for bin/create/delete labelling)
 function sbSnap(label){sbHistory=sbHistory.slice(0,sbHistIdx+1);sbHistory.push({label,folders:JSON.parse(JSON.stringify(state.folders)),maps:JSON.parse(JSON.stringify(state.maps)),bin:JSON.parse(JSON.stringify(state.bin||[]))});sbHistIdx=sbHistory.length-1;updateSbUR();}
 function updateSbUR(){}
