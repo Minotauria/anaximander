@@ -696,18 +696,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
   <div class="tmi" id="tmi-ghosts">&#9685; Ghost nodes: on</div>
   <div class="sm-sep"></div>
   <div class="sm-row">
-    <span class="sm-row-lbl">count</span>
-    <div class="sm-pills" id="ghost-count-pills">
-      <button class="sm-pill" data-count="1">1</button>
-      <button class="sm-pill" data-count="2">2</button>
-      <button class="sm-pill" data-count="3">3</button>
-      <button class="sm-pill" data-count="4">4</button>
-      <button class="sm-pill" data-count="5">5</button>
-    </div>
   </div>
-  <div class="sm-sep"></div>
   <div class="sm-row" style="flex-direction:column;align-items:stretch;gap:4px;">
-    <span class="sm-row-lbl" style="padding:4px 0 0;">labels (up to 10)</span>
+    <span class="sm-row-lbl" style="padding:4px 0 0;">labels — ticked ones appear (up to 10)</span>
     <div id="ghost-labels-list"></div>
     <button class="sm-add" id="ghost-labels-add">+ add label</button>
   </div>
@@ -2045,15 +2036,17 @@ function buildGhosts(nodeId){
   const map=cmap();if(!map){ghosts=[];return;}
   const n=map.nodes.find(nd=>nd.id===nodeId);if(!n){ghosts=[];return;}
   const hidden=getCollapsedHidden();
-  const DIRS=[{dx:2.2,dy:-1.1},{dx:2.2,dy:0},{dx:2.2,dy:1.1},{dx:0,dy:-2},{dx:0,dy:2},{dx:-2.2,dy:-1.1},{dx:-2.2,dy:1.1}];
+  // 12 candidate positions so all 10 tickable labels can find a slot even when a few collide
+  const DIRS=[{dx:2.2,dy:-1.1},{dx:2.2,dy:0},{dx:2.2,dy:1.1},{dx:0,dy:-2},{dx:0,dy:2},{dx:-2.2,dy:-1.1},{dx:-2.2,dy:1.1},{dx:1.1,dy:-2},{dx:-1.1,dy:-2},{dx:1.1,dy:2},{dx:-1.1,dy:2},{dx:-2.2,dy:0}];
   ghosts=[];let placed=0;
-  const _maxGhosts=typeof ghostCount!=='undefined'?ghostCount:3;
+  // the ticked labels are the ghosts — their number is the count
+  const _act=(typeof ghostLabelPool!=='undefined'?ghostLabelPool:GHOST_LABELS.map(t=>({t,on:true}))).filter(g=>g.on&&g.t&&g.t.trim());
   for(const dir of DIRS){
-    if(placed>=_maxGhosts)break;
+    if(placed>=_act.length)break;
     const gx=n.x+dir.dx*160,gy=n.y+dir.dy*160;
     const tooClose=map.nodes.some(nd=>!hidden.has(nd.id)&&Math.sqrt((nd.x-gx)**2+(nd.y-gy)**2)<90);
     if(tooClose)continue;
-    const _pool=typeof ghostLabelPool!=='undefined'?ghostLabelPool:GHOST_LABELS;ghosts.push({x:gx,y:gy,label:_pool[(nodeId*3+placed)%_pool.length],parentId:nodeId,idx:placed,_sel:false});
+    ghosts.push({x:gx,y:gy,label:_act[placed].t,parentId:nodeId,idx:placed,_sel:false});
     placed++;
   }
 }
@@ -3482,37 +3475,32 @@ document.getElementById('rp-collapse').addEventListener('click',()=>{applyRpColl
 panelTabEl.addEventListener('click',()=>{applyRpCollapsed(false);try{localStorage.setItem(_RP_KEY,'0');}catch(e){}});
 
 // ── Ghost node settings ──
-let ghostCount=3;
-let ghostLabelPool=['explore further','related idea','counterpoint','implication','question','alternative','example','context','expand this','consequence'];
-
-function renderGhostCountPills(){
-  document.querySelectorAll('#ghost-count-pills .sm-pill').forEach(b=>{
-    b.classList.toggle('on',parseInt(b.dataset.count)===ghostCount);
-  });
-}
-document.querySelectorAll('#ghost-count-pills .sm-pill').forEach(b=>{
-  b.addEventListener('click',ev=>{ev.stopPropagation();ghostCount=parseInt(b.dataset.count);renderGhostCountPills();});
-});
-renderGhostCountPills();
+// each pool entry is {t: label text, on: whether it spawns} \u2014 the ticked set IS the
+// ghost count (up to 10); first three ticked by default to match the old count of 3
+let ghostLabelPool=['explore further','related idea','counterpoint','implication','question','alternative','example','context','expand this','consequence'].map((t,i)=>({t,on:i<3}));
 
 function renderGhostLabelsList(){
   const list=document.getElementById('ghost-labels-list');list.innerHTML='';
-  ghostLabelPool.forEach((lbl,i)=>{
+  ghostLabelPool.forEach((g,i)=>{
     const row=document.createElement('div');row.className='sm-lblrow';
-    const inp=document.createElement('input');inp.type='text';inp.value=lbl;
-    inp.addEventListener('input',()=>{ghostLabelPool[i]=inp.value;});
+    const chk=document.createElement('input');chk.type='checkbox';chk.checked=!!g.on;chk.title='offer this ghost';
+    chk.style.cssText='accent-color:#7ec87e;flex-shrink:0;margin:0 2px 0 0;cursor:pointer;';
+    chk.addEventListener('click',ev=>ev.stopPropagation());
+    chk.addEventListener('change',()=>{g.on=chk.checked;});
+    const inp=document.createElement('input');inp.type='text';inp.value=g.t;
+    inp.addEventListener('input',()=>{g.t=inp.value;});
     inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();closeAllSubs();}ev.stopPropagation();});
     inp.addEventListener('click',ev=>ev.stopPropagation());
     const del=document.createElement('button');del.textContent='\u2715';del.title='remove';
     del.addEventListener('click',ev=>{ev.stopPropagation();ghostLabelPool.splice(i,1);renderGhostLabelsList();});
-    row.appendChild(inp);row.appendChild(del);list.appendChild(row);
+    row.appendChild(chk);row.appendChild(inp);row.appendChild(del);list.appendChild(row);
   });
   const addBtn=document.getElementById('ghost-labels-add');
   addBtn.style.display=ghostLabelPool.length>=10?'none':'';
 }
 document.getElementById('ghost-labels-add').addEventListener('click',ev=>{
   ev.stopPropagation();
-  if(ghostLabelPool.length<10){ghostLabelPool.push('new prompt');renderGhostLabelsList();}
+  if(ghostLabelPool.length<10){ghostLabelPool.push({t:'new prompt',on:true});renderGhostLabelsList();}
 });
 document.getElementById('ghost-done').addEventListener('click',ev=>{ev.stopPropagation();closeAllSubs();});
 renderGhostLabelsList();
