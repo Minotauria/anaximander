@@ -103,7 +103,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #app{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.4s;}
 #app.vis{opacity:1;pointer-events:all;}
 /* ── burger + drawer (map navigation) ── */
-#burger{position:fixed;top:14px;left:14px;height:34px;display:flex;align-items:center;gap:9px;padding:0 13px 0 11px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;z-index:200;color:#909078;font-size:12.5px;user-select:none;font-family:'Lora',serif;transition:background 0.15s,border-color 0.15s,color 0.15s;}
+#burger{position:fixed;top:14px;left:14px;height:34px;display:flex;align-items:center;padding:0 11px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;z-index:200;color:#909078;font-size:12.5px;user-select:none;font-family:'Lora',serif;transition:background 0.15s,border-color 0.15s,color 0.15s;}
+#map-name-chip{position:fixed;top:14px;left:56px;height:34px;display:flex;align-items:center;padding:0 13px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;z-index:200;color:#909078;font-size:12.5px;user-select:none;font-family:'Lora',serif;max-width:280px;}
+#map-name-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #burger:hover{background:#1e271e;border-color:#3a4838;color:#c8c898;}
 #burger.open{border-color:#5a8a5a;color:#c8c898;background:#1e271e;}
 #burger-glyph{font-size:14px;letter-spacing:-1px;color:#6a6a58;}
@@ -415,16 +417,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
     </div>
   </div>
   <div id="app">
-    <div id="burger" title="Maps"><span id="burger-glyph">&#9776;</span><span id="burger-name"></span></div>
+    <div id="burger" title="Menu"><span id="burger-glyph">&#9776;</span></div>
+    <div id="map-name-chip"><span id="burger-name"></span></div>
     <div id="drawer">
       <div id="dd-mapname">
         <input id="map-title-in" value="" placeholder="untitled"/>
         <span class="dd-edit">&#9998;</span>
       </div>
       <div class="dd-item" id="dd-all-maps"><span class="dd-icon">&#8962;</span> home</div>
-      <div class="dd-rule"></div>
-      <div class="dd-section">Maps</div>
-      <div id="dd-maps"></div>
       <div class="dd-item quiet" id="dd-new-map"><span class="dd-icon">+</span> new map</div>
       <div class="dd-rule"></div>
       <div class="dd-item" id="dd-import"><span class="dd-icon">&#8613;</span> import file</div>
@@ -635,11 +635,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       <textarea id="gen-prompt" rows="3" placeholder="e.g. the causes of World War I, or Stoic philosophy, or photosynthesis…"></textarea>
       <div id="gen-notes-row" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#7a7858;margin:0 0 6px;flex-wrap:wrap;">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="gen-notes-chk" style="accent-color:#7ec87e;"> include notes</label>
-        <span id="gen-notes-cap" style="display:none;align-items:center;gap:6px;">
+        <span id="gen-notes-cap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;">
           <span style="color:#5a5a48;">·</span>
-          <input type="range" id="gen-notes-max" min="50" max="1000" step="10" style="width:200px;accent-color:#7ec87e;">
-          <input type="number" id="gen-notes-num" min="10" max="5000" step="10" style="width:58px;background:#0d1a0d;border:0.5px solid #303624;color:#dac888;border-radius:6px;padding:2px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;outline:none;">
-          <span style="color:#5a5a48;white-space:nowrap;">words max across the map</span>
+          <input type="range" id="gen-notes-max" min="50" max="1000" step="10" style="width:200px;flex-shrink:0;accent-color:#7ec87e;">
+          <input type="number" id="gen-notes-num" min="10" max="5000" step="10" style="width:58px;flex-shrink:0;background:#0d1a0d;border:0.5px solid #303624;color:#dac888;border-radius:6px;padding:2px 4px;font-family:'IBM Plex Mono',monospace;font-size:11px;outline:none;">
+          <span style="color:#5a5a48;white-space:nowrap;">words total</span>
         </span>
       </div>
       <div id="gen-est"></div>
@@ -3180,22 +3180,7 @@ function showSbCtx(x,y,items){
   menu.style.left=x+'px';menu.style.top=y+'px';menu.style.display='block';
 }
 function renderSB(){
-  const list=document.getElementById('dd-maps');if(!list)return;
-  list.innerHTML='';
-  state.maps.forEach(m=>{
-    const row=document.createElement('div');
-    row.className='dd-item'+(m.id===state.currentMapId?' active':'');
-    const mark=document.createElement('span');
-    if(m.id===state.currentMapId){mark.className='dd-check';mark.innerHTML='&#10003;';}
-    else mark.className='dd-gap';
-    const lbl=document.createElement('span');lbl.style.cssText='flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';lbl.textContent=m.name;
-    row.appendChild(mark);row.appendChild(lbl);
-    row.addEventListener('click',()=>{
-      if(m.id!==state.currentMapId){state.currentMapId=m.id;T={x:0,y:0,s:1};renderMap();renderSB();}
-      closeDrawer();
-    });
-    list.appendChild(row);
-  });
+  // the drawer no longer lists maps \u2014 the splash owns navigation
   const bn=document.getElementById('burger-name');
   if(bn){const cur=cmap();bn.textContent=cur?cur.name:'\u2014';}
 }
