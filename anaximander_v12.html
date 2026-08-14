@@ -1168,7 +1168,17 @@ function showUndoWarning(){
 function clearUndoWarning(){const w=document.getElementById('undo-warn');if(w)w.remove();}
 
 function canvasUndo(){
-  const map=cmap();if(!map||!map.history||map.histIdx<=0)return;
+  const map=cmap();if(!map||!map.history||map.histIdx<0)return;
+  // most actions snapshot BEFORE mutating, so the live state is often ahead of the
+  // tip — bank it first, so undo steps back exactly one action and redo can return
+  const tip=map.history[map.histIdx];
+  const liveN=JSON.stringify(map.nodes),liveE=JSON.stringify(map.edges);
+  if(tip&&(JSON.stringify(tip.nodes)!==liveN||JSON.stringify(tip.edges)!==liveE)){
+    map.history=map.history.slice(0,map.histIdx+1);
+    map.history.push({label:'current',ts:Date.now(),nodes:JSON.parse(liveN),edges:JSON.parse(liveE)});
+    if(map.history.length>30)map.history.shift();else map.histIdx++;
+  }
+  if(map.histIdx<=0)return;
   map.histIdx--;
   const h=map.history[map.histIdx];
   map.nodes=JSON.parse(JSON.stringify(h.nodes));
@@ -3670,7 +3680,12 @@ document.getElementById('bg-pop').addEventListener('mouseleave',()=>{const m=cma
 _bgMarkActive();
 document.getElementById('bg-custom').addEventListener('input',e=>{const m=cmap();if(!m)return;m.bg=e.target.value;_bgMarkActive();softSave();render();});
 
-function renderHist(){const map=cmap(),list=document.getElementById('hist-list');list.innerHTML='';if(!map.history||!map.history.length){list.innerHTML='<div style="font-size:10px;color:#2a2a2a;padding:2px 0;">no history yet</div>';return;}map.history.forEach(h=>{const row=document.createElement('div');row.className='hr';const t=new Date(h.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});row.innerHTML=`<span class="hn">${h.label} <span style="color:#2a2a2a;">${t}</span></span><button>↩</button>`;row.querySelector('button').addEventListener('click',()=>{const m=cmap();m.nodes=JSON.parse(JSON.stringify(h.nodes));m.edges=JSON.parse(JSON.stringify(h.edges));softSave();render();document.getElementById('hist-pop').classList.remove('vis');});list.appendChild(row);});}
+function renderHist(){const map=cmap(),list=document.getElementById('hist-list');list.innerHTML='';if(!map.history||!map.history.length){list.innerHTML='<div style="font-size:10px;color:#2a2a2a;padding:2px 0;">no history yet</div>';return;}map.history.forEach(h=>{const row=document.createElement('div');row.className='hr';const t=new Date(h.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});row.innerHTML=`<span class="hn">${h.label} <span style="color:#2a2a2a;">${t}</span></span><button>↩</button>`;row.querySelector('button').addEventListener('click',()=>{
+    // restore = a NEW state at the tip of the timeline, not a silent overwrite —
+    // keeps histIdx in sync so undo returns to the pre-restore state
+    const m=cmap();m.nodes=JSON.parse(JSON.stringify(h.nodes));m.edges=JSON.parse(JSON.stringify(h.edges));
+    pushCanvasHistLocal('restored: '+h.label);
+    softSave();render();document.getElementById('hist-pop').classList.remove('vis');});list.appendChild(row);});}
 
 const _btnSearch=document.getElementById('btn-search');if(_btnSearch)_btnSearch.addEventListener('click',()=>openSearch());
 document.getElementById('zin').addEventListener('click',()=>{const c={x:cvs.width/2,y:cvs.height/2},ns=Math.min(6,T.s*1.2);T.x=c.x-(c.x-T.x)*(ns/T.s);T.y=c.y-(c.y-T.y)*(ns/T.s);T.s=ns;if(editingNode)positionInput(editingNode);render();});
@@ -5332,7 +5347,12 @@ function buildMapFromGenerated(topic,rawNodes){
   setTimeout(()=>{
     const targets=computeRadialTargets(map);
     targets.forEach((pos,id)=>{const n=map.nodes.find(x=>x.id===id);if(n){n.x=pos.x;n.y=pos.y;}});
-    resetAllKf();softSave();render();
+    resetAllKf();
+    // renderMap seeded history[0] while every node was still at (0,0) — re-seed it
+    // with the laid-out positions so undo-to-start doesn't collapse the map
+    map.history=[{label:'initial',ts:Date.now(),nodes:JSON.parse(JSON.stringify(map.nodes)),edges:JSON.parse(JSON.stringify(map.edges))}];
+    map.histIdx=0;updateCvsUndoRedo();
+    softSave();render();
   },30);
 }
 
