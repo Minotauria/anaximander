@@ -106,8 +106,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #app.vis{opacity:1;pointer-events:all;}
 /* ── burger + drawer (map navigation) ── */
 #burger{position:fixed;top:14px;left:14px;height:34px;display:flex;align-items:center;padding:0 11px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;z-index:200;color:#909078;font-size:12.5px;user-select:none;font-family:'Lora',serif;transition:background 0.15s,border-color 0.15s,color 0.15s;}
-#map-name-chip{position:fixed;top:14px;left:56px;height:34px;display:flex;align-items:center;padding:0 13px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;z-index:200;color:#909078;font-size:12.5px;user-select:none;font-family:'Lora',serif;max-width:280px;}
-#map-name-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #burger:hover{background:#1e271e;border-color:#3a4838;color:#c8c898;}
 #burger.open{border-color:#5a8a5a;color:#c8c898;background:#1e271e;}
 #burger-glyph{font-size:14px;letter-spacing:-1px;color:#6a6a58;}
@@ -117,7 +115,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #drawer.vis{display:block;}
 #dd-mapname{padding:11px 15px 10px;border-bottom:0.5px solid #252e25;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 #dd-mapname:hover{background:#1d261d;}
-.dd-edit{font-size:10px;color:#4a4a3c;opacity:0;transition:opacity 0.15s;flex-shrink:0;pointer-events:none;}
+.dd-edit{font-size:10px;color:#4a4a3c;opacity:0;transition:opacity 0.15s,color 0.15s;flex-shrink:0;cursor:pointer;}
+.dd-edit:hover{color:#c8c898;}
 #dd-mapname:hover .dd-edit,#dd-mapname:focus-within .dd-edit{opacity:1;}
 .dd-section{padding:9px 15px 3px;font-size:9px;text-transform:uppercase;letter-spacing:0.13em;color:#4a4a3c;font-weight:500;}
 .dd-item{padding:7px 15px;font-size:12px;color:#8a8a76;cursor:pointer;display:flex;align-items:center;gap:9px;transition:background 0.1s,color 0.1s;}
@@ -133,23 +132,23 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .dd-pad-btm{height:7px;}
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 /* ── top-right toolbar ── */
-#toolbar{position:absolute;top:14px;right:14px;display:flex;align-items:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;padding:6px 11px;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity 0.4s;}
+#toolbar{position:absolute;bottom:14px;left:14px;display:flex;align-items:center;z-index:20;opacity:0;pointer-events:none;transition:opacity 0.4s;}
 #toolbar.show{opacity:1;}
 .tb-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;color:#6a6a5a;font-size:13px;border:none;background:transparent;font-family:'Lora',serif;transition:background 0.1s,color 0.1s;padding:0;}
 .tb-btn:not(:disabled):hover{background:#252e25;color:#a09e8a;}
 .tb-btn:disabled{opacity:0.4;cursor:default;}
 .tb-sep{width:0.5px;height:16px;background:#252e25;margin:0 3px;flex-shrink:0;}
-#map-title-in{font-size:13px;font-weight:500;color:#c8c898;background:none;border:none;outline:none;font-family:'Lora',serif;flex:1;min-width:0;padding:0;}
+#map-title-in{font-size:13px;font-weight:500;color:#c8c898;background:none;border:none;outline:none;font-family:'Lora',serif;flex:1;min-width:0;padding:0;resize:none;overflow:hidden;line-height:1.45;}
 #map-title-in::placeholder{color:#7a7858;}
 #map-title-in:focus{color:#e8d098;}
-#autosave-ind{font-size:11px;color:#45453a;font-family:'Lora',serif;transition:color 0.3s;}
+#autosave-ind{font-size:11px;color:#5a5a48;font-family:'Lora',serif;transition:color 0.3s;}
 #autosave-ind.saving{color:#9aa07a;}
 .tmi{padding:8px 18px;font-size:13px;cursor:pointer;color:#a09e8a;font-family:'Lora',serif;}
 .tmi:hover{background:#26301e;color:#dac888;}
 /* ── right tool panel ── */
-#rpanel{position:absolute;top:60px;right:14px;width:172px;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.5);z-index:19;animation:dropIn 0.14s ease;font-family:'Lora',serif;}
+#rpanel{position:absolute;top:14px;right:14px;width:172px;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.5);z-index:19;animation:dropIn 0.14s ease;font-family:'Lora',serif;}
 #rpanel.hidden{display:none;}
-#rp-collapse{position:absolute;top:5px;right:6px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:4px;color:#4a4a3c;font-size:11px;cursor:pointer;font-family:'Lora',serif;transition:background 0.1s,color 0.1s;z-index:5;padding:0;}
+#rp-collapse{position:absolute;top:5px;right:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:4px;color:#4a4a3c;font-size:13px;cursor:pointer;font-family:'Lora',serif;transition:background 0.1s,color 0.1s;z-index:5;padding:0;user-select:none;-webkit-user-select:none;}
 #rp-collapse:hover{background:#252e25;color:#a09e8a;}
 .rp-group{border-bottom:0.5px solid #222b22;}
 .rp-group:last-child{border-bottom:none;}
@@ -160,7 +159,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .rp-icon{font-size:11px;width:13px;text-align:center;opacity:0.65;flex-shrink:0;}
 .rp-chevron{font-size:9px;color:#4a4a3c;margin-left:auto;}
 .rp-pad-btm{height:6px;}
-#panel-tab{position:absolute;top:60px;right:14px;width:45px;height:45px;display:none;align-items:center;justify-content:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;cursor:pointer;color:#6a6a5a;font-size:18px;z-index:19;transition:background 0.15s,border-color 0.15s,color 0.15s;font-family:'Lora',serif;}
+#panel-tab{position:absolute;top:14px;right:14px;width:34px;height:34px;display:none;align-items:center;justify-content:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;color:#6a6a5a;font-size:15px;z-index:19;transition:background 0.15s,border-color 0.15s,color 0.15s;font-family:'Lora',serif;user-select:none;-webkit-user-select:none;}
 #panel-tab.vis{display:flex;}
 #panel-tab:hover{background:#1e271e;border-color:#3a4838;color:#a09e8a;}
 #canvas-wrap{flex:1;position:relative;overflow:hidden;}
@@ -425,15 +424,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
   </div>
   <div id="app">
     <div id="burger" title="Menu"><span id="burger-glyph">&#9776;</span></div>
-    <div id="map-name-chip"><span id="burger-name"></span></div>
     <div id="drawer">
       <div id="dd-mapname">
-        <input id="map-title-in" value="" placeholder="untitled"/>
-        <span class="dd-edit">&#9998;</span>
+        <textarea id="map-title-in" placeholder="untitled" rows="1"></textarea>
+        <span class="dd-edit" title="Rename map">&#9998;</span>
       </div>
       <div class="dd-item" id="dd-all-maps"><span class="dd-icon">&#8962;</span> Home</div>
-      <div class="dd-rule"></div>
-      <div class="dd-item" id="dd-export"><span class="dd-icon">&#8615;</span> Export &amp; share <span class="dd-chevron">&#9658;</span></div>
       <div class="dd-pad-btm"></div>
     </div>
     <div id="main">
@@ -453,6 +449,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <div class="rp-item" id="rp-ghosts"><span class="rp-icon">&#9685;</span> Ghost nodes <span class="rp-chevron">&#9658;</span></div>
           <div class="rp-item" id="rp-untangle"><span class="rp-icon">&#10022;</span> Organise radial</div>
           <div class="rp-item" id="rp-tidy"><span class="rp-icon">&#10016;</span> Organise tree</div>
+          <div class="rp-item" id="rp-export"><span class="rp-icon">&#8615;</span> Export &amp; share <span class="rp-chevron">&#9658;</span></div>
         </div>
         <div class="rp-group">
           <div class="rp-label">AI</div>
@@ -3116,9 +3113,9 @@ burgerEl.addEventListener('click',e=>{
   e.stopPropagation();
   const open=drawerEl.classList.toggle('vis');
   burgerEl.classList.toggle('open',open);
-  if(open)renderSB();else closeAllSubs();
+  if(open){renderSB();fitMapTitle();}else closeAllSubs();
 });
-drawerEl.addEventListener('click',e=>{e.stopPropagation();if(!e.target.closest('#dd-export'))closeAllSubs();});
+drawerEl.addEventListener('click',e=>{e.stopPropagation();closeAllSubs();});
 document.addEventListener('click',()=>closeDrawer());
 // folders surface on the splash grid (drag-drop filing, nesting, breadcrumbs);
 // the drawer still lists maps flat
@@ -3206,20 +3203,25 @@ function renderMap(){
 }
 document.getElementById('map-title-in').addEventListener('change',e=>{const m=cmap();if(m){m.name=e.target.value;softSave();renderSB();}});
 document.getElementById('dd-all-maps').addEventListener('click',()=>{closeDrawer();showSplash();});
-// export & share submenu opens to the right of the drawer
-document.getElementById('dd-export').addEventListener('click',ev=>{
+// export & share submenu opens to the left of the tool panel
+document.getElementById('rp-export').addEventListener('click',ev=>{
   ev.stopPropagation();
   const sub=document.getElementById('sub-export');
   const isOpen=sub.classList.contains('vis');
   closeAllSubs();
   if(!isOpen){
     const tr=ev.currentTarget.getBoundingClientRect();
-    sub.style.left=(tr.right+8)+'px';
-    sub.style.right='auto';
     sub.style.top=tr.top+'px';
+    sub.style.right=(window.innerWidth-tr.left+8)+'px';
+    sub.style.left='auto';
     sub.classList.add('vis');openSub=sub;
   }
 });
+// pencil focuses the rename field; the field grows downward for long titles
+document.querySelector('#dd-mapname .dd-edit').addEventListener('click',()=>{const i=document.getElementById('map-title-in');i.focus();i.select();});
+function fitMapTitle(){const i=document.getElementById('map-title-in');if(!i)return;i.style.height='auto';i.style.height=i.scrollHeight+'px';}
+document.getElementById('map-title-in').addEventListener('input',fitMapTitle);
+document.getElementById('map-title-in').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.target.blur();}});
 // bin header toggle
 const binHdr=document.getElementById('bin-header');if(binHdr)binHdr.addEventListener('click',()=>{sbBinOpen=!sbBinOpen;renderBin();});
 // empty bin buttons
@@ -3467,7 +3469,7 @@ document.addEventListener('click',()=>closeAllSubs());
 // stop clicks inside submenus from bubbling to the document-level close handler
 document.querySelectorAll('.submenu').forEach(s=>s.addEventListener('click',ev=>ev.stopPropagation()));
 // choosing an export/import/share item closes the submenu and the drawer
-document.getElementById('sub-export').addEventListener('click',ev=>{if(ev.target.classList.contains('tmi')){closeAllSubs();closeDrawer();}});
+document.getElementById('sub-export').addEventListener('click',ev=>{if(ev.target.classList.contains('tmi'))closeAllSubs();});
 
 // fullscreen button on canvas
 const _btnFs=document.getElementById('btn-fullscreen');if(_btnFs)_btnFs.addEventListener('click',toggleFullscreen);
@@ -3608,15 +3610,16 @@ const SHORTCUTS=[
     ['click edge style','set edge style on all edges touching selected nodes'],
   ]},
   {section:'map drawer',items:[
-    ['≡ button (top left)','open the drawer — switch, create, import, export'],
-    ['map name field','rename the current map'],
-    ['⌂ all maps','back to the home screen'],
+    ['≡ button (top left)','open the drawer — rename the map or return home'],
+    ['map name field (or ✎)','rename the current map — enter commits'],
+    ['⌂ home','back to the home screen'],
   ]},
   {section:'tool panel',items:[
-    ['»','collapse the right panel to a thin tab'],
+    ['»','collapse the right panel to a thin tab (top right)'],
     ['«','expand it again'],
     ['&#10022; organise radial','arrange the map in rings around the root'],
     ['&#10016; organise tree','arrange the map as a left-to-right tree'],
+    ['↧ Export & share','PNG / JPG / JSON / Markdown export, imports, share via URL'],
   ]},
 ];
 function renderShortcuts(){
