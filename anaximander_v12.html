@@ -79,6 +79,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .sp-cm-item.del{color:#6a5a48;}
 .sp-cm-item.del:hover{color:#a08a6a;}
 .sp-cm-item{white-space:nowrap;}
+/* first-word capitals on menu items (glyph-led labels are capitalised in their strings) */
+.ci::first-letter,.sp-cm-item::first-letter,.sp-cm-label::first-letter{text-transform:uppercase;}
 .sp-cm-item.dim{opacity:0.35;pointer-events:none;}
 .sp-cm-label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:#4a4a3c;padding:5px 13px 3px;cursor:default;}
 .sp-foot{margin-top:auto;padding:18px 0 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;}
@@ -131,7 +133,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .dd-pad-btm{height:7px;}
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
 /* ── top-right toolbar ── */
-#toolbar{position:absolute;top:14px;right:14px;display:flex;align-items:center;gap:2px;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;padding:4px 7px;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
+#toolbar{position:absolute;top:14px;right:14px;display:flex;align-items:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;padding:6px 11px;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity 0.4s;}
+#toolbar.show{opacity:1;}
 .tb-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;color:#6a6a5a;font-size:13px;border:none;background:transparent;font-family:'Lora',serif;transition:background 0.1s,color 0.1s;padding:0;}
 .tb-btn:not(:disabled):hover{background:#252e25;color:#a09e8a;}
 .tb-btn:disabled{opacity:0.4;cursor:default;}
@@ -139,7 +142,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #map-title-in{font-size:13px;font-weight:500;color:#c8c898;background:none;border:none;outline:none;font-family:'Lora',serif;flex:1;min-width:0;padding:0;}
 #map-title-in::placeholder{color:#7a7858;}
 #map-title-in:focus{color:#e8d098;}
-#autosave-ind{font-size:11px;color:#45453a;font-family:'Lora',serif;transition:color 0.3s;padding-right:7px;margin-right:3px;border-right:0.5px solid #252e25;}
+#autosave-ind{font-size:11px;color:#45453a;font-family:'Lora',serif;transition:color 0.3s;}
 #autosave-ind.saving{color:#9aa07a;}
 .tmi{padding:8px 18px;font-size:13px;cursor:pointer;color:#a09e8a;font-family:'Lora',serif;}
 .tmi:hover{background:#26301e;color:#dac888;}
@@ -157,7 +160,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 .rp-icon{font-size:11px;width:13px;text-align:center;opacity:0.65;flex-shrink:0;}
 .rp-chevron{font-size:9px;color:#4a4a3c;margin-left:auto;}
 .rp-pad-btm{height:6px;}
-#panel-tab{position:absolute;top:60px;right:14px;width:30px;height:30px;display:none;align-items:center;justify-content:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:8px;cursor:pointer;color:#6a6a5a;font-size:12px;z-index:19;transition:background 0.15s,border-color 0.15s,color 0.15s;font-family:'Lora',serif;}
+#panel-tab{position:absolute;top:60px;right:14px;width:45px;height:45px;display:none;align-items:center;justify-content:center;background:#1a201a;border:0.5px solid #2a3028;border-radius:10px;cursor:pointer;color:#6a6a5a;font-size:18px;z-index:19;transition:background 0.15s,border-color 0.15s,color 0.15s;font-family:'Lora',serif;}
 #panel-tab.vis{display:flex;}
 #panel-tab:hover{background:#1e271e;border-color:#3a4838;color:#a09e8a;}
 #canvas-wrap{flex:1;position:relative;overflow:hidden;}
@@ -172,7 +175,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 #inline-input *::selection{background:rgba(126,200,126,0.4)!important;color:inherit!important;}
 #inline-input::-moz-selection,
 #inline-input *::-moz-selection{background:rgba(126,200,126,0.4)!important;}
-#zoom-ctrl{position:absolute;bottom:18px;right:18px;display:flex;flex-direction:column;gap:3px;background:#1a201a;border:0.5px solid #2a3028;border-radius:14px;padding:6px;z-index:10;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
+#zoom-ctrl{position:absolute;bottom:18px;right:18px;display:flex;flex-direction:column;gap:3px;background:#1a201a;border:0.5px solid #2a3028;border-radius:14px;padding:6px;z-index:10;box-shadow:0 8px 30px rgba(0,0,0,0.5);transform:scale(0.75);transform-origin:bottom right;}
 .zm{width:30px;height:30px;border-radius:8px;border:none;background:none;cursor:pointer;font-size:16px;font-weight:500;color:#dac888;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;}
 .zm:hover{color:#e8d098;background:#26301e;}
 .zm.on{color:#dac888;background:#26301e;}
@@ -400,6 +403,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <span class="sp-tile-icon">&#8613;</span>
           <span class="sp-tile-name">From document<span class="sp-soon">soon</span></span>
         </div>
+        <div class="sp-tile" id="sp-tile-import" title="open a .json or .mm export">
+          <span class="sp-tile-icon">&#8613;</span>
+          <span class="sp-tile-name">Import file</span>
+        </div>
       </div>
       <div class="sp-scroll">
         <div class="sp-sec">Return</div>
@@ -409,7 +416,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
       <div class="sp-foot">
         <span class="sp-hint" id="sp-hint" style="visibility:hidden;"><span class="sp-key">&#8629;</span>reopen <span id="sp-hint-name"></span></span>
         <span style="display:flex;align-items:center;gap:16px;">
-          <span class="sp-bin-link" id="sp-bin-link"><span style="font-size:11px;">&#9109;</span>recycle bin <span id="sp-bin-count"></span></span>
+          <span class="sp-bin-link" id="sp-bin-link"><span style="font-size:11px;">&#9109;</span>Recycle bin <span id="sp-bin-count"></span></span>
           <span class="sp-ver">v12</span>
         </span>
         <div id="sp-bin-pop"></div>
@@ -424,60 +431,36 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
         <input id="map-title-in" value="" placeholder="untitled"/>
         <span class="dd-edit">&#9998;</span>
       </div>
-      <div class="dd-item" id="dd-all-maps"><span class="dd-icon">&#8962;</span> home</div>
-      <div class="dd-item quiet" id="dd-new-map"><span class="dd-icon">+</span> new map</div>
+      <div class="dd-item" id="dd-all-maps"><span class="dd-icon">&#8962;</span> Home</div>
       <div class="dd-rule"></div>
-      <div class="dd-item" id="dd-import"><span class="dd-icon">&#8613;</span> import file</div>
-      <div class="dd-item" id="dd-export"><span class="dd-icon">&#8615;</span> export &amp; share <span class="dd-chevron">&#9658;</span></div>
-      <div class="dd-rule"></div>
-      <div id="bin-section">
-        <div id="bin-header" class="dd-item quiet">
-          <span id="bin-chevron" style="font-size:10px;color:#5a6048;transition:transform 0.15s;flex-shrink:0;">›</span>
-          <span class="dd-icon">&#9109;</span><span>recycle bin</span>
-          <span id="bin-badge" style="background:#3a2a2a;color:#c87e7e;font-size:9px;border-radius:8px;padding:1px 5px;margin-left:auto;display:none;"></span>
-        </div>
-        <div id="bin-contents" style="display:none;padding:4px 0 6px;">
-          <div id="bin-list"></div>
-          <div id="empty-bin-confirm" style="display:none;padding:4px 10px 6px;">
-            <div style="font-size:10px;color:#c87e7e;margin-bottom:5px;">permanently delete all items?</div>
-            <div style="display:flex;gap:4px;">
-              <button id="empty-bin-yes" style="flex:1;padding:3px;border-radius:4px;border:0.5px solid #4a2a2a;background:#2a1a1a;color:#c87e7e;cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;">yes, delete all</button>
-              <button id="empty-bin-no" style="flex:1;padding:3px;border-radius:4px;border:0.5px solid #333;background:#2a2a2a;color:#888;cursor:pointer;font-family:Nunito,sans-serif;font-size:11px;">cancel</button>
-            </div>
-          </div>
-          <button id="empty-bin-btn" style="width:calc(100% - 20px);margin:4px 10px 2px;padding:4px;border-radius:5px;border:0.5px solid #3a2a2a;background:none;color:#7a4a4a;font-size:11px;cursor:pointer;font-family:Nunito,sans-serif;display:none;">empty bin permanently</button>
-        </div>
-      </div>
+      <div class="dd-item" id="dd-export"><span class="dd-icon">&#8615;</span> Export &amp; share <span class="dd-chevron">&#9658;</span></div>
       <div class="dd-pad-btm"></div>
     </div>
     <div id="main">
       <div id="toolbar">
         <span id="autosave-ind">saved</span>
-        <button class="tb-btn" id="cvs-undo" title="Undo (⌘Z)" disabled>&#8630;</button>
-        <button class="tb-btn" id="cvs-redo" title="Redo (⌘⇧Z)" disabled>&#8631;</button>
-        <div class="tb-sep"></div>
-        <button class="tb-btn" id="btn-fullscreen" title="Fullscreen (F11)">&#9635;</button>
-        <div class="tb-sep"></div>
-        <button class="tb-btn" id="btn-shortcuts" title="Keyboard shortcuts">?</button>
       </div>
       <div id="rpanel">
         <button id="rp-collapse" title="Collapse panel">&#187;</button>
         <div class="rp-group">
           <div class="rp-label">Canvas</div>
-          <div class="rp-item" id="rp-bg"><span class="rp-icon">&#9632;</span> background</div>
-          <div class="rp-item" id="rp-legend"><span class="rp-icon">&#9671;</span> legend</div>
+          <div class="rp-item" id="rp-bg"><span class="rp-icon">&#9632;</span> Background</div>
+          <div class="rp-item" id="rp-legend"><span class="rp-icon">&#9671;</span> Legend</div>
         </div>
         <div class="rp-group">
           <div class="rp-label">Map</div>
-          <div class="rp-item" id="rp-history"><span class="rp-icon">&#9201;</span> history</div>
-          <div class="rp-item" id="rp-ghosts"><span class="rp-icon">&#9685;</span> ghost nodes <span class="rp-chevron">&#9658;</span></div>
-          <div class="rp-item" id="rp-untangle"><span class="rp-icon">&#10022;</span> organise radial</div>
-          <div class="rp-item" id="rp-tidy"><span class="rp-icon">&#10016;</span> organise tree</div>
+          <div class="rp-item" id="rp-history"><span class="rp-icon">&#9201;</span> History</div>
+          <div class="rp-item" id="rp-ghosts"><span class="rp-icon">&#9685;</span> Ghost nodes <span class="rp-chevron">&#9658;</span></div>
+          <div class="rp-item" id="rp-untangle"><span class="rp-icon">&#10022;</span> Organise radial</div>
+          <div class="rp-item" id="rp-tidy"><span class="rp-icon">&#10016;</span> Organise tree</div>
         </div>
         <div class="rp-group">
           <div class="rp-label">AI</div>
-          <div class="rp-item" id="rp-ai-sugg"><span class="rp-icon">&#10022;</span> suggestions</div>
-          <div class="rp-item" id="rp-gen"><span class="rp-icon">&#10022;</span> generate in map</div>
+          <div class="rp-item" id="rp-ai-sugg"><span class="rp-icon">&#10022;</span> Suggestions</div>
+          <div class="rp-item" id="rp-gen"><span class="rp-icon">&#10022;</span> Generate in map</div>
+        </div>
+        <div class="rp-group">
+          <div class="rp-item" id="rp-shortcuts"><span class="rp-icon">?</span> Shortcuts</div>
           <div class="rp-pad-btm"></div>
         </div>
       </div>
@@ -513,6 +496,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
           <div id="zoom-lbl">100%</div>
           <button class="zm" id="zout">−</button>
           <button class="zm" id="btn-fit" title="fit to page"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2H2v3"/><path d="M11 2h3v3"/><path d="M14 11v3h-3"/><path d="M2 11v3h3"/><rect x="5.5" y="6" width="5" height="4" rx="1.2"/></svg></button>
+          <button class="zm" id="btn-fullscreen" title="Fullscreen (F11)">&#9635;</button>
           <button class="zm" id="btn-mm" style="margin-top:6px;font-size:18px;border-top:0.5px solid #2a3028;border-radius:0 0 8px 8px;padding-top:6px;height:36px;">&#9638;</button>
         </div>
         <canvas id="minimap" width="225" height="150"></canvas>
@@ -702,17 +686,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#111;}
 
 <!-- ⋯ menu submenus -->
 <div class="submenu" id="sub-export">
-  <div class="tmi" id="tmi-export-png">&#8615; png</div>
-  <div class="tmi" id="tmi-export-jpg">&#8615; jpg</div>
-  <div class="tmi" id="tmi-export-json">&#8615; json</div>
-  <div class="tmi" id="tmi-export-md">&#8615; markdown</div>
-  <div class="tmi" id="tmi-import2">&#8613; import json</div>
-  <div class="tmi" id="tmi-import-mm">&#8613; import .mm</div>
-  <div class="tmi" id="tmi-share">&#128279; share via URL</div>
+  <div class="tmi" id="tmi-export-png">&#8615; PNG</div>
+  <div class="tmi" id="tmi-export-jpg">&#8615; JPG</div>
+  <div class="tmi" id="tmi-export-json">&#8615; JSON</div>
+  <div class="tmi" id="tmi-export-md">&#8615; Markdown</div>
+  <div class="tmi" id="tmi-import2">&#8613; Import JSON</div>
+  <div class="tmi" id="tmi-import-mm">&#8613; Import .mm</div>
+  <div class="tmi" id="tmi-share">&#128279; Share via URL</div>
 </div>
 
 <div class="submenu" id="sub-ghost" style="min-width:220px;">
-  <div class="tmi" id="tmi-ghosts">&#9685; ghost nodes: on</div>
+  <div class="tmi" id="tmi-ghosts">&#9685; Ghost nodes: on</div>
   <div class="sm-sep"></div>
   <div class="sm-row">
     <span class="sm-row-lbl">count</span>
@@ -1142,8 +1126,10 @@ function normalizeState(){
 }
 function hardSave(){localStorage.setItem('anax_v7',JSON.stringify(state));showSaved();}
 function softSave(){showSaving();clearTimeout(autosaveTimer);autosaveTimer=setTimeout(()=>hardSave(),800);}
-function showSaving(){const el=document.getElementById('autosave-ind');el.textContent='saving…';el.classList.add('saving');}
-function showSaved(){const el=document.getElementById('autosave-ind');el.textContent='saved';el.classList.remove('saving');}
+// the indicator only appears while a save is in flight, lingers 2s on "saved", then fades
+let _savedFade=null;
+function showSaving(){const el=document.getElementById('autosave-ind');el.textContent='saving…';el.classList.add('saving');clearTimeout(_savedFade);document.getElementById('toolbar')?.classList.add('show');}
+function showSaved(){const el=document.getElementById('autosave-ind');el.textContent='saved';el.classList.remove('saving');clearTimeout(_savedFade);_savedFade=setTimeout(()=>document.getElementById('toolbar')?.classList.remove('show'),2000);}
 function cmap(){return state.maps.find(m=>m.id===state.currentMapId);}
 function updateCvsUndoRedo(){
   const map=cmap();
@@ -2804,7 +2790,7 @@ function showEdgeCtx(sx,sy,e){
   const menu=document.getElementById('ctx');menu.innerHTML='';
   const wr=document.getElementById('canvas-wrap').getBoundingClientRect();
   const sl=document.createElement('div');sl.className='ci-label';sl.textContent='style';menu.appendChild(sl);
-  ['straight','dashed','dotted','arrow','arrow2'].forEach(s=>{const i=document.createElement('div');i.className='ci';i.textContent=(s==='straight'?'—— ':s==='dashed'?'- - ':s==='dotted'?'··· ':s==='arrow'?'→  ':'↔  ')+s;if(e.style===s)i.style.color=ACCENT;i.addEventListener('click',()=>{e.style=s;menu.style.display='none';softSave();render();});menu.appendChild(i);});
+  ['straight','dashed','dotted','arrow','arrow2'].forEach(s=>{const i=document.createElement('div');i.className='ci';i.textContent=(s==='straight'?'—— ':s==='dashed'?'- - ':s==='dotted'?'··· ':s==='arrow'?'→  ':'↔  ')+s.charAt(0).toUpperCase()+s.slice(1);if(e.style===s)i.style.color=ACCENT;i.addEventListener('click',()=>{e.style=s;menu.style.display='none';softSave();render();});menu.appendChild(i);});
   const sep1=document.createElement('div');sep1.className='ci-sep';menu.appendChild(sep1);
   const tl=document.createElement('div');tl.className='ci-label';tl.textContent='thickness';menu.appendChild(tl);
   [{l:'thin',v:1},{l:'medium',v:2},{l:'thick',v:3.5},{l:'heavy',v:5.5}].forEach(({l,v})=>{const i=document.createElement('div');i.className='ci';i.textContent=l;if(e.thickness===v)i.style.color=ACCENT;i.addEventListener('click',()=>{e.thickness=v;menu.style.display='none';softSave();render();});menu.appendChild(i);});
@@ -2879,7 +2865,7 @@ function showKfCtx(sx,sy,e,kfIdx){
   const wr=document.getElementById('canvas-wrap').getBoundingClientRect();
   const isCentre=kfIdx===Math.floor(e.keyframes.length/2);
   // branch-from-keyframe and delete — available on every keyframe
-  const br=document.createElement('div');br.className='ci';br.textContent='+ branch from here';
+  const br=document.createElement('div');br.className='ci';br.textContent='+ Branch from here';
   br.addEventListener('click',()=>{menu.style.display='none';spawnBranchFromKf(e,kfIdx);});menu.appendChild(br);
   const dl=document.createElement('div');dl.className='ci red';dl.textContent='\u2715 delete keyframe';
   dl.addEventListener('click',()=>{
@@ -2897,7 +2883,7 @@ function showKfCtx(sx,sy,e,kfIdx){
     const lbl=document.createElement('div');lbl.className='ci-label';lbl.textContent='edge';menu.appendChild(lbl);
     // style row
     const sl=document.createElement('div');sl.className='ci-label';sl.textContent='style';sl.style.fontSize='10px';menu.appendChild(sl);
-    ['straight','dashed','dotted','arrow','arrow2'].forEach(s=>{const i=document.createElement('div');i.className='ci';i.textContent=(s==='straight'?'—— ':s==='dashed'?'- - ':s==='dotted'?'··· ':s==='arrow'?'→  ':'↔  ')+s;if(e.style===s)i.style.color=ACCENT;i.addEventListener('click',()=>{e.style=s;menu.style.display='none';softSave();render();});menu.appendChild(i);});
+    ['straight','dashed','dotted','arrow','arrow2'].forEach(s=>{const i=document.createElement('div');i.className='ci';i.textContent=(s==='straight'?'—— ':s==='dashed'?'- - ':s==='dotted'?'··· ':s==='arrow'?'→  ':'↔  ')+s.charAt(0).toUpperCase()+s.slice(1);if(e.style===s)i.style.color=ACCENT;i.addEventListener('click',()=>{e.style=s;menu.style.display='none';softSave();render();});menu.appendChild(i);});
     const sep2=document.createElement('div');sep2.className='ci-sep';menu.appendChild(sep2);
     // thickness slider
     const tl=document.createElement('div');tl.className='ci-label';tl.textContent='thickness';menu.appendChild(tl);
@@ -3209,9 +3195,7 @@ function renderMap(){
   render();updateCvsUndoRedo();
 }
 document.getElementById('map-title-in').addEventListener('change',e=>{const m=cmap();if(m){m.name=e.target.value;softSave();renderSB();}});
-document.getElementById('dd-new-map').addEventListener('click',()=>{closeDrawer();promptM('Map name','New map',v=>{sbSnap('before create');const nm=defMap('m'+Date.now(),v);state.maps.push(nm);state.currentMapId=nm.id;T={x:0,y:0,s:1};sbSnap('created: '+v);softSave();renderSB();renderMap();});});
 document.getElementById('dd-all-maps').addEventListener('click',()=>{closeDrawer();showSplash();});
-document.getElementById('dd-import').addEventListener('click',()=>{closeDrawer();document.getElementById('file-imp-any').click();});
 // export & share submenu opens to the right of the drawer
 document.getElementById('dd-export').addEventListener('click',ev=>{
   ev.stopPropagation();
@@ -3448,7 +3432,7 @@ rpTidy.addEventListener('click',()=>{
 document.getElementById('tmi-ghosts').addEventListener('click',()=>{
   ghostsEnabled=!ghostsEnabled;
   ghosts=[];
-  document.getElementById('tmi-ghosts').textContent=ghostsEnabled?'⧅ ghost nodes: on':'⧅ ghost nodes: off';
+  document.getElementById('tmi-ghosts').textContent=ghostsEnabled?'⧅ Ghost nodes: on':'⧅ Ghost nodes: off';
   render();
 });
 // tmi-fullscreen moved to canvas button
@@ -3636,7 +3620,7 @@ function renderShortcuts(){
     </div>
   `).join('');
 }
-document.getElementById('btn-shortcuts').addEventListener('click',()=>{
+document.getElementById('rp-shortcuts').addEventListener('click',()=>{
   renderShortcuts();
   document.getElementById('shortcuts-ov').style.display='flex';
 });
@@ -4085,6 +4069,7 @@ document.getElementById('sp-tile-blank').addEventListener('click',()=>promptM('M
   sbSnap('before create');const nm=defMap('m'+Date.now(),v);state.maps.push(nm);state.currentMapId=nm.id;T={x:0,y:0,s:1};sbSnap('created: '+v);softSave();renderSB();renderMap();enterCanvas();
 }));
 document.getElementById('sp-tile-prompt').addEventListener('click',()=>{openGenModal('new');});
+document.getElementById('sp-tile-import').addEventListener('click',()=>{document.getElementById('file-imp-any').click();});
 // ── move to… — flat indented folder tree; excludeId hides that folder + descendants (cycle guard) ──
 function spMoveTargets(excludeId){
   const out=[{id:null,name:'⌂ top level',depth:0}];
